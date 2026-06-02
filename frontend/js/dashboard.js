@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V1.8
+  V1.9 Email Verification Guard
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -9,6 +9,7 @@ let cachedPayments = [];
 let cachedCertificates = [];
 let cachedParentRequests = [];
 let cachedClub = null;
+let currentUser = null;
 let openedAthleteId = null;
 let editingAthleteId = null;
 let editingPaymentId = null;
@@ -36,6 +37,7 @@ function bindDashboardActions(){
     const copyRegistrationLinkBtn = document.getElementById("copyRegistrationLinkBtn");
     const clubSettingsForm = document.getElementById("clubSettingsForm");
     const regenerateClubCodeBtn = document.getElementById("regenerateClubCodeBtn");
+    const resendVerificationBtn = document.getElementById("resendVerificationBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -67,6 +69,10 @@ function bindDashboardActions(){
 
     if(refreshBtn){
         refreshBtn.addEventListener("click", refreshAll);
+    }
+
+    if(resendVerificationBtn){
+        resendVerificationBtn.addEventListener("click", resendVerificationEmail);
     }
 
     if(addAthleteForm){
@@ -147,6 +153,7 @@ function bindDashboardActions(){
 }
 
 async function refreshAll(){
+    await loadCurrentUser();
     await loadMyClub();
     await loadDashboard();
     await loadAthletesPreview();
@@ -163,6 +170,83 @@ async function refreshAll(){
     }
 }
 
+async function loadCurrentUser(){
+    try{
+        currentUser = await apiRequest("/auth/me");
+        renderEmailVerificationState();
+    }catch(error){
+        currentUser = null;
+
+        if(String(error.message || "").toLowerCase().includes("not authenticated")){
+            clearToken();
+            window.location.href = "index.html";
+            return;
+        }
+
+        setDashboardMessage("Impossibile verificare lo stato account.", "error");
+    }
+}
+
+function renderEmailVerificationState(){
+    const banner = document.getElementById("emailVerificationBanner");
+    const emailBox = document.getElementById("currentUserEmail");
+
+    if(emailBox){
+        emailBox.textContent = currentUser?.email || "Email non disponibile";
+    }
+
+    if(!banner) return;
+
+    if(currentUser && currentUser.email_verified === false){
+        banner.classList.remove("hidden");
+    }else{
+        banner.classList.add("hidden");
+    }
+}
+
+function isEmailVerified(){
+    return !!currentUser?.email_verified;
+}
+
+function requireVerifiedEmail(actionLabel = "questa funzione"){
+    if(isEmailVerified()){
+        return true;
+    }
+
+    setDashboardMessage(
+        `Verifica la tua email prima di usare ${actionLabel}. Controlla la posta oppure reinvia il link di verifica.`,
+        "error"
+    );
+
+    const banner = document.getElementById("emailVerificationBanner");
+    if(banner){
+        banner.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    return false;
+}
+
+async function resendVerificationEmail(){
+    if(!currentUser?.email){
+        setDashboardMessage("Email account non disponibile.", "error");
+        return;
+    }
+
+    setDashboardMessage("Invio nuova email di verifica...", "info");
+
+    try{
+        const data = await apiRequest("/auth/resend-verification", {
+            method: "POST",
+            body: JSON.stringify({
+                email: currentUser.email
+            })
+        });
+
+        setDashboardMessage(data.message || "Email di verifica inviata.", "success");
+    }catch(error){
+        setDashboardMessage(error.message || "Errore durante l'invio della verifica email.", "error");
+    }
+}
 
 async function loadMyClub(){
     try{
@@ -171,6 +255,7 @@ async function loadMyClub(){
     }catch(error){
         setText("clubNameBox", "Società non disponibile");
         setText("clubPublicCodeBox", "-");
+
         const input = document.getElementById("clubRegistrationLink");
         if(input){
             input.value = "Link non disponibile";
@@ -197,6 +282,10 @@ function renderClubRegistrationLink(){
 }
 
 async function copyRegistrationLink(){
+    if(!requireVerifiedEmail("il link iscrizione genitori")){
+        return;
+    }
+
     const input = document.getElementById("clubRegistrationLink");
     if(!input || !input.value || input.value.includes("non disponibile")){
         setDashboardMessage("Link iscrizione non disponibile.", "error");
@@ -213,7 +302,6 @@ async function copyRegistrationLink(){
     }
 }
 
-
 function fillClubSettingsForm(){
     if(!cachedClub) return;
 
@@ -227,6 +315,10 @@ function fillClubSettingsForm(){
 
 async function handleUpdateClubSettings(event){
     event.preventDefault();
+
+    if(!requireVerifiedEmail("la modifica dei dati società")){
+        return;
+    }
 
     const payload = {
         name: document.getElementById("clubNameInput").value.trim(),
@@ -249,6 +341,7 @@ async function handleUpdateClubSettings(event){
             method: "PATCH",
             body: JSON.stringify(payload)
         });
+
         renderClubRegistrationLink();
         setDashboardMessage("Dati società aggiornati correttamente.", "success");
     }catch(error){
@@ -257,6 +350,10 @@ async function handleUpdateClubSettings(event){
 }
 
 async function handleRegenerateClubCode(){
+    if(!requireVerifiedEmail("la rigenerazione del codice iscrizione")){
+        return;
+    }
+
     if(!confirm("Vuoi rigenerare il codice iscrizione partendo dal nome società attuale? Il vecchio link non sarà più valido.")){
         return;
     }
@@ -267,6 +364,7 @@ async function handleRegenerateClubCode(){
         cachedClub = await apiRequest("/clubs/me/regenerate-code", {
             method: "PATCH"
         });
+
         renderClubRegistrationLink();
         setDashboardMessage("Codice iscrizione rigenerato. Copia il nuovo link e invialo ai genitori.", "success");
     }catch(error){
@@ -297,7 +395,6 @@ async function loadDashboard(){
     }
 }
 
-
 async function loadParentRequestsList(){
     const list = document.getElementById("parentRequestsList");
     if(!list) return;
@@ -321,10 +418,15 @@ function populateParentRequestGroupFilter(){
     if(!select) return;
 
     const currentValue = select.value;
-    const groups = [...new Set(cachedParentRequests.map(item => item.requested_group || "Senza gruppo"))].filter(Boolean).sort((a,b)=>a.localeCompare(b,"it"));
+    const groups = [...new Set(cachedParentRequests.map(item => item.requested_group || "Senza gruppo"))]
+        .filter(Boolean)
+        .sort((a,b)=>a.localeCompare(b,"it"));
 
     select.innerHTML = `<option value="">Tutti i gruppi</option>` + groups.map(group => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join("");
-    if(currentValue && groups.includes(currentValue)) select.value = currentValue;
+
+    if(currentValue && groups.includes(currentValue)){
+        select.value = currentValue;
+    }
 }
 
 function renderParentRequestsList(){
@@ -352,6 +454,7 @@ function renderParentRequestsList(){
     list.innerHTML = filtered.map(request => {
         const status = getParentRequestStatus(request.status);
         const athleteName = `${request.athlete_first_name || ""} ${request.athlete_last_name || ""}`.trim();
+
         return `
             <article class="data-card request-card">
                 <div>
@@ -398,8 +501,21 @@ function getFilteredParentRequests(){
     const group = document.getElementById("parentRequestGroupFilter")?.value || "";
 
     return cachedParentRequests.filter(request => {
-        const haystack = [request.athlete_first_name, request.athlete_last_name, request.requested_group, request.parent_name, request.parent_phone, request.parent_email, request.notes, request.review_note, request.status].join(" ").toLowerCase();
-        return (!search || haystack.includes(search)) && (!statusFilter || request.status === statusFilter) && (!group || (request.requested_group || "Senza gruppo") === group);
+        const haystack = [
+            request.athlete_first_name,
+            request.athlete_last_name,
+            request.requested_group,
+            request.parent_name,
+            request.parent_phone,
+            request.parent_email,
+            request.notes,
+            request.review_note,
+            request.status
+        ].join(" ").toLowerCase();
+
+        return (!search || haystack.includes(search)) &&
+               (!statusFilter || request.status === statusFilter) &&
+               (!group || (request.requested_group || "Senza gruppo") === group);
     });
 }
 
@@ -410,34 +526,66 @@ function getParentRequestStatus(status){
 }
 
 async function approveParentRequest(requestId){
-    if(!confirm("Vuoi approvare questa richiesta e creare automaticamente l'atleta?")) return;
+    if(!requireVerifiedEmail("l'approvazione delle richieste")){
+        return;
+    }
+
+    if(!confirm("Vuoi approvare questa richiesta e creare automaticamente l'atleta?")){
+        return;
+    }
+
     setDashboardMessage("Approvazione richiesta...", "info");
+
     try{
         await apiRequest(`/parent-requests/${requestId}/approve`, { method:"PATCH" });
         await refreshAll();
         setDashboardMessage("Richiesta approvata. Atleta creato automaticamente.", "success");
-    }catch(error){ setDashboardMessage(error.message, "error"); }
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
 }
 
 async function rejectParentRequest(requestId){
+    if(!requireVerifiedEmail("la gestione delle richieste")){
+        return;
+    }
+
     const reason = prompt("Motivo del rifiuto o nota per la segreteria:", "Richiesta rifiutata.");
     if(reason === null) return;
+
     setDashboardMessage("Rifiuto richiesta...", "info");
+
     try{
-        await apiRequest(`/parent-requests/${requestId}/reject`, { method:"PATCH", body:JSON.stringify({ review_note: reason || "Richiesta rifiutata." }) });
+        await apiRequest(`/parent-requests/${requestId}/reject`, {
+            method:"PATCH",
+            body:JSON.stringify({ review_note: reason || "Richiesta rifiutata." })
+        });
+
         await loadParentRequestsList();
         setDashboardMessage("Richiesta rifiutata.", "success");
-    }catch(error){ setDashboardMessage(error.message, "error"); }
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
 }
 
 async function deleteParentRequest(requestId){
-    if(!confirm("Vuoi eliminare questa richiesta?")) return;
+    if(!requireVerifiedEmail("l'eliminazione delle richieste")){
+        return;
+    }
+
+    if(!confirm("Vuoi eliminare questa richiesta?")){
+        return;
+    }
+
     setDashboardMessage("Eliminazione richiesta...", "info");
+
     try{
         await apiRequest(`/parent-requests/${requestId}`, { method:"DELETE" });
         await loadParentRequestsList();
         setDashboardMessage("Richiesta eliminata.", "success");
-    }catch(error){ setDashboardMessage(error.message, "error"); }
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
 }
 
 async function loadAthletesPreview(){
@@ -474,6 +622,7 @@ function renderAthletesList(){
 
     const filtered = cachedAthletes.filter(athlete => {
         const athleteStatus = getAthleteAdminStatus(athlete);
+
         const haystack = [
             athlete.first_name,
             athlete.last_name,
@@ -485,11 +634,9 @@ function renderAthletesList(){
             athlete.phone
         ].join(" ").toLowerCase();
 
-        const matchesSearch = !search || haystack.includes(search);
-        const matchesGroup = !group || (athlete.group_name || "Senza gruppo") === group;
-        const matchesStatus = !status || athleteStatus.key === status;
-
-        return matchesSearch && matchesGroup && matchesStatus;
+        return (!search || haystack.includes(search)) &&
+               (!group || (athlete.group_name || "Senza gruppo") === group) &&
+               (!status || athleteStatus.key === status);
     });
 
     if(!filtered.length){
@@ -510,18 +657,9 @@ function renderAthletesList(){
 
                 <div class="card-actions">
                     <span class="status-badge ${status.className}">${status.label}</span>
-
-                    <button type="button" class="mini-btn" onclick="openAthleteDetail(${athlete.id})">
-                        Apri scheda
-                    </button>
-
-                    <button type="button" class="mini-btn" onclick="fillAthleteForm(${athlete.id})">
-                        Modifica
-                    </button>
-
-                    <button type="button" class="mini-btn danger" onclick="deleteAthlete(${athlete.id})">
-                        Elimina
-                    </button>
+                    <button type="button" class="mini-btn" onclick="openAthleteDetail(${athlete.id})">Apri scheda</button>
+                    <button type="button" class="mini-btn" onclick="fillAthleteForm(${athlete.id})">Modifica</button>
+                    <button type="button" class="mini-btn danger" onclick="deleteAthlete(${athlete.id})">Elimina</button>
                 </div>
             </article>
         `;
@@ -626,11 +764,7 @@ function renderPaymentsList(){
             <article class="data-card">
                 <div>
                     <strong>${escapeHtml(athlete)}</strong>
-                    <span>
-                        Dovuto: ${formatEuro(payment.amount_due || 0)} ·
-                        Pagato: ${formatEuro(payment.amount_paid || 0)} ·
-                        Scadenza: ${formatDate(payment.due_date)}
-                    </span>
+                    <span>Dovuto: ${formatEuro(payment.amount_due || 0)} · Pagato: ${formatEuro(payment.amount_paid || 0)} · Scadenza: ${formatDate(payment.due_date)}</span>
                     <span>Metodo: ${escapeHtml(payment.method || "Non indicato")}</span>
                 </div>
 
@@ -641,9 +775,7 @@ function renderPaymentsList(){
                     <small>${stateLabel}</small>
 
                     <div class="card-actions">
-                        <button type="button" class="mini-btn" onclick="fillPaymentForm(${payment.id})">
-                            Modifica
-                        </button>
+                        <button type="button" class="mini-btn" onclick="fillPaymentForm(${payment.id})">Modifica</button>
 
                         ${!isPaid ? `
                             <button type="button" class="mini-btn success" onclick="markPaymentPaid(${payment.id})">
@@ -651,9 +783,7 @@ function renderPaymentsList(){
                             </button>
                         ` : ""}
 
-                        <button type="button" class="mini-btn danger" onclick="deletePayment(${payment.id})">
-                            Elimina
-                        </button>
+                        <button type="button" class="mini-btn danger" onclick="deletePayment(${payment.id})">Elimina</button>
                     </div>
                 </div>
             </article>
@@ -717,19 +847,18 @@ function renderCertificatesList(){
                             </button>
                         ` : ""}
 
-                        <button type="button" class="mini-btn" onclick="fillCertificateForm(${cert.id})">
-                            Modifica
-                        </button>
-
-                        <button type="button" class="mini-btn danger" onclick="deleteCertificate(${cert.id})">
-                            Elimina
-                        </button>
+                        <button type="button" class="mini-btn" onclick="fillCertificateForm(${cert.id})">Modifica</button>
+                        <button type="button" class="mini-btn danger" onclick="deleteCertificate(${cert.id})">Elimina</button>
                     </div>
                 </div>
             </article>
         `;
     }).join("");
 }
+
+/* =========================
+   Form e azioni atleti
+========================= */
 
 function fillAthleteForm(athleteId){
     const athlete = cachedAthletes.find(item => Number(item.id) === Number(athleteId));
@@ -775,6 +904,87 @@ function resetAthleteForm(){
     }
 }
 
+async function handleAddAthlete(event){
+    event.preventDefault();
+
+    if(!requireVerifiedEmail("l'inserimento degli atleti")){
+        return;
+    }
+
+    const payload = {
+        first_name: document.getElementById("athleteFirstName").value.trim(),
+        last_name: document.getElementById("athleteLastName").value.trim(),
+        birth_date: document.getElementById("athleteBirthDate").value,
+        group_name: document.getElementById("athleteGroup").value.trim(),
+        phone: document.getElementById("athletePhone").value.trim() || null,
+        email: document.getElementById("athleteEmail").value.trim() || null,
+        parent_name_1: document.getElementById("parentName").value.trim() || null,
+        parent_phone_1: document.getElementById("parentPhone").value.trim() || null,
+        parent_email_1: document.getElementById("parentEmail").value.trim() || null,
+        parent_name_2: null,
+        parent_phone_2: null,
+        parent_email_2: null,
+        notes: document.getElementById("athleteNotes").value.trim() || null
+    };
+
+    setDashboardMessage(editingAthleteId ? "Aggiornamento atleta..." : "Salvataggio atleta...", "info");
+
+    try{
+        if(editingAthleteId){
+            await apiRequest(`/athletes/${editingAthleteId}`, {
+                method: "PATCH",
+                body: JSON.stringify(payload)
+            });
+
+            resetAthleteForm();
+            await refreshAll();
+            setDashboardMessage("Atleta aggiornato correttamente.", "success");
+        }else{
+            await apiRequest("/athletes/", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+
+            resetAthleteForm();
+            await refreshAll();
+            setDashboardMessage("Atleta inserito correttamente.", "success");
+        }
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
+}
+
+async function deleteAthlete(athleteId){
+    if(!requireVerifiedEmail("l'eliminazione degli atleti")){
+        return;
+    }
+
+    if(!confirm("Vuoi eliminare questo atleta? Se ha pagamenti o certificati collegati, il backend bloccherà l'eliminazione.")){
+        return;
+    }
+
+    setDashboardMessage("Eliminazione atleta...", "info");
+
+    try{
+        await apiRequest(`/athletes/${athleteId}`, {
+            method: "DELETE"
+        });
+
+        if(openedAthleteId === athleteId){
+            closeAthleteDetail();
+        }
+
+        await refreshAll();
+        setDashboardMessage("Atleta eliminato.", "success");
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
+}
+
+/* =========================
+   Pagamenti
+========================= */
+
 function fillPaymentForm(paymentId){
     const payment = cachedPayments.find(item => Number(item.id) === Number(paymentId));
 
@@ -813,98 +1023,12 @@ function resetPaymentForm(clearForm = true){
     document.getElementById("cancelPaymentEditBtn")?.classList.add("hidden");
 }
 
-function fillCertificateForm(certificateId){
-    const cert = cachedCertificates.find(item => Number(item.id) === Number(certificateId));
-
-    if(!cert){
-        setDashboardMessage("Certificato non trovato.", "error");
-        return;
-    }
-
-    editingCertificateId = cert.id;
-    resetPaymentForm(false);
-
-    document.getElementById("certificateAthleteId").value = String(cert.athlete_id || "");
-    document.getElementById("certificateType").value = cert.type || "Certificato medico sportivo";
-    document.getElementById("certificateIssueDate").value = normalizeDateInput(cert.issue_date);
-    document.getElementById("certificateExpiryDate").value = normalizeDateInput(cert.expiry_date);
-    document.getElementById("certificateStatus").value = cert.status || "valid";
-
-    setText("certificateSubmitBtn", "Aggiorna certificato");
-    document.getElementById("cancelCertificateEditBtn")?.classList.remove("hidden");
-
-    document.getElementById("certificatesSection")?.scrollIntoView({ behavior:"smooth" });
-    setDashboardMessage("Modifica certificato attiva. Aggiorna i campi e salva.", "info");
-}
-
-function resetCertificateForm(clearForm = true){
-    editingCertificateId = null;
-
-    const form = document.getElementById("addCertificateForm");
-    if(form && clearForm){
-        form.reset();
-    }
-
-    const certificateType = document.getElementById("certificateType");
-    if(certificateType && clearForm){
-        certificateType.value = "Certificato medico sportivo";
-    }
-
-    setText("certificateSubmitBtn", "Salva certificato");
-    document.getElementById("cancelCertificateEditBtn")?.classList.add("hidden");
-}
-
-async function handleAddAthlete(event){
-    event.preventDefault();
-
-    const payload = {
-        first_name: document.getElementById("athleteFirstName").value.trim(),
-        last_name: document.getElementById("athleteLastName").value.trim(),
-        birth_date: document.getElementById("athleteBirthDate").value,
-        group_name: document.getElementById("athleteGroup").value.trim(),
-        phone: document.getElementById("athletePhone").value.trim() || null,
-        email: document.getElementById("athleteEmail").value.trim() || null,
-        parent_name_1: document.getElementById("parentName").value.trim() || null,
-        parent_phone_1: document.getElementById("parentPhone").value.trim() || null,
-        parent_email_1: document.getElementById("parentEmail").value.trim() || null,
-        parent_name_2: null,
-        parent_phone_2: null,
-        parent_email_2: null,
-        notes: document.getElementById("athleteNotes").value.trim() || null
-    };
-
-    setDashboardMessage(
-        editingAthleteId ? "Aggiornamento atleta..." : "Salvataggio atleta...",
-        "info"
-    );
-
-    try{
-        if(editingAthleteId){
-            await apiRequest(`/athletes/${editingAthleteId}`, {
-                method: "PATCH",
-                body: JSON.stringify(payload)
-            });
-
-            resetAthleteForm();
-            await refreshAll();
-            setDashboardMessage("Atleta aggiornato correttamente.", "success");
-        }else{
-            await apiRequest("/athletes/", {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
-
-            resetAthleteForm();
-            await refreshAll();
-            setDashboardMessage("Atleta inserito correttamente.", "success");
-        }
-    }catch(error){
-        setDashboardMessage(error.message, "error");
-    }
-}
-
 async function handleAddPayment(event){
     event.preventDefault();
+
+    if(!requireVerifiedEmail("la gestione dei pagamenti")){
+        return;
+    }
 
     const payload = {
         athlete_id: Number(document.getElementById("paymentAthleteId").value),
@@ -948,8 +1072,107 @@ async function handleAddPayment(event){
     }
 }
 
+async function markPaymentPaid(paymentId){
+    if(!requireVerifiedEmail("la gestione dei pagamenti")){
+        return;
+    }
+
+    if(!confirm("Vuoi segnare questo pagamento come pagato?")) return;
+
+    setDashboardMessage("Aggiornamento pagamento...", "info");
+
+    try{
+        await apiRequest(`/payments/${paymentId}/mark-paid`, {
+            method: "PATCH"
+        });
+
+        if(editingPaymentId === paymentId){
+            resetPaymentForm();
+        }
+
+        await refreshAll();
+        setDashboardMessage("Pagamento segnato come pagato.", "success");
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
+}
+
+async function deletePayment(paymentId){
+    if(!requireVerifiedEmail("l'eliminazione dei pagamenti")){
+        return;
+    }
+
+    if(!confirm("Vuoi eliminare questo pagamento?")) return;
+
+    setDashboardMessage("Eliminazione pagamento...", "info");
+
+    try{
+        await apiRequest(`/payments/${paymentId}`, {
+            method: "DELETE"
+        });
+
+        if(editingPaymentId === paymentId){
+            resetPaymentForm();
+        }
+
+        await refreshAll();
+        setDashboardMessage("Pagamento eliminato.", "success");
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
+}
+
+/* =========================
+   Certificati
+========================= */
+
+function fillCertificateForm(certificateId){
+    const cert = cachedCertificates.find(item => Number(item.id) === Number(certificateId));
+
+    if(!cert){
+        setDashboardMessage("Certificato non trovato.", "error");
+        return;
+    }
+
+    editingCertificateId = cert.id;
+    resetPaymentForm(false);
+
+    document.getElementById("certificateAthleteId").value = String(cert.athlete_id || "");
+    document.getElementById("certificateType").value = cert.type || "Certificato medico sportivo";
+    document.getElementById("certificateIssueDate").value = normalizeDateInput(cert.issue_date);
+    document.getElementById("certificateExpiryDate").value = normalizeDateInput(cert.expiry_date);
+    document.getElementById("certificateStatus").value = cert.status || "valid";
+
+    setText("certificateSubmitBtn", "Aggiorna certificato");
+    document.getElementById("cancelCertificateEditBtn")?.classList.remove("hidden");
+
+    document.getElementById("certificatesSection")?.scrollIntoView({ behavior:"smooth" });
+    setDashboardMessage("Modifica certificato attiva. Aggiorna i campi e salva.", "info");
+}
+
+function resetCertificateForm(clearForm = true){
+    editingCertificateId = null;
+
+    const form = document.getElementById("addCertificateForm");
+    if(form && clearForm){
+        form.reset();
+    }
+
+    const certificateType = document.getElementById("certificateType");
+    if(certificateType && clearForm){
+        certificateType.value = "Certificato medico sportivo";
+    }
+
+    setText("certificateSubmitBtn", "Salva certificato");
+    document.getElementById("cancelCertificateEditBtn")?.classList.add("hidden");
+}
+
 async function handleAddCertificate(event){
     event.preventDefault();
+
+    if(!requireVerifiedEmail("la gestione dei certificati")){
+        return;
+    }
 
     const payload = {
         athlete_id: Number(document.getElementById("certificateAthleteId").value),
@@ -992,72 +1215,11 @@ async function handleAddCertificate(event){
     }
 }
 
-async function deleteAthlete(athleteId){
-    if(!confirm("Vuoi eliminare questo atleta? Se ha pagamenti o certificati collegati, il backend bloccherà l'eliminazione.")){
+async function markCertificateValid(certificateId){
+    if(!requireVerifiedEmail("la gestione dei certificati")){
         return;
     }
 
-    setDashboardMessage("Eliminazione atleta...", "info");
-
-    try{
-        await apiRequest(`/athletes/${athleteId}`, {
-            method: "DELETE"
-        });
-
-        if(openedAthleteId === athleteId){
-            closeAthleteDetail();
-        }
-
-        await refreshAll();
-        setDashboardMessage("Atleta eliminato.", "success");
-    }catch(error){
-        setDashboardMessage(error.message, "error");
-    }
-}
-
-async function markPaymentPaid(paymentId){
-    if(!confirm("Vuoi segnare questo pagamento come pagato?")) return;
-
-    setDashboardMessage("Aggiornamento pagamento...", "info");
-
-    try{
-        await apiRequest(`/payments/${paymentId}/mark-paid`, {
-            method: "PATCH"
-        });
-
-        if(editingPaymentId === paymentId){
-            resetPaymentForm();
-        }
-
-        await refreshAll();
-        setDashboardMessage("Pagamento segnato come pagato.", "success");
-    }catch(error){
-        setDashboardMessage(error.message, "error");
-    }
-}
-
-async function deletePayment(paymentId){
-    if(!confirm("Vuoi eliminare questo pagamento?")) return;
-
-    setDashboardMessage("Eliminazione pagamento...", "info");
-
-    try{
-        await apiRequest(`/payments/${paymentId}`, {
-            method: "DELETE"
-        });
-
-        if(editingPaymentId === paymentId){
-            resetPaymentForm();
-        }
-
-        await refreshAll();
-        setDashboardMessage("Pagamento eliminato.", "success");
-    }catch(error){
-        setDashboardMessage(error.message, "error");
-    }
-}
-
-async function markCertificateValid(certificateId){
     if(!confirm("Vuoi segnare questo certificato come valido?")) return;
 
     setDashboardMessage("Aggiornamento certificato...", "info");
@@ -1079,6 +1241,10 @@ async function markCertificateValid(certificateId){
 }
 
 async function deleteCertificate(certificateId){
+    if(!requireVerifiedEmail("l'eliminazione dei certificati")){
+        return;
+    }
+
     if(!confirm("Vuoi eliminare questo certificato?")) return;
 
     setDashboardMessage("Eliminazione certificato...", "info");
@@ -1098,6 +1264,10 @@ async function deleteCertificate(certificateId){
         setDashboardMessage(error.message, "error");
     }
 }
+
+/* =========================
+   Scheda atleta
+========================= */
 
 function openAthleteDetail(athleteId, scroll = true){
     const athlete = cachedAthletes.find(item => Number(item.id) === Number(athleteId));
@@ -1139,17 +1309,18 @@ function openAthleteDetail(athleteId, scroll = true){
 }
 
 function quickCreatePaymentForOpenedAthlete(){
+    if(!requireVerifiedEmail("il pagamento rapido")){
+        return;
+    }
+
     if(!openedAthleteId){
         setDashboardMessage("Apri prima una scheda atleta.", "error");
         return;
     }
 
-    const athlete = cachedAthletes.find(item => Number(item.id) === Number(openedAthleteId));
-
     resetPaymentForm();
 
     const select = document.getElementById("paymentAthleteId");
-
     if(select){
         select.value = String(openedAthleteId);
     }
@@ -1166,25 +1337,22 @@ function quickCreatePaymentForOpenedAthlete(){
     }
 
     document.getElementById("paymentsSection")?.scrollIntoView({ behavior:"smooth" });
-
-    setDashboardMessage(
-        `Pagamento rapido per ${athlete ? athlete.first_name + " " + athlete.last_name : "atleta selezionato"}.`,
-        "info"
-    );
+    setDashboardMessage("Pagamento rapido pronto per l'atleta selezionato.", "info");
 }
 
 function quickCreateCertificateForOpenedAthlete(){
+    if(!requireVerifiedEmail("il certificato rapido")){
+        return;
+    }
+
     if(!openedAthleteId){
         setDashboardMessage("Apri prima una scheda atleta.", "error");
         return;
     }
 
-    const athlete = cachedAthletes.find(item => Number(item.id) === Number(openedAthleteId));
-
     resetCertificateForm();
 
     const select = document.getElementById("certificateAthleteId");
-
     if(select){
         select.value = String(openedAthleteId);
     }
@@ -1201,11 +1369,7 @@ function quickCreateCertificateForOpenedAthlete(){
     }
 
     document.getElementById("certificatesSection")?.scrollIntoView({ behavior:"smooth" });
-
-    setDashboardMessage(
-        `Certificato rapido per ${athlete ? athlete.first_name + " " + athlete.last_name : "atleta selezionato"}.`,
-        "info"
-    );
+    setDashboardMessage("Certificato rapido pronto per l'atleta selezionato.", "info");
 }
 
 function closeAthleteDetail(){
@@ -1261,6 +1425,10 @@ function renderDetailCertificates(certificates){
         `;
     }).join("");
 }
+
+/* =========================
+   Utility stato e filtri
+========================= */
 
 function getAthleteAdminStatus(athlete){
     const payments = cachedPayments.filter(item => Number(item.athlete_id) === Number(athlete.id));
@@ -1322,6 +1490,7 @@ function getFilteredPayments(){
     return cachedPayments.filter(payment => {
         const athlete = getAthleteById(payment.athlete_id);
         const paymentState = getPaymentStatusKey(payment);
+
         const haystack = [
             athlete?.first_name,
             athlete?.last_name,
@@ -1331,11 +1500,9 @@ function getFilteredPayments(){
             payment.status
         ].join(" ").toLowerCase();
 
-        const matchesSearch = !search || haystack.includes(search);
-        const matchesGroup = !group || ((athlete?.group_name || "Senza gruppo") === group);
-        const matchesStatus = !statusFilter || paymentState === statusFilter;
-
-        return matchesSearch && matchesGroup && matchesStatus;
+        return (!search || haystack.includes(search)) &&
+               (!group || ((athlete?.group_name || "Senza gruppo") === group)) &&
+               (!statusFilter || paymentState === statusFilter);
     });
 }
 
@@ -1347,6 +1514,7 @@ function getFilteredCertificates(){
     return cachedCertificates.filter(cert => {
         const athlete = getAthleteById(cert.athlete_id);
         const status = getCertificateStatusKey(cert);
+
         const haystack = [
             athlete?.first_name,
             athlete?.last_name,
@@ -1355,11 +1523,9 @@ function getFilteredCertificates(){
             cert.status
         ].join(" ").toLowerCase();
 
-        const matchesSearch = !search || haystack.includes(search);
-        const matchesGroup = !group || ((athlete?.group_name || "Senza gruppo") === group);
-        const matchesStatus = !statusFilter || status === statusFilter;
-
-        return matchesSearch && matchesGroup && matchesStatus;
+        return (!search || haystack.includes(search)) &&
+               (!group || ((athlete?.group_name || "Senza gruppo") === group)) &&
+               (!statusFilter || status === statusFilter);
     });
 }
 
@@ -1446,6 +1612,10 @@ function getCertificateStatus(expiryDate){
 
     return { label:"Valido", className:"status-success" };
 }
+
+/* =========================
+   Export CSV
+========================= */
 
 function exportPaymentsCsv(){
     const rows = getFilteredPayments();
@@ -1550,6 +1720,10 @@ function escapeCsvCell(value){
     const escaped = raw.replaceAll('"', '""');
     return `"${escaped}"`;
 }
+
+/* =========================
+   Utility generali
+========================= */
 
 function getTodaySlug(){
     return new Date().toISOString().slice(0, 10);

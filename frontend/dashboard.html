@@ -52,6 +52,28 @@
 
             <div id="dashboardMessage" class="message hidden"></div>
 
+            <section id="emailVerificationBanner" class="panel hidden">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Sicurezza account</p>
+                        <h2>Email non verificata</h2>
+                        <p>
+                            Per usare le funzioni operative di ClubIQ devi verificare la tua email.
+                            Controlla la casella di posta oppure invia di nuovo il link di verifica.
+                        </p>
+                    </div>
+
+                    <button id="resendVerificationBtn" class="secondary-btn" type="button">
+                        Reinvia email verifica
+                    </button>
+                </div>
+
+                <div class="auth-note">
+                    <strong>Email account:</strong>
+                    <span id="currentUserEmail">Caricamento...</span>
+                </div>
+            </section>
+
             <section class="stats-grid">
                 <article class="stat-card">
                     <span>Atleti totali</span>
@@ -108,7 +130,6 @@
                     Link da inviare ai genitori
                     <input id="clubRegistrationLink" type="text" readonly value="Caricamento..." />
                 </label>
-
 
                 <form id="clubSettingsForm" class="grid-form">
                     <label>
