@@ -1,9 +1,9 @@
 /*
   ClubIQ Segreteria - API Client
-  V1.0
+  V1.1 Same-Origin Fix
 */
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = "";
 
 function getToken(){
     return localStorage.getItem("clubiq_token") || "";
