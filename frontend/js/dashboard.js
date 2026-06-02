@@ -34,6 +34,8 @@ function bindDashboardActions(){
     const quickPaymentBtn = document.getElementById("quickPaymentBtn");
     const quickCertificateBtn = document.getElementById("quickCertificateBtn");
     const copyRegistrationLinkBtn = document.getElementById("copyRegistrationLinkBtn");
+    const clubSettingsForm = document.getElementById("clubSettingsForm");
+    const regenerateClubCodeBtn = document.getElementById("regenerateClubCodeBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -120,6 +122,14 @@ function bindDashboardActions(){
         copyRegistrationLinkBtn.addEventListener("click", copyRegistrationLink);
     }
 
+    if(clubSettingsForm){
+        clubSettingsForm.addEventListener("submit", handleUpdateClubSettings);
+    }
+
+    if(regenerateClubCodeBtn){
+        regenerateClubCodeBtn.addEventListener("click", handleRegenerateClubCode);
+    }
+
     [athleteSearchInput, athleteGroupFilter, athleteStatusFilter].filter(Boolean).forEach(input => {
         input.addEventListener("input", renderAthletesList);
         input.addEventListener("change", renderAthletesList);
@@ -178,6 +188,7 @@ function renderClubRegistrationLink(){
 
     setText("clubNameBox", cachedClub.name || "Società");
     setText("clubPublicCodeBox", publicCode || "-");
+    fillClubSettingsForm();
 
     const input = document.getElementById("clubRegistrationLink");
     if(input){
@@ -200,6 +211,72 @@ async function copyRegistrationLink(){
         document.execCommand("copy");
         setDashboardMessage("Link iscrizione copiato.", "success");
     }
+}
+
+
+function fillClubSettingsForm(){
+    if(!cachedClub) return;
+
+    setInputValue("clubNameInput", cachedClub.name || "");
+    setInputValue("clubEmailInput", cachedClub.email || "");
+    setInputValue("clubPhoneInput", cachedClub.phone || "");
+    setInputValue("clubAddressInput", cachedClub.address || "");
+    setInputValue("clubPresidentInput", cachedClub.president || "");
+    setInputValue("clubSecretaryInput", cachedClub.secretary || "");
+}
+
+async function handleUpdateClubSettings(event){
+    event.preventDefault();
+
+    const payload = {
+        name: document.getElementById("clubNameInput").value.trim(),
+        email: document.getElementById("clubEmailInput").value.trim() || null,
+        phone: document.getElementById("clubPhoneInput").value.trim() || null,
+        address: document.getElementById("clubAddressInput").value.trim() || null,
+        president: document.getElementById("clubPresidentInput").value.trim() || null,
+        secretary: document.getElementById("clubSecretaryInput").value.trim() || null
+    };
+
+    if(!payload.name){
+        setDashboardMessage("Inserisci il nome società.", "error");
+        return;
+    }
+
+    setDashboardMessage("Salvataggio dati società...", "info");
+
+    try{
+        cachedClub = await apiRequest("/clubs/me", {
+            method: "PATCH",
+            body: JSON.stringify(payload)
+        });
+        renderClubRegistrationLink();
+        setDashboardMessage("Dati società aggiornati correttamente.", "success");
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
+}
+
+async function handleRegenerateClubCode(){
+    if(!confirm("Vuoi rigenerare il codice iscrizione partendo dal nome società attuale? Il vecchio link non sarà più valido.")){
+        return;
+    }
+
+    setDashboardMessage("Rigenerazione codice iscrizione...", "info");
+
+    try{
+        cachedClub = await apiRequest("/clubs/me/regenerate-code", {
+            method: "PATCH"
+        });
+        renderClubRegistrationLink();
+        setDashboardMessage("Codice iscrizione rigenerato. Copia il nuovo link e invialo ai genitori.", "success");
+    }catch(error){
+        setDashboardMessage(error.message, "error");
+    }
+}
+
+function setInputValue(id, value){
+    const el = document.getElementById(id);
+    if(el) el.value = value ?? "";
 }
 
 async function loadDashboard(){

@@ -18,32 +18,29 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def build_public_code(club_name: str) -> str:
-    """Create a clean public registration code from the club name."""
     normalized = unicodedata.normalize("NFKD", club_name or "")
     ascii_name = normalized.encode("ascii", "ignore").decode("ascii")
     code = re.sub(r"[^A-Za-z0-9]+", "", ascii_name).upper()
     return code[:24] or "CLUB"
 
 
-def make_unique_public_code(db: Session, club_name: str) -> str:
+def make_unique_public_code(db: Session, club_name: str, current_club_id: int | None = None) -> str:
     base_code = build_public_code(club_name)
     candidate = base_code
     counter = 2
 
-    while db.query(Club).filter(Club.public_code == candidate).first():
+    while True:
+        existing = db.query(Club).filter(Club.public_code == candidate).first()
+        if not existing or existing.id == current_club_id:
+            return candidate
+
         suffix = str(counter)
         candidate = f"{base_code[:24-len(suffix)]}{suffix}"
         counter += 1
 
-    return candidate
-
 
 @router.post("/signup", response_model=Token)
 def signup(user_in: UserCreate, db: Session = Depends(get_db)):
-    """
-    Register a new club and its first admin user (owner).
-    A unique public registration code is generated from the real club name.
-    """
     existing_club = db.query(Club).filter(Club.name == user_in.club_name).first()
     if existing_club:
         raise HTTPException(
@@ -87,7 +84,6 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(login_in: UserLogin, db: Session = Depends(get_db)):
-    """Authenticate a user and return a JWT token."""
     user = db.query(User).filter(User.username == login_in.username).first()
     if not user or not verify_password(login_in.password, user.hashed_password):
         raise HTTPException(

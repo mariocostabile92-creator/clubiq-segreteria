@@ -108,6 +108,49 @@
                     Link da inviare ai genitori
                     <input id="clubRegistrationLink" type="text" readonly value="Caricamento..." />
                 </label>
+
+
+                <form id="clubSettingsForm" class="grid-form">
+                    <label>
+                        Nome società
+                        <input id="clubNameInput" type="text" placeholder="Nome società" required />
+                    </label>
+
+                    <label>
+                        Email società
+                        <input id="clubEmailInput" type="email" placeholder="segreteria@societa.it" />
+                    </label>
+
+                    <label>
+                        Telefono
+                        <input id="clubPhoneInput" type="text" placeholder="Telefono società" />
+                    </label>
+
+                    <label>
+                        Indirizzo
+                        <input id="clubAddressInput" type="text" placeholder="Sede o campo sportivo" />
+                    </label>
+
+                    <label>
+                        Presidente
+                        <input id="clubPresidentInput" type="text" placeholder="Nome presidente" />
+                    </label>
+
+                    <label>
+                        Segretario
+                        <input id="clubSecretaryInput" type="text" placeholder="Nome segretario" />
+                    </label>
+
+                    <div class="form-actions full">
+                        <button id="saveClubSettingsBtn" class="primary-btn" type="submit">
+                            Salva dati società
+                        </button>
+
+                        <button id="regenerateClubCodeBtn" class="secondary-btn" type="button">
+                            Rigenera codice dal nome
+                        </button>
+                    </div>
+                </form>
             </section>
 
             <section id="parentRequestsSection" class="panel">
