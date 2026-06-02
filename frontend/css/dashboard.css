@@ -556,3 +556,47 @@ body{
         font-size:30px;
     }
 }
+
+
+/* ================================
+   Link iscrizione professionale
+================================ */
+
+.club-link-heading{
+    align-items:flex-start;
+}
+
+.club-link-description{
+    margin:8px 0 0;
+    max-width:680px;
+    color:var(--muted);
+    line-height:1.5;
+    font-weight:800;
+}
+
+.club-link-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+#clubRegistrationLink{
+    font-weight:800;
+    color:#1d4ed8;
+    background:#f8fafc;
+}
+
+@media (max-width: 760px){
+    .club-link-actions{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr;
+    }
+
+    .club-link-actions .primary-btn,
+    .club-link-actions .secondary-btn{
+        width:100%;
+    }
+}

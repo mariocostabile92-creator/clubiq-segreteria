@@ -35,6 +35,7 @@ function bindDashboardActions(){
     const quickPaymentBtn = document.getElementById("quickPaymentBtn");
     const quickCertificateBtn = document.getElementById("quickCertificateBtn");
     const copyRegistrationLinkBtn = document.getElementById("copyRegistrationLinkBtn");
+    const openRegistrationLinkBtn = document.getElementById("openRegistrationLinkBtn");
     const clubSettingsForm = document.getElementById("clubSettingsForm");
     const regenerateClubCodeBtn = document.getElementById("regenerateClubCodeBtn");
     const resendVerificationBtn = document.getElementById("resendVerificationBtn");
@@ -131,6 +132,10 @@ function bindDashboardActions(){
 
     if(copyRegistrationLinkBtn){
         copyRegistrationLinkBtn.addEventListener("click", copyRegistrationLink);
+    }
+
+    if(openRegistrationLinkBtn){
+        openRegistrationLinkBtn.addEventListener("click", openRegistrationLink);
     }
 
     if(clubSettingsForm){
@@ -319,19 +324,47 @@ function renderClubRegistrationLink(){
     }
 }
 
+function getRegistrationLinkValue(){
+    const input = document.getElementById("clubRegistrationLink");
+
+    if(!input || !input.value || input.value.includes("non disponibile") || input.value.includes("Caricamento")){
+        return null;
+    }
+
+    return input.value;
+}
+
+function openRegistrationLink(){
+    if(!requireVerifiedEmail("il modulo iscrizione genitori")){
+        return;
+    }
+
+    const link = getRegistrationLinkValue();
+
+    if(!link){
+        setDashboardMessage("Link iscrizione non disponibile.", "error");
+        return;
+    }
+
+    window.open(link, "_blank", "noopener,noreferrer");
+    setDashboardMessage("Modulo iscrizione aperto in una nuova scheda.", "success");
+}
+
 async function copyRegistrationLink(){
     if(!requireVerifiedEmail("il link iscrizione genitori")){
         return;
     }
 
     const input = document.getElementById("clubRegistrationLink");
-    if(!input || !input.value || input.value.includes("non disponibile")){
+    const link = getRegistrationLinkValue();
+
+    if(!input || !link){
         setDashboardMessage("Link iscrizione non disponibile.", "error");
         return;
     }
 
     try{
-        await navigator.clipboard.writeText(input.value);
+        await navigator.clipboard.writeText(link);
         setDashboardMessage("Link iscrizione copiato. Puoi inviarlo ai genitori.", "success");
     }catch(error){
         input.select();
