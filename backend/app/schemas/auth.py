@@ -10,6 +10,19 @@ class MessageResponse(BaseModel):
     message: str
 
 
+class AuthMeResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    role: str
+    club_id: int
+    email_verified: bool
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
 class UserCreate(BaseModel):
     club_name: str = Field(min_length=2)
     username: str = Field(min_length=3)
@@ -22,11 +35,11 @@ class UserLogin(BaseModel):
     password: str
 
 
-class ResetPasswordRequest(BaseModel):
+class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 
-class ForgotPasswordRequest(BaseModel):
+class ResetPasswordRequest(BaseModel):
     email: EmailStr
 
 
