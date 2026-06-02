@@ -39,22 +39,10 @@
             </div>
 
             <div class="hero-grid landing-feature-grid">
-                <div>
-                    <strong>Atleti ordinati</strong>
-                    <span>Anagrafiche, gruppi, contatti genitori e note sempre consultabili.</span>
-                </div>
-                <div>
-                    <strong>Quote sotto controllo</strong>
-                    <span>Incassato, residuo, scaduti e pagamenti registrati in pochi click.</span>
-                </div>
-                <div>
-                    <strong>Certificati monitorati</strong>
-                    <span>Scadenze mediche e documenti visibili dalla stessa dashboard.</span>
-                </div>
-                <div>
-                    <strong>Richieste genitori</strong>
-                    <span>Il genitore compila online, la segreteria approva e crea l’atleta.</span>
-                </div>
+                <div><strong>Atleti ordinati</strong><span>Anagrafiche, gruppi, contatti genitori e note sempre consultabili.</span></div>
+                <div><strong>Quote sotto controllo</strong><span>Incassato, residuo, scaduti e pagamenti registrati in pochi click.</span></div>
+                <div><strong>Certificati monitorati</strong><span>Scadenze mediche e documenti visibili dalla stessa dashboard.</span></div>
+                <div><strong>Richieste genitori</strong><span>Il genitore compila online, la segreteria approva e crea l’atleta.</span></div>
             </div>
 
             <div class="trust-strip">
@@ -79,50 +67,40 @@
             <div id="authMessage" class="message hidden"></div>
 
             <form id="loginForm" class="auth-form">
-                <div id="loginPanel">
-                    <label>
-                        Username
-                        <input id="loginUsername" type="text" placeholder="username" required />
-                    </label>
-
-                    <label>
-                        Password
-                        <input id="loginPassword" type="password" placeholder="Password" required />
-                    </label>
-
-                    <button class="primary-btn" type="submit">Entra nella dashboard</button>
-                </div>
+                <label>Username o email<input id="loginUsername" type="text" placeholder="username o email" required /></label>
+                <label>Password<input id="loginPassword" type="password" placeholder="Password" required /></label>
+                <button class="primary-btn" type="submit">Entra nella dashboard</button>
+                <button id="showForgotPasswordBtn" class="ghost-btn" type="button">Password dimenticata?</button>
             </form>
 
             <form id="signupForm" class="auth-form hidden">
-                <div id="signupPanel">
-                    <label>
-                        Nome società
-                        <input id="signupClubName" type="text" placeholder="Nome reale della società" required />
-                    </label>
+                <label>Nome società<input id="signupClubName" type="text" placeholder="Nome reale della società" required /></label>
+                <label>Username admin<input id="signupUsername" type="text" placeholder="username amministratore" required /></label>
+                <label>Email<input id="signupEmail" type="email" placeholder="segreteria@societa.it" required /></label>
+                <label>Password<input id="signupPassword" type="password" placeholder="Almeno 8 caratteri" minlength="8" required /></label>
+                <button class="primary-btn" type="submit">Crea società</button>
+            </form>
 
-                    <label>
-                        Username admin
-                        <input id="signupUsername" type="text" placeholder="username amministratore" required />
-                    </label>
+            <form id="forgotPasswordForm" class="auth-form hidden">
+                <h3>Recupera password</h3>
+                <p class="form-help">Inserisci l'email del tuo account. Ti invieremo un link sicuro per impostare una nuova password.</p>
+                <label>Email account<input id="forgotPasswordEmail" type="email" placeholder="segreteria@societa.it" required /></label>
+                <button class="primary-btn" type="submit">Invia link reset</button>
+                <button class="ghost-btn" type="button" data-auth-back-login>Torna al login</button>
+            </form>
 
-                    <label>
-                        Email
-                        <input id="signupEmail" type="email" placeholder="segreteria@societa.it" required />
-                    </label>
-
-                    <label>
-                        Password
-                        <input id="signupPassword" type="password" placeholder="Password sicura" required />
-                    </label>
-
-                    <button class="primary-btn" type="submit">Crea società</button>
-                </div>
+            <form id="resetPasswordForm" class="auth-form hidden">
+                <h3>Nuova password</h3>
+                <input id="resetPasswordToken" type="hidden" />
+                <label>Nuova password<input id="resetNewPassword" type="password" minlength="8" placeholder="Almeno 8 caratteri" required /></label>
+                <label>Conferma password<input id="resetConfirmPassword" type="password" minlength="8" placeholder="Ripeti la password" required /></label>
+                <button class="primary-btn" type="submit">Aggiorna password</button>
+                <button class="ghost-btn" type="button" data-auth-back-login>Torna al login</button>
             </form>
 
             <div class="auth-note">
-                <strong>Per i genitori:</strong>
-                il link iscrizione viene generato nella dashboard della società.
+                <strong>Email e sicurezza:</strong>
+                dopo la registrazione riceverai una mail di verifica. Il link iscrizione viene generato nella dashboard della società.
             </div>
         </section>
     </main>

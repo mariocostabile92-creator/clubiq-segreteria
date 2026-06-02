@@ -1,60 +1,87 @@
 /*
   ClubIQ Segreteria - Auth
-  V1.2 Emergency Stable
+  V2.0 Brevo Email Verification + Password Reset
 */
 
 document.addEventListener("DOMContentLoaded", () => {
-    const loginForm = document.getElementById("loginForm");
-    const signupForm = document.getElementById("signupForm");
-    const showLoginBtn = document.getElementById("showLogin");
-    const showSignupBtn = document.getElementById("showSignup");
-
-    if(showLoginBtn){
-        showLoginBtn.addEventListener("click", () => {
-            showAuthPanel("login");
-        });
-    }
-
-    if(showSignupBtn){
-        showSignupBtn.addEventListener("click", () => {
-            showAuthPanel("signup");
-        });
-    }
-
-    if(loginForm){
-        loginForm.addEventListener("submit", handleLogin);
-    }
-
-    if(signupForm){
-        signupForm.addEventListener("submit", handleSignup);
-    }
-
-    showAuthPanel("login");
+    bindAuthActions();
+    handleAuthQueryParams();
 });
 
-function showAuthPanel(type){
+function bindAuthActions(){
     const loginForm = document.getElementById("loginForm");
     const signupForm = document.getElementById("signupForm");
+    const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+    const resetPasswordForm = document.getElementById("resetPasswordForm");
     const showLoginBtn = document.getElementById("showLogin");
     const showSignupBtn = document.getElementById("showSignup");
+    const showForgotPasswordBtn = document.getElementById("showForgotPasswordBtn");
+    const backToLoginBtns = document.querySelectorAll("[data-auth-back-login]");
 
-    if(!loginForm || !signupForm) return;
+    if(showLoginBtn) showLoginBtn.addEventListener("click", () => showAuthPanel("login"));
+    if(showSignupBtn) showSignupBtn.addEventListener("click", () => showAuthPanel("signup"));
+    if(showForgotPasswordBtn) showForgotPasswordBtn.addEventListener("click", () => showAuthPanel("forgot"));
 
-    if(type === "login"){
-        loginForm.classList.remove("hidden");
-        signupForm.classList.add("hidden");
+    backToLoginBtns.forEach(btn => btn.addEventListener("click", () => showAuthPanel("login")));
 
-        if(showLoginBtn) showLoginBtn.classList.add("active");
-        if(showSignupBtn) showSignupBtn.classList.remove("active");
-    }else{
-        signupForm.classList.remove("hidden");
-        loginForm.classList.add("hidden");
+    if(loginForm) loginForm.addEventListener("submit", handleLogin);
+    if(signupForm) signupForm.addEventListener("submit", handleSignup);
+    if(forgotPasswordForm) forgotPasswordForm.addEventListener("submit", handleForgotPassword);
+    if(resetPasswordForm) resetPasswordForm.addEventListener("submit", handleResetPassword);
 
-        if(showSignupBtn) showSignupBtn.classList.add("active");
-        if(showLoginBtn) showLoginBtn.classList.remove("active");
+    showAuthPanel("login");
+}
+
+async function handleAuthQueryParams(){
+    const params = new URLSearchParams(window.location.search);
+    const verifyToken = params.get("verify_token");
+    const resetToken = params.get("reset_token");
+
+    if(verifyToken){
+        setAuthMessage("Verifica email in corso...", "info");
+        try{
+            const data = await apiRequest("/auth/verify-email", {
+                method: "POST",
+                body: JSON.stringify({ token: verifyToken })
+            });
+            cleanAuthUrl();
+            showAuthPanel("login");
+            setAuthMessage(data.message || "Email verificata. Ora puoi accedere.", "success");
+        }catch(error){
+            cleanAuthUrl();
+            showAuthPanel("login");
+            setAuthMessage(error.message || "Link verifica email non valido o scaduto.", "error");
+        }
+        return;
     }
 
-    clearAuthMessage();
+    if(resetToken){
+        const tokenInput = document.getElementById("resetPasswordToken");
+        if(tokenInput) tokenInput.value = resetToken;
+        showAuthPanel("reset");
+        setAuthMessage("Imposta la nuova password per completare il reset.", "info");
+    }
+}
+
+function cleanAuthUrl(){
+    window.history.replaceState({}, document.title, window.location.pathname + "#accesso");
+}
+
+function showAuthPanel(type){
+    const panels = {
+        login: document.getElementById("loginForm"),
+        signup: document.getElementById("signupForm"),
+        forgot: document.getElementById("forgotPasswordForm"),
+        reset: document.getElementById("resetPasswordForm")
+    };
+
+    Object.values(panels).forEach(panel => panel?.classList.add("hidden"));
+    panels[type]?.classList.remove("hidden");
+
+    document.getElementById("showLogin")?.classList.toggle("active", type === "login");
+    document.getElementById("showSignup")?.classList.toggle("active", type === "signup");
+
+    if(type !== "reset") clearAuthMessage();
 }
 
 async function handleLogin(event){
@@ -64,7 +91,7 @@ async function handleLogin(event){
     const password = document.getElementById("loginPassword").value.trim();
 
     if(!username || !password){
-        setAuthMessage("Inserisci username e password.", "error");
+        setAuthMessage("Inserisci username/email e password.", "error");
         return;
     }
 
@@ -78,7 +105,6 @@ async function handleLogin(event){
 
         setToken(data.access_token);
         setAuthMessage("Login effettuato. Apro la dashboard...", "success");
-
         window.location.assign("/dashboard.html");
     }catch(error){
         setAuthMessage(error.message || "Credenziali non valide.", "error");
@@ -98,25 +124,83 @@ async function handleSignup(event){
         return;
     }
 
-    setAuthMessage("Creazione società in corso...", "info");
+    if(password.length < 8){
+        setAuthMessage("La password deve contenere almeno 8 caratteri.", "error");
+        return;
+    }
+
+    setAuthMessage("Creazione società e invio email di verifica...", "info");
 
     try{
         const data = await apiRequest("/auth/signup", {
             method: "POST",
-            body: JSON.stringify({
-                club_name,
-                username,
-                email,
-                password
-            })
+            body: JSON.stringify({ club_name, username, email, password })
         });
 
         setToken(data.access_token);
-        setAuthMessage("Società creata. Apro la dashboard...", "success");
-
+        setAuthMessage("Società creata. Ti abbiamo inviato una email di verifica. Apro la dashboard...", "success");
         window.location.assign("/dashboard.html");
     }catch(error){
         setAuthMessage(error.message || "Errore durante la creazione della società.", "error");
+    }
+}
+
+async function handleForgotPassword(event){
+    event.preventDefault();
+
+    const email = document.getElementById("forgotPasswordEmail").value.trim();
+    if(!email){
+        setAuthMessage("Inserisci la tua email.", "error");
+        return;
+    }
+
+    setAuthMessage("Invio link reset password...", "info");
+
+    try{
+        const data = await apiRequest("/auth/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({ email })
+        });
+        setAuthMessage(data.message || "Controlla la tua email.", "success");
+    }catch(error){
+        setAuthMessage(error.message || "Errore durante l'invio del reset password.", "error");
+    }
+}
+
+async function handleResetPassword(event){
+    event.preventDefault();
+
+    const token = document.getElementById("resetPasswordToken").value.trim();
+    const new_password = document.getElementById("resetNewPassword").value.trim();
+    const confirmPassword = document.getElementById("resetConfirmPassword").value.trim();
+
+    if(!token || !new_password){
+        setAuthMessage("Link reset non valido o password mancante.", "error");
+        return;
+    }
+
+    if(new_password.length < 8){
+        setAuthMessage("La nuova password deve contenere almeno 8 caratteri.", "error");
+        return;
+    }
+
+    if(new_password !== confirmPassword){
+        setAuthMessage("Le password non coincidono.", "error");
+        return;
+    }
+
+    setAuthMessage("Aggiornamento password...", "info");
+
+    try{
+        const data = await apiRequest("/auth/reset-password", {
+            method: "POST",
+            body: JSON.stringify({ token, new_password })
+        });
+        cleanAuthUrl();
+        showAuthPanel("login");
+        setAuthMessage(data.message || "Password aggiornata. Ora puoi accedere.", "success");
+    }catch(error){
+        setAuthMessage(error.message || "Errore durante il reset password.", "error");
     }
 }
 
