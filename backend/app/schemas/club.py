@@ -16,3 +16,15 @@ class ClubOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ClubUpdate(BaseModel):
+    """Pydantic schema for updating club information."""
+
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    address: str | None = None
+    president: str | None = None
+    secretary: str | None = None
+    regenerate_public_code: bool = False
