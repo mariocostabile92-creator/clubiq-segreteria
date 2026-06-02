@@ -1,8 +1,6 @@
 /*
   ClubIQ Segreteria - Iscrizione Genitore Pubblica
-  V1.2
-  Crea richieste iscrizione senza login usando codice società.
-  Include link certificato medico e ricevuta pagamento.
+  V1.3 Product Links
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -53,7 +51,7 @@ async function handleParentRequestSubmit(event){
     };
 
     if(!payload.club_code){
-        setRequestMessage("Inserisci il codice società.", "error");
+        setRequestMessage("Inserisci il codice società fornito dalla segreteria.", "error");
         return;
     }
 
@@ -77,7 +75,7 @@ async function handleParentRequestSubmit(event){
         });
 
         const usedCode = payload.club_code;
-        clearParentRequestForm();
+        clearParentRequestForm(false);
 
         const clubCodeInput = document.getElementById("clubCode");
         if(clubCodeInput){
@@ -111,14 +109,16 @@ async function publicApiRequest(path, options = {}){
     return data;
 }
 
-function clearParentRequestForm(){
+function clearParentRequestForm(showMessage = true){
     const form = document.getElementById("parentRequestForm");
 
     if(form){
         form.reset();
     }
 
-    setRequestMessage("Modulo pulito.", "info");
+    if(showMessage){
+        setRequestMessage("Modulo pulito.", "info");
+    }
 }
 
 function setSubmitLoading(isLoading){

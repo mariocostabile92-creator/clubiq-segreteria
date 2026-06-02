@@ -8,6 +8,7 @@ let cachedAthletes = [];
 let cachedPayments = [];
 let cachedCertificates = [];
 let cachedParentRequests = [];
+let cachedClub = null;
 let openedAthleteId = null;
 let editingAthleteId = null;
 let editingPaymentId = null;
@@ -32,6 +33,7 @@ function bindDashboardActions(){
     const closeAthleteDetailBtn = document.getElementById("closeAthleteDetailBtn");
     const quickPaymentBtn = document.getElementById("quickPaymentBtn");
     const quickCertificateBtn = document.getElementById("quickCertificateBtn");
+    const copyRegistrationLinkBtn = document.getElementById("copyRegistrationLinkBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -114,6 +116,10 @@ function bindDashboardActions(){
         quickCertificateBtn.addEventListener("click", quickCreateCertificateForOpenedAthlete);
     }
 
+    if(copyRegistrationLinkBtn){
+        copyRegistrationLinkBtn.addEventListener("click", copyRegistrationLink);
+    }
+
     [athleteSearchInput, athleteGroupFilter, athleteStatusFilter].filter(Boolean).forEach(input => {
         input.addEventListener("input", renderAthletesList);
         input.addEventListener("change", renderAthletesList);
@@ -131,6 +137,7 @@ function bindDashboardActions(){
 }
 
 async function refreshAll(){
+    await loadMyClub();
     await loadDashboard();
     await loadAthletesPreview();
     await loadPaymentsList();
@@ -143,6 +150,55 @@ async function refreshAll(){
 
     if(openedAthleteId){
         openAthleteDetail(openedAthleteId, false);
+    }
+}
+
+
+async function loadMyClub(){
+    try{
+        cachedClub = await apiRequest("/clubs/me");
+        renderClubRegistrationLink();
+    }catch(error){
+        setText("clubNameBox", "Società non disponibile");
+        setText("clubPublicCodeBox", "-");
+        const input = document.getElementById("clubRegistrationLink");
+        if(input){
+            input.value = "Link non disponibile";
+        }
+    }
+}
+
+function renderClubRegistrationLink(){
+    if(!cachedClub) return;
+
+    const publicCode = cachedClub.public_code || "";
+    const link = publicCode
+        ? `${window.location.origin}/iscrizione.html?club=${encodeURIComponent(publicCode)}`
+        : "Codice iscrizione non disponibile";
+
+    setText("clubNameBox", cachedClub.name || "Società");
+    setText("clubPublicCodeBox", publicCode || "-");
+
+    const input = document.getElementById("clubRegistrationLink");
+    if(input){
+        input.value = link;
+    }
+}
+
+async function copyRegistrationLink(){
+    const input = document.getElementById("clubRegistrationLink");
+    if(!input || !input.value || input.value.includes("non disponibile")){
+        setDashboardMessage("Link iscrizione non disponibile.", "error");
+        return;
+    }
+
+    try{
+        await navigator.clipboard.writeText(input.value);
+        setDashboardMessage("Link iscrizione copiato. Puoi inviarlo ai genitori.", "success");
+    }catch(error){
+        input.select();
+        document.execCommand("copy");
+        setDashboardMessage("Link iscrizione copiato.", "success");
     }
 }
 

@@ -2,9 +2,7 @@ from pydantic import BaseModel
 
 
 class ClubOut(BaseModel):
-    """
-    Pydantic schema for returning basic club information.
-    """
+    """Pydantic schema for returning basic club information."""
 
     id: int
     name: str

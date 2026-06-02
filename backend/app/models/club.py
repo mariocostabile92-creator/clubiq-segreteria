@@ -19,7 +19,7 @@ class Club(Base):
     name = Column(String, nullable=False, index=True)
 
     # Public code used by parents to submit registration requests.
-    # Example: ARCO2026, CLUBIQTEST, GSARCO.
+    # Generated automatically from the real club name at signup.
     public_code = Column(String, nullable=True, unique=True, index=True)
 
     logo = Column(String, nullable=True)

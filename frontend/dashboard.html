@@ -28,6 +28,7 @@
 
             <nav class="side-nav">
                 <a class="active" href="#top">Dashboard</a>
+                <a href="#clubRegistrationSection">Link iscrizione</a>
                 <a href="#parentRequestsSection">Richieste</a>
                 <a href="#athletesSection">Atleti</a>
                 <a href="#addAthleteSection">Nuovo atleta</a>
@@ -83,7 +84,31 @@
                 </article>
             </section>
 
+            <section id="clubRegistrationSection" class="panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Iscrizioni online</p>
+                        <h2>Link iscrizione della società</h2>
+                    </div>
+                    <button id="copyRegistrationLinkBtn" class="secondary-btn" type="button">Copia link</button>
+                </div>
 
+                <div class="detail-grid">
+                    <article class="detail-box">
+                        <span>Società</span>
+                        <strong id="clubNameBox">Caricamento...</strong>
+                    </article>
+                    <article class="detail-box">
+                        <span>Codice iscrizione</span>
+                        <strong id="clubPublicCodeBox">-</strong>
+                    </article>
+                </div>
+
+                <label class="full">
+                    Link da inviare ai genitori
+                    <input id="clubRegistrationLink" type="text" readonly value="Caricamento..." />
+                </label>
+            </section>
 
             <section id="parentRequestsSection" class="panel">
                 <div class="section-heading">
@@ -92,7 +117,9 @@
                         <h2>Richieste genitori da verificare</h2>
                     </div>
 
-                    <button id="refreshParentRequestsBtn" class="secondary-btn" type="button">Aggiorna richieste</button>
+                    <button id="refreshParentRequestsBtn" class="secondary-btn" type="button">
+                        Aggiorna richieste
+                    </button>
                 </div>
 
                 <div class="request-summary-grid">
@@ -136,7 +163,9 @@
                     </div>
                 </div>
 
-                <div id="parentRequestsFilterSummary" class="filter-summary">Richieste visualizzate: 0</div>
+                <div id="parentRequestsFilterSummary" class="filter-summary">
+                    Richieste visualizzate: 0
+                </div>
 
                 <div id="parentRequestsList" class="records-list">
                     <div class="empty">Caricamento richieste...</div>
@@ -190,248 +219,101 @@
                 </div>
 
                 <form id="addAthleteForm" class="grid-form">
-                    <label>
-                        Nome
-                        <input id="athleteFirstName" type="text" required />
-                    </label>
-
-                    <label>
-                        Cognome
-                        <input id="athleteLastName" type="text" required />
-                    </label>
-
-                    <label>
-                        Data nascita
-                        <input id="athleteBirthDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Gruppo
-                        <input id="athleteGroup" type="text" placeholder="Under 12" />
-                    </label>
-
-                    <label>
-                        Telefono atleta
-                        <input id="athletePhone" type="text" />
-                    </label>
-
-                    <label>
-                        Email atleta
-                        <input id="athleteEmail" type="email" />
-                    </label>
-
-                    <label>
-                        Genitore
-                        <input id="parentName" type="text" />
-                    </label>
-
-                    <label>
-                        Telefono genitore
-                        <input id="parentPhone" type="text" />
-                    </label>
-
-                    <label>
-                        Email genitore
-                        <input id="parentEmail" type="email" />
-                    </label>
-
-                    <label class="full">
-                        Note
-                        <textarea id="athleteNotes" rows="3"></textarea>
-                    </label>
-
+                    <label>Nome<input id="athleteFirstName" type="text" required /></label>
+                    <label>Cognome<input id="athleteLastName" type="text" required /></label>
+                    <label>Data nascita<input id="athleteBirthDate" type="date" required /></label>
+                    <label>Gruppo<input id="athleteGroup" type="text" placeholder="Under 12" /></label>
+                    <label>Telefono atleta<input id="athletePhone" type="text" /></label>
+                    <label>Email atleta<input id="athleteEmail" type="email" /></label>
+                    <label>Genitore<input id="parentName" type="text" /></label>
+                    <label>Telefono genitore<input id="parentPhone" type="text" /></label>
+                    <label>Email genitore<input id="parentEmail" type="email" /></label>
+                    <label class="full">Note<textarea id="athleteNotes" rows="3"></textarea></label>
                     <button class="primary-btn full" type="submit">Salva atleta</button>
                 </form>
             </section>
 
             <section id="paymentsSection" class="panel">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Amministrazione</p>
-                        <h2>Pagamenti quote</h2>
-                    </div>
-                </div>
-
+                <div class="section-heading"><div><p class="eyebrow">Amministrazione</p><h2>Pagamenti quote</h2></div></div>
                 <form id="addPaymentForm" class="grid-form">
-                    <label>
-                        Atleta
-                        <select id="paymentAthleteId" required>
-                            <option value="">Seleziona atleta</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Quota dovuta
-                        <input id="paymentAmountDue" type="number" min="0" step="0.01" required />
-                    </label>
-
-                    <label>
-                        Importo pagato
-                        <input id="paymentAmountPaid" type="number" min="0" step="0.01" value="0" />
-                    </label>
-
-                    <label>
-                        Scadenza
-                        <input id="paymentDueDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Stato
-                        <select id="paymentStatus">
-                            <option value="pending">Da completare</option>
-                            <option value="paid">Pagato</option>
-                            <option value="overdue">Scaduto</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Metodo
-                        <input id="paymentMethod" type="text" placeholder="Bonifico, contanti..." />
-                    </label>
-
-                    <label class="full">
-                        Note pagamento
-                        <textarea id="paymentNotes" rows="3"></textarea>
-                    </label>
-
-                    <button class="primary-btn full" type="submit">Salva pagamento</button>
+                    <label>Atleta<select id="paymentAthleteId" required><option value="">Seleziona atleta</option></select></label>
+                    <label>Quota dovuta<input id="paymentAmountDue" type="number" min="0" step="0.01" required /></label>
+                    <label>Importo pagato<input id="paymentAmountPaid" type="number" min="0" step="0.01" value="0" /></label>
+                    <label>Scadenza<input id="paymentDueDate" type="date" required /></label>
+                    <label>Stato<select id="paymentStatus"><option value="pending">Da completare</option><option value="paid">Pagato</option><option value="overdue">Scaduto</option></select></label>
+                    <label>Metodo<input id="paymentMethod" type="text" placeholder="Bonifico, contanti..." /></label>
+                    <label class="full">Note pagamento<textarea id="paymentNotes" rows="3"></textarea></label>
+                    <button id="paymentSubmitBtn" class="primary-btn full" type="submit">Salva pagamento</button>
+                    <button id="cancelPaymentEditBtn" class="secondary-btn full hidden" type="button">Annulla modifica pagamento</button>
                 </form>
 
                 <div class="subsection">
-                    <h3>Pagamenti registrati</h3>
-                    <div id="paymentsList" class="records-list">
-                        <div class="empty">Caricamento...</div>
+                    <div class="subsection-title-row">
+                        <h3>Pagamenti registrati</h3>
+                        <button id="exportPaymentsCsvBtn" class="secondary-btn" type="button">Esporta pagamenti CSV</button>
                     </div>
+                    <div id="paymentsFilterSummary" class="filter-summary"></div>
+                    <div id="paymentsList" class="records-list"><div class="empty">Caricamento...</div></div>
                 </div>
             </section>
 
             <section id="certificatesSection" class="panel">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Documenti</p>
-                        <h2>Certificati medici</h2>
-                    </div>
-                </div>
-
+                <div class="section-heading"><div><p class="eyebrow">Documenti</p><h2>Certificati medici</h2></div></div>
                 <form id="addCertificateForm" class="grid-form">
-                    <label>
-                        Atleta
-                        <select id="certificateAthleteId" required>
-                            <option value="">Seleziona atleta</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Tipo certificato
-                        <input id="certificateType" type="text" value="Certificato medico sportivo" required />
-                    </label>
-
-                    <label>
-                        Data rilascio
-                        <input id="certificateIssueDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Data scadenza
-                        <input id="certificateExpiryDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Stato
-                        <select id="certificateStatus">
-                            <option value="valid">Valido</option>
-                            <option value="expiring">In scadenza</option>
-                            <option value="expired">Scaduto</option>
-                        </select>
-                    </label>
-
-                    <button class="primary-btn full" type="submit">Salva certificato</button>
+                    <label>Atleta<select id="certificateAthleteId" required><option value="">Seleziona atleta</option></select></label>
+                    <label>Tipo certificato<input id="certificateType" type="text" value="Certificato medico sportivo" required /></label>
+                    <label>Data rilascio<input id="certificateIssueDate" type="date" required /></label>
+                    <label>Data scadenza<input id="certificateExpiryDate" type="date" required /></label>
+                    <label>Stato<select id="certificateStatus"><option value="valid">Valido</option><option value="expiring">In scadenza</option><option value="expired">Scaduto</option></select></label>
+                    <button id="certificateSubmitBtn" class="primary-btn full" type="submit">Salva certificato</button>
+                    <button id="cancelCertificateEditBtn" class="secondary-btn full hidden" type="button">Annulla modifica certificato</button>
                 </form>
 
                 <div class="subsection">
-                    <h3>Certificati registrati</h3>
-                    <div id="certificatesList" class="records-list">
-                        <div class="empty">Caricamento...</div>
+                    <div class="subsection-title-row">
+                        <h3>Certificati registrati</h3>
+                        <button id="exportCertificatesCsvBtn" class="secondary-btn" type="button">Esporta certificati CSV</button>
                     </div>
+                    <div id="certificatesFilterSummary" class="filter-summary"></div>
+                    <div id="certificatesList" class="records-list"><div class="empty">Caricamento...</div></div>
                 </div>
             </section>
-<section id="athleteDetailSection" class="panel hidden">
-    <div class="section-heading">
-        <div>
-            <p class="eyebrow">Scheda atleta</p>
-            <h2 id="detailAthleteName">Atleta</h2>
-        </div>
 
-        <div class="detail-actions">
-            <button id="quickPaymentBtn" class="secondary-btn" type="button">
-                + Nuovo pagamento
-            </button>
-
-            <button id="quickCertificateBtn" class="secondary-btn" type="button">
-                + Nuovo certificato
-            </button>
-
-            <button id="closeAthleteDetailBtn" class="secondary-btn" type="button">
-                Chiudi scheda
-            </button>
-        </div>
-    </div>
-
-    <div class="detail-grid">
-        <article class="detail-box">
-            <span>Gruppo</span>
-            <strong id="detailAthleteGroup">-</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Data nascita</span>
-            <strong id="detailAthleteBirth">-</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Contatto principale</span>
-            <strong id="detailAthleteContact">-</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Residuo quote</span>
-            <strong id="detailAthleteResiduo">0,00 €</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Certificato</span>
-            <strong id="detailAthleteCertificate">-</strong>
-        </article>
-    </div>
-
-    <div class="detail-columns">
-        <div>
-            <h3>Pagamenti collegati</h3>
-            <div id="detailPaymentsList" class="records-list">
-                <div class="empty">Nessun pagamento collegato.</div>
-            </div>
-        </div>
-
-        <div>
-            <h3>Certificati collegati</h3>
-            <div id="detailCertificatesList" class="records-list">
-                <div class="empty">Nessun certificato collegato.</div>
-            </div>
-        </div>
-    </div>
-</section>
+            <section id="athleteDetailSection" class="panel hidden">
+                <div class="section-heading">
+                    <div><p class="eyebrow">Scheda atleta</p><h2 id="detailAthleteName">Atleta</h2></div>
+                    <div class="detail-actions">
+                        <button id="quickPaymentBtn" class="secondary-btn" type="button">+ Nuovo pagamento</button>
+                        <button id="quickCertificateBtn" class="secondary-btn" type="button">+ Nuovo certificato</button>
+                        <button id="closeAthleteDetailBtn" class="secondary-btn" type="button">Chiudi scheda</button>
+                    </div>
+                </div>
+                <div class="detail-grid">
+                    <article class="detail-box"><span>Gruppo</span><strong id="detailAthleteGroup">-</strong></article>
+                    <article class="detail-box"><span>Data nascita</span><strong id="detailAthleteBirth">-</strong></article>
+                    <article class="detail-box"><span>Contatto principale</span><strong id="detailAthleteContact">-</strong></article>
+                    <article class="detail-box"><span>Residuo quote</span><strong id="detailAthleteResiduo">0,00 €</strong></article>
+                    <article class="detail-box"><span>Certificato</span><strong id="detailAthleteCertificate">-</strong></article>
+                </div>
+                <div class="detail-columns">
+                    <div><h3>Pagamenti collegati</h3><div id="detailPaymentsList" class="records-list"><div class="empty">Nessun pagamento collegato.</div></div></div>
+                    <div><h3>Certificati collegati</h3><div id="detailCertificatesList" class="records-list"><div class="empty">Nessun certificato collegato.</div></div></div>
+                </div>
+            </section>
         </main>
     </div>
 
     <script src="js/api.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/pwa.js"></script>
-<nav class="mobile-bottom-nav">
-    <a href="#top">Home</a>
-    <a href="#parentRequestsSection">Richieste</a>
-    <a href="#athletesSection">Atleti</a>
-    <a href="#paymentsSection">Quote</a>
-    <a href="#certificatesSection">Certificati</a>
-</nav>
+
+    <nav class="mobile-bottom-nav">
+        <a href="#top">Home</a>
+        <a href="#clubRegistrationSection">Link</a>
+        <a href="#parentRequestsSection">Richieste</a>
+        <a href="#athletesSection">Atleti</a>
+        <a href="#paymentsSection">Quote</a>
+        <a href="#certificatesSection">Certificati</a>
+    </nav>
 </body>
 </html>
