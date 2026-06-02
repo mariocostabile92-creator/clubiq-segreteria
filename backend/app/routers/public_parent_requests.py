@@ -1,8 +1,15 @@
 """
 Public routes for parent registration requests.
+Upload documenti V1 - Cloudinary.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import base64
+import os
+import time
+import uuid
+from urllib import parse, request as urlrequest
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from ..db.database import get_db
@@ -18,6 +25,111 @@ router = APIRouter(
     prefix="/public/parent-requests",
     tags=["public-parent-requests"],
 )
+
+ALLOWED_UPLOAD_CONTENT_TYPES = {
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+}
+MAX_UPLOAD_SIZE = 8 * 1024 * 1024
+
+
+def _cloudinary_config():
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
+    api_key = os.getenv("CLOUDINARY_API_KEY", "").strip()
+    api_secret = os.getenv("CLOUDINARY_API_SECRET", "").strip()
+
+    if not cloud_name or not api_key or not api_secret:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Upload documenti non configurato. Mancano variabili Cloudinary.",
+        )
+
+    return cloud_name, api_key, api_secret
+
+
+def _upload_to_cloudinary(file_bytes: bytes, filename: str, content_type: str, document_type: str) -> str:
+    cloud_name, api_key, api_secret = _cloudinary_config()
+
+    if content_type not in ALLOWED_UPLOAD_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Formato file non valido. Carica PDF, JPG, PNG o WEBP.",
+        )
+
+    if len(file_bytes) > MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File troppo grande. Dimensione massima: 8 MB.",
+        )
+
+    resource_type = "raw" if content_type == "application/pdf" else "image"
+    timestamp = str(int(time.time()))
+    safe_name = "".join(ch for ch in (filename or "documento").rsplit(".", 1)[0] if ch.isalnum() or ch in ("-", "_")) or "documento"
+    public_id = f"clubiq/parent-requests/{document_type}/{uuid.uuid4().hex}_{safe_name}"
+
+    # Signature Cloudinary: sha1 dei parametri firmati ordinati + api_secret.
+    import hashlib
+    params_to_sign = f"folder=clubiq/parent-requests/{document_type}&public_id={public_id}&timestamp={timestamp}{api_secret}"
+    signature = hashlib.sha1(params_to_sign.encode("utf-8")).hexdigest()
+
+    data_uri = f"data:{content_type};base64,{base64.b64encode(file_bytes).decode('utf-8')}"
+    upload_url = f"https://api.cloudinary.com/v1_1/{cloud_name}/{resource_type}/upload"
+
+    payload = parse.urlencode({
+        "file": data_uri,
+        "api_key": api_key,
+        "timestamp": timestamp,
+        "signature": signature,
+        "folder": f"clubiq/parent-requests/{document_type}",
+        "public_id": public_id,
+    }).encode("utf-8")
+
+    req = urlrequest.Request(upload_url, data=payload, method="POST")
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+
+    try:
+        with urlrequest.urlopen(req, timeout=30) as response:
+            import json
+            result = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Errore durante il caricamento del documento.",
+        ) from exc
+
+    secure_url = result.get("secure_url")
+    if not secure_url:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Upload completato senza URL documento.",
+        )
+
+    return secure_url
+
+
+@router.post("/upload-document")
+async def upload_parent_document(
+    document_type: str,
+    file: UploadFile = File(...),
+):
+    normalized_type = (document_type or "").strip().lower()
+    if normalized_type not in {"certificate", "receipt"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tipo documento non valido.",
+        )
+
+    file_bytes = await file.read()
+    url = _upload_to_cloudinary(
+        file_bytes=file_bytes,
+        filename=file.filename or "documento",
+        content_type=file.content_type or "application/octet-stream",
+        document_type=normalized_type,
+    )
+
+    return {"url": url, "document_type": normalized_type}
 
 
 @router.post("/", response_model=PublicParentRequestOut)

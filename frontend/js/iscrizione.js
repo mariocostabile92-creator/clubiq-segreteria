@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Iscrizione Genitore Pubblica
-  V1.3 Product Links
+  V1.4 Upload documenti Cloudinary
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -36,6 +36,13 @@ function preloadClubCodeFromUrl(){
 async function handleParentRequestSubmit(event){
     event.preventDefault();
 
+    const certificateFile = document.getElementById("certificateFile")?.files?.[0] || null;
+    const paymentReceiptFile = document.getElementById("paymentReceiptFile")?.files?.[0] || null;
+
+    if(!validateUploadFile(certificateFile) || !validateUploadFile(paymentReceiptFile)){
+        return;
+    }
+
     const payload = {
         club_code: document.getElementById("clubCode").value.trim().toUpperCase(),
         athlete_first_name: document.getElementById("athleteFirstName").value.trim(),
@@ -45,8 +52,8 @@ async function handleParentRequestSubmit(event){
         parent_name: document.getElementById("parentName").value.trim(),
         parent_phone: document.getElementById("parentPhone").value.trim() || null,
         parent_email: document.getElementById("parentEmail").value.trim(),
-        certificate_file_url: document.getElementById("certificateFileUrl").value.trim() || null,
-        payment_receipt_url: document.getElementById("paymentReceiptUrl").value.trim() || null,
+        certificate_file_url: null,
+        payment_receipt_url: null,
         notes: document.getElementById("requestNotes").value.trim() || null
     };
 
@@ -66,9 +73,20 @@ async function handleParentRequestSubmit(event){
     }
 
     setSubmitLoading(true);
-    setRequestMessage("Invio richiesta in corso...", "info");
 
     try{
+        if(certificateFile){
+            setRequestMessage("Caricamento certificato medico...", "info");
+            payload.certificate_file_url = await uploadParentDocument(certificateFile, "certificate");
+        }
+
+        if(paymentReceiptFile){
+            setRequestMessage("Caricamento ricevuta pagamento...", "info");
+            payload.payment_receipt_url = await uploadParentDocument(paymentReceiptFile, "receipt");
+        }
+
+        setRequestMessage("Invio richiesta in corso...", "info");
+
         await publicApiRequest("/public/parent-requests/", {
             method: "POST",
             body: JSON.stringify(payload)
@@ -82,12 +100,55 @@ async function handleParentRequestSubmit(event){
             clubCodeInput.value = usedCode;
         }
 
-        setRequestMessage("Richiesta inviata correttamente. La segreteria potrà verificarla.", "success");
+        setRequestMessage("Richiesta inviata correttamente. La segreteria potrà verificarla e aprire i documenti caricati.", "success");
     }catch(error){
         setRequestMessage(error.message || "Errore durante l'invio della richiesta.", "error");
     }finally{
         setSubmitLoading(false);
     }
+}
+
+async function uploadParentDocument(file, documentType){
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_BASE_URL}/public/parent-requests/upload-document?document_type=${encodeURIComponent(documentType)}`, {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if(!response.ok){
+        throw new Error(data?.detail || "Errore durante il caricamento del documento.");
+    }
+
+    if(!data?.url){
+        throw new Error("Documento caricato ma URL non disponibile.");
+    }
+
+    return data.url;
+}
+
+function validateUploadFile(file){
+    if(!file){
+        return true;
+    }
+
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    const maxSize = 8 * 1024 * 1024;
+
+    if(!allowedTypes.includes(file.type)){
+        setRequestMessage("Formato file non valido. Usa PDF, JPG, PNG o WEBP.", "error");
+        return false;
+    }
+
+    if(file.size > maxSize){
+        setRequestMessage("File troppo grande. Dimensione massima: 8 MB.", "error");
+        return false;
+    }
+
+    return true;
 }
 
 async function publicApiRequest(path, options = {}){
