@@ -28,6 +28,7 @@
 
             <nav class="side-nav">
                 <a class="active" href="#top">Dashboard</a>
+                <a href="#parentRequestsSection">Richieste</a>
                 <a href="#athletesSection">Atleti</a>
                 <a href="#addAthleteSection">Nuovo atleta</a>
                 <a href="#paymentsSection">Pagamenti</a>
@@ -35,7 +36,7 @@
             </nav>
 
             <button id="installPwaBtn" class="ghost-btn hidden" type="button">Installa app</button>
-<button id="logoutBtn" class="ghost-btn" type="button">Esci</button>
+            <button id="logoutBtn" class="ghost-btn" type="button">Esci</button>
         </aside>
 
         <main id="top" class="main-content">
@@ -80,6 +81,66 @@
                     <strong id="expiringCertificates">0</strong>
                     <small>Entro 30 giorni</small>
                 </article>
+            </section>
+
+
+
+            <section id="parentRequestsSection" class="panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Iscrizioni online</p>
+                        <h2>Richieste genitori da verificare</h2>
+                    </div>
+
+                    <button id="refreshParentRequestsBtn" class="secondary-btn" type="button">Aggiorna richieste</button>
+                </div>
+
+                <div class="request-summary-grid">
+                    <article class="request-summary-card">
+                        <span>In attesa</span>
+                        <strong id="pendingRequestsCount">0</strong>
+                    </article>
+
+                    <article class="request-summary-card">
+                        <span>Approvate</span>
+                        <strong id="approvedRequestsCount">0</strong>
+                    </article>
+
+                    <article class="request-summary-card">
+                        <span>Rifiutate</span>
+                        <strong id="rejectedRequestsCount">0</strong>
+                    </article>
+                </div>
+
+                <div class="filters-bar">
+                    <div class="filter-field">
+                        <label for="parentRequestSearchInput">Cerca richiesta</label>
+                        <input id="parentRequestSearchInput" type="search" placeholder="Atleta, genitore, email...">
+                    </div>
+
+                    <div class="filter-field">
+                        <label for="parentRequestStatusFilter">Stato</label>
+                        <select id="parentRequestStatusFilter">
+                            <option value="">Tutte</option>
+                            <option value="pending">In attesa</option>
+                            <option value="approved">Approvate</option>
+                            <option value="rejected">Rifiutate</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-field">
+                        <label for="parentRequestGroupFilter">Gruppo richiesto</label>
+                        <select id="parentRequestGroupFilter">
+                            <option value="">Tutti i gruppi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="parentRequestsFilterSummary" class="filter-summary">Richieste visualizzate: 0</div>
+
+                <div id="parentRequestsList" class="records-list">
+                    <div class="empty">Caricamento richieste...</div>
+                </div>
             </section>
 
             <section id="athletesSection" class="panel">
@@ -367,6 +428,7 @@
     <script src="js/pwa.js"></script>
 <nav class="mobile-bottom-nav">
     <a href="#top">Home</a>
+    <a href="#parentRequestsSection">Richieste</a>
     <a href="#athletesSection">Atleti</a>
     <a href="#paymentsSection">Quote</a>
     <a href="#certificatesSection">Certificati</a>
