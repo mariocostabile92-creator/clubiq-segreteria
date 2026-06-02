@@ -1,50 +1,22 @@
 /*
-  ClubIQ Segreteria - PWA Register
-  V1.1
+  ClubIQ Segreteria - PWA
+  V1.4 Emergency Off
 */
 
-let deferredInstallPrompt = null;
-
-if("serviceWorker" in navigator){
-    window.addEventListener("load", () => {
-        navigator.serviceWorker
-            .register("/service-worker.js")
-            .then(() => console.log("ClubIQ PWA pronta"))
-            .catch(error => console.warn("Service Worker non registrato:", error));
-    });
-}
-
-window.addEventListener("beforeinstallprompt", event => {
-    event.preventDefault();
-    deferredInstallPrompt = event;
-
-    const installBtn = document.getElementById("installPwaBtn");
-    if(installBtn){
-        installBtn.classList.remove("hidden");
-    }
-});
-
-async function installClubIQPWA(){
-    if(!deferredInstallPrompt){
-        alert("Installazione non disponibile in questo momento. Su mobile puoi usare 'Aggiungi a schermata Home'.");
+window.addEventListener("load", async () => {
+    if (!("serviceWorker" in navigator)) {
         return;
     }
 
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
+    try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
 
-    deferredInstallPrompt = null;
+        for (const registration of registrations) {
+            await registration.unregister();
+        }
 
-    const installBtn = document.getElementById("installPwaBtn");
-    if(installBtn){
-        installBtn.classList.add("hidden");
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const installBtn = document.getElementById("installPwaBtn");
-
-    if(installBtn){
-        installBtn.addEventListener("click", installClubIQPWA);
+        console.log("ClubIQ service worker disattivato temporaneamente");
+    } catch (error) {
+        console.warn("Errore disattivazione service worker:", error);
     }
 });

@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Auth
-  V1.0
+  V1.2 Emergency Stable
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,11 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const signupForm = document.getElementById("signupForm");
     const showLoginBtn = document.getElementById("showLogin");
     const showSignupBtn = document.getElementById("showSignup");
-
-    if(isLoggedIn() && window.location.pathname.endsWith("index.html")){
-        window.location.href = "dashboard.html";
-        return;
-    }
 
     if(showLoginBtn){
         showLoginBtn.addEventListener("click", () => {
@@ -33,25 +28,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if(signupForm){
         signupForm.addEventListener("submit", handleSignup);
     }
+
+    showAuthPanel("login");
 });
 
 function showAuthPanel(type){
-    const loginPanel = document.getElementById("loginPanel");
-    const signupPanel = document.getElementById("signupPanel");
+    const loginForm = document.getElementById("loginForm");
+    const signupForm = document.getElementById("signupForm");
     const showLoginBtn = document.getElementById("showLogin");
     const showSignupBtn = document.getElementById("showSignup");
 
+    if(!loginForm || !signupForm) return;
+
     if(type === "login"){
-        loginPanel.classList.remove("hidden");
-        signupPanel.classList.add("hidden");
-        showLoginBtn.classList.add("active");
-        showSignupBtn.classList.remove("active");
+        loginForm.classList.remove("hidden");
+        signupForm.classList.add("hidden");
+
+        if(showLoginBtn) showLoginBtn.classList.add("active");
+        if(showSignupBtn) showSignupBtn.classList.remove("active");
     }else{
-        signupPanel.classList.remove("hidden");
-        loginPanel.classList.add("hidden");
-        showSignupBtn.classList.add("active");
-        showLoginBtn.classList.remove("active");
+        signupForm.classList.remove("hidden");
+        loginForm.classList.add("hidden");
+
+        if(showSignupBtn) showSignupBtn.classList.add("active");
+        if(showLoginBtn) showLoginBtn.classList.remove("active");
     }
+
+    clearAuthMessage();
 }
 
 async function handleLogin(event){
@@ -59,6 +62,11 @@ async function handleLogin(event){
 
     const username = document.getElementById("loginUsername").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
+
+    if(!username || !password){
+        setAuthMessage("Inserisci username e password.", "error");
+        return;
+    }
 
     setAuthMessage("Accesso in corso...", "info");
 
@@ -69,13 +77,11 @@ async function handleLogin(event){
         });
 
         setToken(data.access_token);
-        setAuthMessage("Login effettuato. Reindirizzamento...", "success");
+        setAuthMessage("Login effettuato. Apro la dashboard...", "success");
 
-        setTimeout(() => {
-            window.location.href = "dashboard.html";
-        }, 500);
+        window.location.assign("/dashboard.html");
     }catch(error){
-        setAuthMessage(error.message, "error");
+        setAuthMessage(error.message || "Credenziali non valide.", "error");
     }
 }
 
@@ -86,6 +92,11 @@ async function handleSignup(event){
     const username = document.getElementById("signupUsername").value.trim();
     const email = document.getElementById("signupEmail").value.trim();
     const password = document.getElementById("signupPassword").value.trim();
+
+    if(!club_name || !username || !email || !password){
+        setAuthMessage("Compila tutti i campi per creare la società.", "error");
+        return;
+    }
 
     setAuthMessage("Creazione società in corso...", "info");
 
@@ -101,13 +112,11 @@ async function handleSignup(event){
         });
 
         setToken(data.access_token);
-        setAuthMessage("Società creata. Reindirizzamento...", "success");
+        setAuthMessage("Società creata. Apro la dashboard...", "success");
 
-        setTimeout(() => {
-            window.location.href = "dashboard.html";
-        }, 500);
+        window.location.assign("/dashboard.html");
     }catch(error){
-        setAuthMessage(error.message, "error");
+        setAuthMessage(error.message || "Errore durante la creazione della società.", "error");
     }
 }
 
@@ -117,4 +126,12 @@ function setAuthMessage(message, type){
 
     box.textContent = message;
     box.className = `message ${type}`;
+}
+
+function clearAuthMessage(){
+    const box = document.getElementById("authMessage");
+    if(!box) return;
+
+    box.textContent = "";
+    box.className = "message hidden";
 }

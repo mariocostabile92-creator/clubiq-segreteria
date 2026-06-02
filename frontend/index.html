@@ -6,6 +6,7 @@
     <title>ClubIQ Segreteria - Accesso</title>
 
     <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="ClubIQ Segreteria: dashboard per gestire atleti, quote, certificati, scadenze e richieste genitori per società sportive e scuole calcio." />
     <link rel="manifest" href="manifest.json" />
 
     <link rel="stylesheet" href="css/base.css" />
@@ -13,34 +14,63 @@
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
-<body class="auth-page">
+<body class="auth-page landing-v2">
 
-    <main class="auth-shell">
-        <section class="auth-hero">
-            <div class="badge">ClubIQ Segreteria Calcio</div>
-            <h1>La segreteria sportiva finalmente sotto controllo.</h1>
-            <p>
-                Gestisci atleti, quote, certificati e scadenze in una dashboard semplice,
-                pensata per società calcistiche dilettantistiche e scuole calcio.
+    <main class="auth-shell landing-shell">
+        <section class="auth-hero landing-hero">
+            <div class="brand-row">
+                <div class="brand-mark">CQ</div>
+                <div>
+                    <div class="badge">ClubIQ Segreteria Calcio</div>
+                    <small>Gestionale smart per società sportive</small>
+                </div>
+            </div>
+
+            <h1>Quote, certificati e iscrizioni finalmente sotto controllo.</h1>
+
+            <p class="hero-lead">
+                Una dashboard semplice per gestire atleti, pagamenti, documenti medici,
+                richieste dei genitori e scadenze senza fogli Excel sparsi.
             </p>
 
-            <div class="hero-grid">
+            <div class="hero-actions">
+                <a class="primary-btn hero-link" href="#accesso">Accedi alla dashboard</a>
+                <a class="secondary-btn hero-link" href="iscrizione.html?club=CLUBIQTEST">Modulo iscrizione atleta</a>
+            </div>
+
+            <div class="hero-grid landing-feature-grid">
                 <div>
-                    <strong>Atleti</strong>
-                    <span>Anagrafiche e contatti sempre ordinati.</span>
+                    <strong>Atleti ordinati</strong>
+                    <span>Anagrafiche, gruppi, contatti genitori e note sempre consultabili.</span>
                 </div>
                 <div>
-                    <strong>Quote</strong>
-                    <span>Controllo rapido su incassi e residui.</span>
+                    <strong>Quote sotto controllo</strong>
+                    <span>Incassato, residuo, scaduti e pagamenti registrati in pochi click.</span>
                 </div>
                 <div>
-                    <strong>Certificati</strong>
-                    <span>Scadenze visibili senza fogli Excel.</span>
+                    <strong>Certificati monitorati</strong>
+                    <span>Scadenze mediche e documenti visibili dalla stessa dashboard.</span>
                 </div>
+                <div>
+                    <strong>Richieste genitori</strong>
+                    <span>Il genitore compila online, la segreteria approva e crea l’atleta.</span>
+                </div>
+            </div>
+
+            <div class="trust-strip">
+                <span>✅ PWA installabile</span>
+                <span>✅ Pensata per mobile</span>
+                <span>✅ Dashboard unica</span>
             </div>
         </section>
 
-        <section class="auth-card">
+        <section id="accesso" class="auth-card landing-auth-card">
+            <div class="auth-card-header">
+                <span class="section-label">Accesso riservato</span>
+                <h2>Entra in ClubIQ</h2>
+                <p>Accedi con le credenziali della tua società oppure crea un nuovo ambiente demo.</p>
+            </div>
+
             <div class="auth-tabs">
                 <button id="showLogin" class="active" type="button">Accedi</button>
                 <button id="showSignup" type="button">Crea società</button>
@@ -49,46 +79,51 @@
             <div id="authMessage" class="message hidden"></div>
 
             <form id="loginForm" class="auth-form">
-                <h2>Accesso</h2>
+                <div id="loginPanel">
+                    <label>
+                        Username
+                        <input id="loginUsername" type="text" placeholder="admin o email" required />
+                    </label>
 
-                <label>
-                    Username
-                    <input id="loginUsername" type="text" placeholder="admin" required />
-                </label>
+                    <label>
+                        Password
+                        <input id="loginPassword" type="password" placeholder="Password" required />
+                    </label>
 
-                <label>
-                    Password
-                    <input id="loginPassword" type="password" placeholder="Password" required />
-                </label>
-
-                <button class="primary-btn" type="submit">Entra</button>
+                    <button class="primary-btn" type="submit">Entra nella dashboard</button>
+                </div>
             </form>
 
             <form id="signupForm" class="auth-form hidden">
-                <h2>Crea la tua società</h2>
+                <div id="signupPanel">
+                    <label>
+                        Nome società
+                        <input id="signupClubName" type="text" placeholder="ASD Club Demo" required />
+                    </label>
 
-                <label>
-                    Nome società
-                    <input id="signupClubName" type="text" placeholder="ASD Club Demo" required />
-                </label>
+                    <label>
+                        Username admin
+                        <input id="signupUsername" type="text" placeholder="admin" required />
+                    </label>
 
-                <label>
-                    Username admin
-                    <input id="signupUsername" type="text" placeholder="admin" required />
-                </label>
+                    <label>
+                        Email
+                        <input id="signupEmail" type="email" placeholder="segreteria@club.it" required />
+                    </label>
 
-                <label>
-                    Email
-                    <input id="signupEmail" type="email" placeholder="segreteria@club.it" required />
-                </label>
+                    <label>
+                        Password
+                        <input id="signupPassword" type="password" placeholder="Password sicura" required />
+                    </label>
 
-                <label>
-                    Password
-                    <input id="signupPassword" type="password" placeholder="Password sicura" required />
-                </label>
-
-                <button class="primary-btn" type="submit">Crea account</button>
+                    <button class="primary-btn" type="submit">Crea società</button>
+                </div>
             </form>
+
+            <div class="auth-note">
+                <strong>Link genitori demo:</strong>
+                <a href="iscrizione.html?club=CLUBIQTEST">apri modulo iscrizione</a>
+            </div>
         </section>
     </main>
 
