@@ -600,3 +600,77 @@ body{
         width:100%;
     }
 }
+
+
+/* ================================
+   Box link pubblico genitori
+================================ */
+
+.club-link-box{
+    display:grid;
+    gap:16px;
+    margin-bottom:22px;
+}
+
+.club-link-meta{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:16px;
+}
+
+.club-public-link{
+    display:grid;
+    gap:8px;
+    border:1px solid #dbeafe;
+    border-radius:22px;
+    background:linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+    padding:18px;
+}
+
+.club-public-link span{
+    color:#1d4ed8;
+    font-size:12px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.club-public-link small{
+    color:var(--muted);
+    font-size:13px;
+    font-weight:800;
+    line-height:1.45;
+}
+
+.club-public-link input{
+    width:100%;
+    border:1px solid #bfdbfe;
+    border-radius:16px;
+    padding:14px 15px;
+    background:#ffffff;
+    color:#1d4ed8;
+    font-size:15px;
+    font-weight:900;
+    outline:none;
+}
+
+.club-public-link input:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+}
+
+@media (max-width: 760px){
+    .club-link-meta{
+        grid-template-columns:1fr;
+    }
+
+    .club-public-link{
+        padding:16px;
+        border-radius:20px;
+    }
+
+    .club-public-link input{
+        min-height:48px;
+        font-size:14px;
+    }
+}
