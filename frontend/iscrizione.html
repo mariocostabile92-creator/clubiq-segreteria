@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iscrizione atleta - ClubIQ Segreteria</title>
+
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="manifest.json" />
+
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/mobile.css" />
+</head>
+<body>
+
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="logo-dot"></span>
+            <div>
+                <strong>ClubIQ</strong>
+                <small>Iscrizione atleta</small>
+            </div>
+        </div>
+
+        <nav class="side-nav">
+            <a class="active" href="iscrizione.html">Iscrizione</a>
+            <a href="index.html">Accesso segreteria</a>
+        </nav>
+
+        <button id="installPwaBtn" class="ghost-btn hidden" type="button">Installa app</button>
+    </aside>
+
+    <main id="top" class="main-content">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Modulo pubblico genitore</p>
+                <h1>Richiesta iscrizione atleta</h1>
+            </div>
+        </header>
+
+        <div id="requestMessage" class="message hidden"></div>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Codice società</p>
+                    <h2>Inserisci il codice fornito dalla società</h2>
+                </div>
+            </div>
+
+            <form id="parentRequestForm" class="grid-form">
+                <label class="full">
+                    Codice società
+                    <input id="clubCode" type="text" placeholder="Esempio: CLUBIQTEST" required />
+                </label>
+
+                <label>
+                    Nome atleta
+                    <input id="athleteFirstName" type="text" required />
+                </label>
+
+                <label>
+                    Cognome atleta
+                    <input id="athleteLastName" type="text" required />
+                </label>
+
+                <label>
+                    Data nascita atleta
+                    <input id="athleteBirthDate" type="date" required />
+                </label>
+
+                <label>
+                    Gruppo richiesto
+                    <input id="requestedGroup" type="text" placeholder="Pulcini, Under 12, Esordienti..." />
+                </label>
+
+                <label>
+                    Nome genitore
+                    <input id="parentName" type="text" required />
+                </label>
+
+                <label>
+                    Telefono genitore
+                    <input id="parentPhone" type="text" placeholder="333..." />
+                </label>
+
+                <label>
+                    Email genitore
+                    <input id="parentEmail" type="email" required />
+                </label>
+
+                <label>
+                    Link certificato medico
+                    <input id="certificateFileUrl" type="url" placeholder="https://..." />
+                </label>
+
+                <label>
+                    Link ricevuta pagamento
+                    <input id="paymentReceiptUrl" type="url" placeholder="https://..." />
+                </label>
+
+                <label class="full">
+                    Note
+                    <textarea id="requestNotes" rows="4" placeholder="Eventuali informazioni utili per la segreteria"></textarea>
+                </label>
+
+                <div class="form-actions full">
+                    <button id="submitRequestBtn" class="primary-btn" type="submit">
+                        Invia richiesta iscrizione
+                    </button>
+
+                    <button id="clearFormBtn" class="secondary-btn" type="button">
+                        Pulisci modulo
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Come funziona</p>
+                    <h2>Dopo l’invio</h2>
+                </div>
+            </div>
+
+            <div class="detail-grid">
+                <article class="detail-box">
+                    <span>1</span>
+                    <strong>Invii la richiesta</strong>
+                </article>
+
+                <article class="detail-box">
+                    <span>2</span>
+                    <strong>La segreteria verifica</strong>
+                </article>
+
+                <article class="detail-box">
+                    <span>3</span>
+                    <strong>Riceverai conferma dalla società</strong>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+
+<nav class="mobile-bottom-nav">
+    <a href="iscrizione.html">Iscrizione</a>
+    <a href="index.html">Segreteria</a>
+</nav>
+
+<script src="js/api.js"></script>
+<script src="js/iscrizione.js"></script>
+<script src="js/pwa.js"></script>
+
+</body>
+</html>

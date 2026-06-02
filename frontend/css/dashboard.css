@@ -1,0 +1,456 @@
+/*
+  ClubIQ Segreteria - Dashboard
+  V1.2
+  Desktop SaaS polish + responsive safe
+*/
+
+body{
+    background:#f4f7fb;
+}
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(150px, 1fr));
+    gap:18px;
+    margin-top:18px;
+}
+
+.stat-card{
+    min-height:132px;
+    background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border:1px solid var(--line);
+    border-radius:24px;
+    padding:22px;
+    box-shadow:0 14px 34px rgba(15,23,42,.07);
+}
+
+.stat-card span{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.09em;
+}
+
+.stat-card strong{
+    display:block;
+    font-size:34px;
+    margin:12px 0 8px;
+    line-height:1;
+    letter-spacing:-.055em;
+}
+
+.stat-card small{
+    color:var(--muted);
+    font-size:14px;
+}
+
+.stat-card:nth-child(2) strong{
+    color:var(--success);
+}
+
+.stat-card:nth-child(3) strong,
+.stat-card:nth-child(4) strong{
+    color:var(--danger);
+}
+
+.stat-card:nth-child(5) strong{
+    color:var(--warning);
+}
+
+.athletes-list,
+.records-list{
+    display:grid;
+    gap:14px;
+}
+
+.athlete-card,
+.data-card{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    border:1px solid var(--line);
+    background:#f8fafc;
+    border-radius:18px;
+    padding:17px;
+    transition:.18s ease;
+}
+
+.athlete-card:hover,
+.data-card:hover{
+    background:#fff;
+    box-shadow:0 12px 28px rgba(15,23,42,.07);
+    transform:translateY(-1px);
+}
+
+.athlete-card strong,
+.data-card strong{
+    display:block;
+    font-size:16px;
+}
+
+.athlete-card span,
+.athlete-card small,
+.data-card span{
+    display:block;
+    color:var(--muted);
+    margin-top:4px;
+}
+
+.data-card span{
+    font-size:14px;
+}
+
+.data-card-right{
+    text-align:right;
+    min-width:150px;
+}
+
+.data-card-right b{
+    display:block;
+    font-size:19px;
+}
+
+.data-card-right small{
+    color:var(--muted);
+}
+
+.grid-form{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:16px;
+}
+
+.grid-form label{
+    display:grid;
+    gap:8px;
+    color:#334155;
+    font-size:13px;
+    font-weight:900;
+}
+
+.grid-form input,
+.grid-form textarea,
+.grid-form select{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:13px 14px;
+    background:#fff;
+    color:var(--text);
+    outline:none;
+    font-size:14px;
+}
+
+.grid-form textarea{
+    resize:vertical;
+}
+
+.grid-form input:focus,
+.grid-form textarea:focus,
+.grid-form select:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(37,99,235,.10);
+}
+
+.grid-form .full{
+    grid-column:1 / -1;
+}
+
+.subsection{
+    margin-top:26px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+}
+
+.subsection h3{
+    margin:0 0 14px;
+    font-size:20px;
+    letter-spacing:-.03em;
+}
+
+.card-actions{
+    display:flex;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+}
+
+.athlete-card .card-actions{
+    margin-top:0;
+    min-width:220px;
+}
+
+.mini-btn{
+    border:0;
+    border-radius:11px;
+    padding:9px 12px;
+    font-size:12px;
+    font-weight:1000;
+    background:#e0ecff;
+    color:#1d4ed8;
+    transition:.16s ease;
+}
+
+.mini-btn:hover{
+    background:#bfdbfe;
+    transform:translateY(-1px);
+}
+
+.mini-btn.success{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.mini-btn.success:hover{
+    background:#bbf7d0;
+}
+
+.mini-btn.danger{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.mini-btn.danger:hover{
+    background:#fecaca;
+}
+
+.status-success{
+    color:var(--success);
+}
+
+.status-warning{
+    color:var(--warning);
+}
+
+.status-danger{
+    color:var(--danger);
+}
+
+.status-muted{
+    color:var(--muted);
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:16px;
+    margin-bottom:26px;
+}
+
+.detail-box{
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:#f8fafc;
+    padding:18px;
+}
+
+.detail-box span{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:8px;
+}
+
+.detail-box strong{
+    display:block;
+    font-size:19px;
+}
+
+.detail-columns{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.detail-columns h3{
+    margin:0 0 12px;
+    font-size:20px;
+    letter-spacing:-.03em;
+}
+
+.mini-record{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:#fff;
+    padding:15px;
+}
+
+.mini-record strong,
+.mini-record span,
+.mini-record small{
+    display:block;
+}
+
+.mini-record span{
+    color:var(--muted);
+    margin-top:5px;
+}
+
+.mini-record small{
+    color:var(--muted);
+    margin-top:5px;
+    font-size:12px;
+}
+
+.empty{
+    color:var(--muted);
+    padding:18px;
+    border:1px dashed var(--line);
+    border-radius:18px;
+    background:#f8fafc;
+}
+
+.empty.error{
+    color:var(--danger);
+    background:#fef2f2;
+    border-color:#fecaca;
+}
+
+/* Filtri atleti */
+.filters-bar{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:14px;
+    margin:18px 0 18px;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:#f8fafc;
+}
+
+.filter-field label{
+    display:block;
+    margin-bottom:8px;
+    font-size:12px;
+    font-weight:1000;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+}
+
+.filter-field input,
+.filter-field select{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 13px;
+    font-size:14px;
+    background:#fff;
+    color:var(--text);
+    outline:none;
+}
+
+.filter-field input:focus,
+.filter-field select:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+
+.status-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+}
+
+.status-ok{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status-payment-open{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.status-certificate-expiring{
+    background:#ffedd5;
+    color:#9a3412;
+}
+
+.status-certificate-expired{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+/* Desktop medio: più respiro senza rompere */
+@media (max-width: 1180px){
+    .stats-grid{
+        grid-template-columns:repeat(3, 1fr);
+    }
+
+    .grid-form{
+        grid-template-columns:repeat(2, 1fr);
+    }
+
+    .detail-grid{
+        grid-template-columns:repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 980px){
+    .stats-grid{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .grid-form{
+        grid-template-columns:1fr;
+    }
+
+    .athlete-card,
+    .data-card{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .athlete-card .card-actions,
+    .data-card-right{
+        width:100%;
+        min-width:0;
+        text-align:left;
+    }
+
+    .card-actions{
+        justify-content:flex-start;
+    }
+
+    .detail-grid{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .detail-columns{
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width: 760px){
+    .filters-bar{
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width: 560px){
+    .stats-grid{
+        grid-template-columns:1fr;
+    }
+
+    .detail-grid{
+        grid-template-columns:1fr;
+    }
+
+    .stat-card{
+        min-height:auto;
+    }
+}
