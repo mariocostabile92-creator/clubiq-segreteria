@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from .core.config import settings
 from .db.database import engine, Base
@@ -25,6 +26,30 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 
 
 Base.metadata.create_all(bind=engine)
+
+
+def ensure_user_auth_columns():
+    """
+    Migrazione sicura per allineare la tabella users ai campi usati da
+    verifica email e reset password.
+
+    ADD COLUMN IF NOT EXISTS evita errori se le colonne esistono già.
+    """
+    statements = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at TIMESTAMP",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP",
+    ]
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
+
+
+ensure_user_auth_columns()
+
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
 
