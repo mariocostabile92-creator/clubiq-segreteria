@@ -10,6 +10,7 @@ import urllib.request
 
 
 BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
+DEFAULT_APP_BASE_URL = "https://web-production-691ae.up.railway.app"
 
 
 def get_email_settings():
@@ -17,21 +18,16 @@ def get_email_settings():
         "api_key": os.getenv("BREVO_API_KEY", "").strip(),
         "from_email": os.getenv("MAIL_FROM_EMAIL", "").strip(),
         "from_name": os.getenv("MAIL_FROM_NAME", "ClubIQ Segreteria").strip(),
-        "app_base_url": os.getenv("APP_BASE_URL", "").strip().rstrip("/"),
+        "app_base_url": os.getenv("APP_BASE_URL", DEFAULT_APP_BASE_URL).strip().rstrip("/"),
     }
 
 
-def is_email_configured() -> bool:
+def get_app_base_url() -> str:
     settings = get_email_settings()
-    return bool(settings["api_key"] and settings["from_email"] and settings["app_base_url"])
+    return settings["app_base_url"] or DEFAULT_APP_BASE_URL
 
 
 def send_brevo_email(to_email: str, subject: str, html_content: str) -> bool:
-    """
-    Invia una email tramite Brevo.
-    Ritorna True se Brevo accetta la richiesta.
-    Solleva RuntimeError con dettaglio chiaro se fallisce.
-    """
     settings = get_email_settings()
 
     if not settings["api_key"]:
@@ -45,7 +41,7 @@ def send_brevo_email(to_email: str, subject: str, html_content: str) -> bool:
 
     payload = {
         "sender": {
-            "name": settings["from_name"],
+            "name": settings["from_name"] or "ClubIQ Segreteria",
             "email": settings["from_email"],
         },
         "to": [
