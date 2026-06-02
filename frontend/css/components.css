@@ -1,494 +1,288 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - ClubIQ Segreteria</title>
+/* =========================================================
+   ClubIQ Segreteria - Components CSS
+   Versione stabile
+========================================================= */
 
-    <meta name="theme-color" content="#0f172a" />
-    <link rel="manifest" href="manifest.json" />
-
-    <link rel="stylesheet" href="css/base.css" />
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css" />
-    <link rel="stylesheet" href="css/mobile.css" />
-</head>
-<body>
-
-    <div class="app-shell">
-        <aside class="sidebar">
-            <div class="brand">
-                <span class="logo-dot"></span>
-                <div>
-                    <strong>ClubIQ</strong>
-                    <small>Segreteria Calcio</small>
-                </div>
-            </div>
-
-            <nav class="side-nav">
-                <a class="active" href="#top">Dashboard</a>
-                <a href="#athletesSection">Atleti</a>
-                <a href="#addAthleteSection">Nuovo atleta</a>
-                <a href="#paymentsSection">Pagamenti</a>
-                <a href="#certificatesSection">Certificati</a>
-            </nav>
-
-            <button id="installPwaBtn" class="ghost-btn hidden" type="button">Installa app</button>
-<button id="logoutBtn" class="ghost-btn" type="button">Esci</button>
-        </aside>
-
-        <main id="top" class="main-content">
-            <header class="topbar">
-                <div>
-                    <p class="eyebrow">Gestionale SaaS</p>
-                    <h1>Dashboard segreteria</h1>
-                </div>
-
-                <button id="refreshBtn" class="secondary-btn" type="button">Aggiorna</button>
-            </header>
-
-            <div id="dashboardMessage" class="message hidden"></div>
-
-            <section class="stats-grid">
-                <article class="stat-card">
-                    <span>Atleti totali</span>
-                    <strong id="athletesCount">0</strong>
-                    <small>Anagrafiche registrate</small>
-                </article>
-
-                <article class="stat-card">
-                    <span>Da incassare</span>
-                    <strong id="totalResiduo">0 €</strong>
-                    <small>Residuo quote</small>
-                </article>
-
-                <article class="stat-card">
-                    <span>Quote scadute</span>
-                    <strong id="overduePayments">0</strong>
-                    <small>Pagamenti in ritardo</small>
-                </article>
-
-                <article class="stat-card">
-                    <span>Certificati scaduti</span>
-                    <strong id="expiredCertificates">0</strong>
-                    <small>Documenti non validi</small>
-                </article>
-
-                <article class="stat-card">
-                    <span>In scadenza</span>
-                    <strong id="expiringCertificates">0</strong>
-                    <small>Entro 30 giorni</small>
-                </article>
-            </section>
-
-            <section id="athletesSection" class="panel">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Archivio</p>
-                        <h2>Atleti recenti</h2>
-                    </div>
-                </div>
-
-                <div class="filters-bar">
-                    <div class="filter-field">
-                        <label for="athleteSearchInput">Cerca atleta</label>
-                        <input id="athleteSearchInput" type="search" placeholder="Nome, cognome, genitore...">
-                    </div>
-
-                    <div class="filter-field">
-                        <label for="athleteGroupFilter">Gruppo</label>
-                        <select id="athleteGroupFilter">
-                            <option value="">Tutti i gruppi</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-field">
-                        <label for="athleteStatusFilter">Stato</label>
-                        <select id="athleteStatusFilter">
-                            <option value="">Tutti</option>
-                            <option value="ok">OK</option>
-                            <option value="payment_open">Quota aperta</option>
-                            <option value="certificate_expiring">Certificato in scadenza</option>
-                            <option value="certificate_expired">Certificato scaduto</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="athletesList" class="athletes-list">
-                    <div class="empty">Caricamento...</div>
-                </div>
-            </section>
-
-            <section id="addAthleteSection" class="panel">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Inserimento rapido</p>
-                        <h2>Nuovo atleta</h2>
-                    </div>
-                </div>
-
-                <form id="addAthleteForm" class="grid-form">
-                    <label>
-                        Nome
-                        <input id="athleteFirstName" type="text" required />
-                    </label>
-
-                    <label>
-                        Cognome
-                        <input id="athleteLastName" type="text" required />
-                    </label>
-
-                    <label>
-                        Data nascita
-                        <input id="athleteBirthDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Gruppo
-                        <input id="athleteGroup" type="text" placeholder="Under 12" />
-                    </label>
-
-                    <label>
-                        Telefono atleta
-                        <input id="athletePhone" type="text" />
-                    </label>
-
-                    <label>
-                        Email atleta
-                        <input id="athleteEmail" type="email" />
-                    </label>
-
-                    <label>
-                        Genitore
-                        <input id="parentName" type="text" />
-                    </label>
-
-                    <label>
-                        Telefono genitore
-                        <input id="parentPhone" type="text" />
-                    </label>
-
-                    <label>
-                        Email genitore
-                        <input id="parentEmail" type="email" />
-                    </label>
-
-                    <label class="full">
-                        Note
-                        <textarea id="athleteNotes" rows="3"></textarea>
-                    </label>
-
-                    <button class="primary-btn full" type="submit">Salva atleta</button>
-                </form>
-            </section>
-
-            <section id="paymentsSection" class="panel">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Amministrazione</p>
-                        <h2>Pagamenti quote</h2>
-                    </div>
-                </div>
-
-                <form id="addPaymentForm" class="grid-form">
-                    <label>
-                        Atleta
-                        <select id="paymentAthleteId" required>
-                            <option value="">Seleziona atleta</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Quota dovuta
-                        <input id="paymentAmountDue" type="number" min="0" step="0.01" required />
-                    </label>
-
-                    <label>
-                        Importo pagato
-                        <input id="paymentAmountPaid" type="number" min="0" step="0.01" value="0" />
-                    </label>
-
-                    <label>
-                        Scadenza
-                        <input id="paymentDueDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Stato
-                        <select id="paymentStatus">
-                            <option value="pending">Da completare</option>
-                            <option value="paid">Pagato</option>
-                            <option value="overdue">Scaduto</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Metodo
-                        <input id="paymentMethod" type="text" placeholder="Bonifico, contanti..." />
-                    </label>
-
-                    <label class="full">
-                        Note pagamento
-                        <textarea id="paymentNotes" rows="3"></textarea>
-                    </label>
-
-                    <button class="primary-btn full" type="submit">Salva pagamento</button>
-                </form>
-
-                <div class="subsection">
-                    <h3>Pagamenti registrati</h3>
-                    <div id="paymentsList" class="records-list">
-                        <div class="empty">Caricamento...</div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="certificatesSection" class="panel">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Documenti</p>
-                        <h2>Certificati medici</h2>
-                    </div>
-                </div>
-
-                <form id="addCertificateForm" class="grid-form">
-                    <label>
-                        Atleta
-                        <select id="certificateAthleteId" required>
-                            <option value="">Seleziona atleta</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Tipo certificato
-                        <input id="certificateType" type="text" value="Certificato medico sportivo" required />
-                    </label>
-
-                    <label>
-                        Data rilascio
-                        <input id="certificateIssueDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Data scadenza
-                        <input id="certificateExpiryDate" type="date" required />
-                    </label>
-
-                    <label>
-                        Stato
-                        <select id="certificateStatus">
-                            <option value="valid">Valido</option>
-                            <option value="expiring">In scadenza</option>
-                            <option value="expired">Scaduto</option>
-                        </select>
-                    </label>
-
-                    <button class="primary-btn full" type="submit">Salva certificato</button>
-                </form>
-
-                <div class="subsection">
-                    <h3>Certificati registrati</h3>
-                    <div id="certificatesList" class="records-list">
-                        <div class="empty">Caricamento...</div>
-                    </div>
-                </div>
-            </section>
-<section id="athleteDetailSection" class="panel hidden">
-    <div class="section-heading">
-        <div>
-            <p class="eyebrow">Scheda atleta</p>
-            <h2 id="detailAthleteName">Atleta</h2>
-        </div>
-
-        <div class="detail-actions">
-            <button id="quickPaymentBtn" class="secondary-btn" type="button">
-                + Nuovo pagamento
-            </button>
-
-            <button id="quickCertificateBtn" class="secondary-btn" type="button">
-                + Nuovo certificato
-            </button>
-
-            <button id="closeAthleteDetailBtn" class="secondary-btn" type="button">
-                Chiudi scheda
-            </button>
-        </div>
-    </div>
-
-    <div class="detail-grid">
-        <article class="detail-box">
-            <span>Gruppo</span>
-            <strong id="detailAthleteGroup">-</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Data nascita</span>
-            <strong id="detailAthleteBirth">-</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Contatto principale</span>
-            <strong id="detailAthleteContact">-</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Residuo quote</span>
-            <strong id="detailAthleteResiduo">0,00 €</strong>
-        </article>
-
-        <article class="detail-box">
-            <span>Certificato</span>
-            <strong id="detailAthleteCertificate">-</strong>
-        </article>
-    </div>
-
-    <div class="detail-columns">
-        <div>
-            <h3>Pagamenti collegati</h3>
-            <div id="detailPaymentsList" class="records-list">
-                <div class="empty">Nessun pagamento collegato.</div>
-            </div>
-        </div>
-
-        <div>
-            <h3>Certificati collegati</h3>
-            <div id="detailCertificatesList" class="records-list">
-                <div class="empty">Nessun certificato collegato.</div>
-            </div>
-        </div>
-    </div>
-</section>
-        </main>
-    </div>
-
-    <script src="js/api.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/pwa.js"></script>
-<nav class="mobile-bottom-nav">
-    <a href="#top">Home</a>
-    <a href="#athletesSection">Atleti</a>
-    <a href="#paymentsSection">Quote</a>
-    <a href="#certificatesSection">Certificati</a>
-</nav>
-</body>
-</html>
-/* Filtri pagamenti/certificati */
-.compact-filters{
-    margin-top:12px;
+:root{
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+    --secondary:#0f172a;
+    --success:#16a34a;
+    --warning:#f59e0b;
+    --danger:#dc2626;
+    --bg:#f4f7fb;
+    --panel:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --soft:#f8fafc;
+    --radius:18px;
+    --shadow:0 18px 50px rgba(15,23,42,.08);
 }
 
-.filter-summary{
-    margin:-4px 0 14px;
-    color:var(--muted);
-    font-size:13px;
+/* ================================
+   Messaggi
+================================ */
+
+.message{
+    padding:13px 15px;
+    border-radius:14px;
+    font-size:14px;
     font-weight:800;
+    margin-bottom:16px;
 }
 
-.detail-actions{
-    display:flex;
-    align-items:center;
-    justify-content:flex-end;
-    flex-wrap:wrap;
-    gap:10px;
+.message.hidden,
+.hidden{
+    display:none !important;
 }
 
-@media (max-width: 760px){
-    .detail-actions{
-        width:100%;
-        justify-content:flex-start;
-    }
-
-    .detail-actions .secondary-btn{
-        flex:1;
-        min-width:160px;
-    }
-}
-/* Filtri pagamenti/certificati */
-.compact-filters{
-    margin-top:12px;
+.message.info{
+    background:#eff6ff;
+    color:#1d4ed8;
+    border:1px solid #bfdbfe;
 }
 
-.filter-summary{
-    margin:-4px 0 14px;
-    color:var(--muted);
-    font-size:13px;
-    font-weight:800;
+.message.success{
+    background:#ecfdf5;
+    color:#166534;
+    border:1px solid #bbf7d0;
 }
 
-/* Azioni rapide scheda atleta */
-.detail-actions{
-    display:flex;
-    align-items:center;
-    justify-content:flex-end;
-    flex-wrap:wrap;
-    gap:10px;
+.message.error{
+    background:#fef2f2;
+    color:#991b1b;
+    border:1px solid #fecaca;
 }
 
-@media (max-width: 760px){
-    .detail-actions{
-        width:100%;
-        justify-content:flex-start;
-    }
+/* ================================
+   Bottoni
+================================ */
 
-    .detail-actions .secondary-btn{
-        flex:1;
-        min-width:160px;
-    }
-}
-
-/* Fix bottoni dopo aggiornamento filtri */
 .primary-btn,
 .secondary-btn,
 .ghost-btn,
 .mini-btn{
-    border:0 !important;
+    border:0;
     cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:.18s ease;
+    font-family:inherit;
 }
 
 .primary-btn{
-    background:var(--primary) !important;
-    color:#fff !important;
-    border-radius:14px !important;
-    padding:12px 16px !important;
-    font-weight:900 !important;
+    background:var(--primary);
+    color:#fff;
+    border-radius:14px;
+    padding:12px 16px;
+    font-weight:900;
+    box-shadow:0 12px 24px rgba(37,99,235,.20);
 }
 
 .primary-btn:hover{
-    background:var(--primary-dark) !important;
+    background:var(--primary-dark);
+    transform:translateY(-1px);
 }
 
 .secondary-btn{
-    background:#e0ecff !important;
-    color:#1d4ed8 !important;
-    border-radius:14px !important;
-    padding:12px 16px !important;
-    font-weight:900 !important;
+    background:#e0ecff;
+    color:#1d4ed8;
+    border-radius:14px;
+    padding:12px 16px;
+    font-weight:900;
 }
 
 .secondary-btn:hover{
-    background:#bfdbfe !important;
+    background:#bfdbfe;
+}
+
+.ghost-btn{
+    width:100%;
+    background:rgba(255,255,255,.08);
+    color:#e5e7eb;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;
+    padding:12px 14px;
+    font-weight:900;
+}
+
+.ghost-btn:hover{
+    background:rgba(255,255,255,.14);
 }
 
 .mini-btn{
-    background:#e0ecff !important;
-    color:#1d4ed8 !important;
-    border-radius:10px !important;
-    padding:8px 10px !important;
-    font-size:12px !important;
-    font-weight:900 !important;
+    background:#e0ecff;
+    color:#1d4ed8;
+    border-radius:10px;
+    padding:8px 10px;
+    font-size:12px;
+    font-weight:900;
 }
 
 .mini-btn.success{
-    background:#dcfce7 !important;
-    color:#166534 !important;
+    background:#dcfce7;
+    color:#166534;
 }
 
 .mini-btn.danger{
-    background:#fee2e2 !important;
-    color:#991b1b !important;
+    background:#fee2e2;
+    color:#991b1b;
 }
-/* ClubIQ V1.6 - Azioni form modifica */
+
+/* ================================
+   Card statistiche
+================================ */
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:14px;
+    margin-bottom:20px;
+}
+
+.stat-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:var(--shadow);
+}
+
+.stat-card span{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+}
+
+.stat-card strong{
+    display:block;
+    margin-top:8px;
+    font-size:30px;
+    line-height:1;
+    color:var(--text);
+}
+
+.stat-card small{
+    display:block;
+    margin-top:8px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+/* ================================
+   Pannelli
+================================ */
+
+.panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:22px;
+    box-shadow:var(--shadow);
+    margin-bottom:20px;
+}
+
+.section-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:18px;
+}
+
+.section-heading h2{
+    margin:0;
+    color:var(--text);
+    letter-spacing:-.03em;
+}
+
+.eyebrow{
+    margin:0 0 4px;
+    color:var(--primary);
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+}
+
+.subsection{
+    margin-top:22px;
+}
+
+.subsection h3{
+    margin:0 0 12px;
+    color:var(--text);
+}
+
+.subsection-title-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+}
+
+.subsection-title-row h3{
+    margin:0;
+}
+
+/* ================================
+   Form
+================================ */
+
+.grid-form{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+}
+
+.grid-form label,
+.filter-field label,
+.auth-form label{
+    display:block;
+    font-size:13px;
+    font-weight:900;
+    color:#334155;
+}
+
+.grid-form input,
+.grid-form select,
+.grid-form textarea,
+.filter-field input,
+.filter-field select,
+.auth-form input{
+    width:100%;
+    margin-top:6px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 13px;
+    font-size:14px;
+    outline:none;
+    background:#fff;
+    color:var(--text);
+}
+
+.grid-form input:focus,
+.grid-form select:focus,
+.grid-form textarea:focus,
+.filter-field input:focus,
+.filter-field select:focus,
+.auth-form input:focus{
+    border-color:#93c5fd;
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+}
+
+.grid-form .full{
+    grid-column:1 / -1;
+}
+
 .form-actions{
     display:flex;
     align-items:center;
@@ -502,7 +296,17 @@
     min-width:190px;
 }
 
-/* Filtri pagamenti/certificati */
+/* ================================
+   Filtri
+================================ */
+
+.filters-bar{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:12px;
+    margin-bottom:16px;
+}
+
 .compact-filters{
     margin-top:12px;
 }
@@ -514,7 +318,44 @@
     font-weight:800;
 }
 
-/* Azioni rapide scheda atleta */
+/* ================================
+   Liste / record
+================================ */
+
+.athletes-list,
+.records-list{
+    display:grid;
+    gap:12px;
+}
+
+.empty{
+    background:#f8fafc;
+    border:1px dashed #cbd5e1;
+    color:var(--muted);
+    border-radius:16px;
+    padding:18px;
+    text-align:center;
+    font-weight:800;
+}
+
+.record-card,
+.athlete-card,
+.request-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 10px 28px rgba(15,23,42,.05);
+}
+
+.request-card{
+    border-left:5px solid #dbeafe;
+}
+
+/* ================================
+   Scheda atleta
+================================ */
+
 .detail-actions{
     display:flex;
     align-items:center;
@@ -523,114 +364,21 @@
     gap:10px;
 }
 
-@media (max-width: 760px){
-    .detail-actions{
-        width:100%;
-        justify-content:flex-start;
-    }
-
-    .detail-actions .secondary-btn{
-        flex:1;
-        min-width:160px;
-    }
-
-    .form-actions .primary-btn,
-    .form-actions .secondary-btn{
-        width:100%;
-        min-width:0;
-    }
-}
-
-/* Fix bottoni */
-.primary-btn,
-.secondary-btn,
-.ghost-btn,
-.mini-btn{
-    border:0 !important;
-    cursor:pointer;
-}
-
-.primary-btn{
-    background:var(--primary) !important;
-    color:#fff !important;
-    border-radius:14px !important;
-    padding:12px 16px !important;
-    font-weight:900 !important;
-}
-
-.primary-btn:hover{
-    background:var(--primary-dark) !important;
-}
-
-.secondary-btn{
-    background:#e0ecff !important;
-    color:#1d4ed8 !important;
-    border-radius:14px !important;
-    padding:12px 16px !important;
-    font-weight:900 !important;
-}
-
-.secondary-btn:hover{
-    background:#bfdbfe !important;
-}
-
-.mini-btn{
-    background:#e0ecff !important;
-    color:#1d4ed8 !important;
-    border-radius:10px !important;
-    padding:8px 10px !important;
-    font-size:12px !important;
-    font-weight:900 !important;
-}
-
-.mini-btn.success{
-    background:#dcfce7 !important;
-    color:#166534 !important;
-}
-
-.mini-btn.danger{
-    background:#fee2e2 !important;
-    color:#991b1b !important;
-}
-/* ClubIQ V1.7 - Export CSV */
-.subsection-title-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:14px;
-}
-
-.subsection-title-row h3{
-    margin:0;
-}
-
-@media (max-width: 760px){
-    .subsection-title-row{
-        align-items:flex-start;
-        flex-direction:column;
-    }
-
-    .subsection-title-row .secondary-btn{
-        width:100%;
-    }
-}
-/* ClubIQ V1.8 - Richieste genitori */
-.request-summary-grid{
+.detail-grid{
     display:grid;
-    grid-template-columns:repeat(3, minmax(0, 1fr));
+    grid-template-columns:repeat(5, minmax(0, 1fr));
     gap:12px;
-    margin:16px 0;
+    margin-bottom:18px;
 }
 
-.request-summary-card{
+.detail-box{
     border:1px solid var(--line);
     border-radius:16px;
-    background:#f8fafc;
     padding:14px;
+    background:#f8fafc;
 }
 
-.request-summary-card span{
+.detail-box span{
     display:block;
     color:var(--muted);
     font-size:12px;
@@ -639,95 +387,90 @@
     letter-spacing:.04em;
 }
 
-.request-summary-card strong{
+.detail-box strong{
     display:block;
     margin-top:6px;
-    font-size:28px;
     color:var(--text);
 }
 
-.request-card{
-    border-left:5px solid #dbeafe;
-}
-
-@media (max-width: 760px){
-    .request-summary-grid{
-        grid-template-columns:1fr;
-    }
-}
-/* ClubIQ V1.8 - Richieste genitori */
-.request-summary-grid{
+.detail-columns{
     display:grid;
-    grid-template-columns:repeat(3, minmax(0, 1fr));
-    gap:12px;
-    margin:16px 0;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
 }
 
-.request-summary-card{
-    border:1px solid var(--line);
-    border-radius:16px;
-    background:#f8fafc;
-    padding:14px;
-}
-
-.request-summary-card span{
-    display:block;
-    color:var(--muted);
-    font-size:12px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:.04em;
-}
-
-.request-summary-card strong{
-    display:block;
-    margin-top:6px;
-    font-size:28px;
-    color:var(--text);
-}
-
-.request-card{
-    border-left:5px solid #dbeafe;
-}
-
-@media (max-width: 760px){
-    .request-summary-grid{
-        grid-template-columns:1fr;
-    }
-}
 /* ================================
-   ClubIQ Landing V1.1
+   Richieste genitori
 ================================ */
 
-.landing-v2{
-    min-height:100vh;
-    background:
-        radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(16,185,129,.16), transparent 35%),
-        #eef2f7;
+.request-summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+    margin:16px 0;
 }
 
+.request-summary-card{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:#f8fafc;
+    padding:14px;
+}
+
+.request-summary-card span{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+}
+
+.request-summary-card strong{
+    display:block;
+    margin-top:6px;
+    font-size:28px;
+    color:var(--text);
+}
+
+/* ================================
+   Login / Landing
+================================ */
+
+.auth-page{
+    min-height:100vh;
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,.22), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(16,185,129,.18), transparent 36%),
+        linear-gradient(135deg, #eef2ff 0%, #f8fafc 48%, #ecfeff 100%);
+}
+
+.auth-shell,
 .landing-shell{
     width:min(1180px, calc(100% - 32px));
     margin:0 auto;
     min-height:100vh;
     display:grid;
-    grid-template-columns:1.25fr .75fr;
+    grid-template-columns:1.18fr .82fr;
     align-items:center;
     gap:28px;
     padding:38px 0;
 }
 
+.auth-hero,
 .landing-hero{
-    background:linear-gradient(145deg, #0f172a, #111827);
+    background:
+        linear-gradient(145deg, rgba(15,23,42,.96), rgba(30,41,59,.96)),
+        radial-gradient(circle at top right, rgba(37,99,235,.30), transparent 35%);
     color:#fff;
-    border-radius:28px;
-    padding:34px;
-    box-shadow:0 24px 80px rgba(15,23,42,.22);
+    border-radius:30px;
+    padding:36px;
+    box-shadow:0 24px 80px rgba(15,23,42,.24);
     position:relative;
     overflow:hidden;
 }
 
+.auth-hero::after,
 .landing-hero::after{
     content:"";
     position:absolute;
@@ -736,7 +479,13 @@
     width:260px;
     height:260px;
     border-radius:50%;
-    background:rgba(37,99,235,.26);
+    background:rgba(37,99,235,.24);
+}
+
+.auth-hero > *,
+.landing-hero > *{
+    position:relative;
+    z-index:1;
 }
 
 .brand-row{
@@ -744,8 +493,6 @@
     align-items:center;
     gap:14px;
     margin-bottom:26px;
-    position:relative;
-    z-index:1;
 }
 
 .brand-mark{
@@ -766,36 +513,33 @@
     margin-top:4px;
 }
 
-.landing-hero .badge,
+.badge,
 .section-label{
     display:inline-flex;
     align-items:center;
     width:max-content;
     font-size:12px;
-    font-weight:800;
+    font-weight:900;
     letter-spacing:.08em;
     text-transform:uppercase;
     color:#93c5fd;
 }
 
+.auth-hero h1,
 .landing-hero h1{
     font-size:clamp(34px, 5vw, 64px);
     line-height:.98;
     letter-spacing:-.055em;
     margin:0 0 18px;
-    max-width:860px;
-    position:relative;
-    z-index:1;
 }
 
+.auth-hero p,
 .hero-lead{
     font-size:18px;
     line-height:1.65;
     color:#dbeafe;
     max-width:760px;
     margin:0 0 24px;
-    position:relative;
-    z-index:1;
 }
 
 .hero-actions{
@@ -803,36 +547,21 @@
     flex-wrap:wrap;
     gap:12px;
     margin:24px 0;
-    position:relative;
-    z-index:1;
 }
 
 .hero-link{
     text-decoration:none;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
 }
 
-.secondary-btn{
-    border:1px solid rgba(255,255,255,.22);
-    background:rgba(255,255,255,.08);
-    color:#fff;
-    border-radius:14px;
-    padding:12px 16px;
-    font-weight:800;
-    cursor:pointer;
-}
-
+.hero-grid,
 .landing-feature-grid{
     display:grid;
     grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:12px;
     margin-top:26px;
-    position:relative;
-    z-index:1;
 }
 
+.hero-grid div,
 .landing-feature-grid div{
     background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.12);
@@ -840,12 +569,14 @@
     padding:16px;
 }
 
+.hero-grid strong,
 .landing-feature-grid strong{
     display:block;
     color:#fff;
     margin-bottom:7px;
 }
 
+.hero-grid span,
 .landing-feature-grid span{
     display:block;
     color:#cbd5e1;
@@ -857,8 +588,6 @@
     flex-wrap:wrap;
     gap:10px;
     margin-top:22px;
-    position:relative;
-    z-index:1;
 }
 
 .trust-strip span{
@@ -871,11 +600,14 @@
     font-weight:800;
 }
 
+.auth-card,
 .landing-auth-card{
-    border-radius:26px;
-    padding:24px;
-    box-shadow:0 20px 60px rgba(15,23,42,.16);
-    background:#fff;
+    border-radius:28px;
+    padding:26px;
+    box-shadow:0 24px 70px rgba(15,23,42,.18);
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(255,255,255,.7);
+    backdrop-filter:blur(18px);
 }
 
 .auth-card-header{
@@ -895,6 +627,41 @@
     margin:0;
 }
 
+.auth-tabs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:#f1f5f9;
+    padding:5px;
+    border-radius:16px;
+    margin-bottom:16px;
+}
+
+.auth-tabs button{
+    border:0;
+    background:transparent;
+    color:#64748b;
+    border-radius:12px;
+    padding:11px;
+    font-weight:900;
+    cursor:pointer;
+}
+
+.auth-tabs button.active{
+    background:#fff;
+    color:#1d4ed8;
+    box-shadow:0 8px 20px rgba(15,23,42,.08);
+}
+
+.auth-form{
+    display:grid;
+    gap:12px;
+}
+
+.auth-form .primary-btn{
+    width:100%;
+    margin-top:4px;
+}
+
 .auth-note{
     margin-top:16px;
     padding:13px;
@@ -906,44 +673,96 @@
 
 .auth-note a{
     color:#2563eb;
-    font-weight:800;
+    font-weight:900;
     text-decoration:none;
 }
 
-.auth-form label{
-    display:block;
-    font-size:13px;
-    font-weight:800;
-    color:#334155;
-    margin-bottom:12px;
-}
+/* ================================
+   Responsive
+================================ */
 
-.auth-form input{
-    width:100%;
-    margin-top:6px;
+@media (max-width: 1100px){
+    .stats-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .detail-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 900px){
+    .auth-shell,
     .landing-shell{
         grid-template-columns:1fr;
         padding:18px 0 28px;
     }
 
+    .auth-hero,
     .landing-hero{
         padding:24px;
         border-radius:24px;
     }
 
+    .hero-grid,
     .landing-feature-grid{
         grid-template-columns:1fr;
     }
 
+    .auth-card,
     .landing-auth-card{
         border-radius:22px;
+    }
+
+    .filters-bar{
+        grid-template-columns:1fr;
+    }
+
+    .grid-form{
+        grid-template-columns:1fr;
+    }
+
+    .detail-columns{
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width: 760px){
+    .stats-grid,
+    .request-summary-grid{
+        grid-template-columns:1fr;
+    }
+
+    .section-heading{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .detail-actions{
+        width:100%;
+        justify-content:flex-start;
+    }
+
+    .detail-actions .secondary-btn{
+        flex:1;
+        min-width:160px;
+    }
+
+    .form-actions .primary-btn,
+    .form-actions .secondary-btn,
+    .subsection-title-row .secondary-btn{
+        width:100%;
+        min-width:0;
+    }
+
+    .subsection-title-row{
+        align-items:flex-start;
+        flex-direction:column;
     }
 }
 
 @media (max-width: 520px){
+    .auth-shell,
     .landing-shell{
         width:min(100% - 20px, 1180px);
     }
@@ -957,8 +776,13 @@
         width:100%;
     }
 
+    .auth-hero h1,
     .landing-hero h1{
         font-size:38px;
     }
-}
 
+    .auth-card,
+    .landing-auth-card{
+        padding:20px;
+    }
+}

@@ -1,7 +1,6 @@
 /*
   ClubIQ Segreteria - Service Worker
   V1.5 Safe Disable
-  Temporaneamente non intercetta richieste.
 */
 
 self.addEventListener("install", (event) => {
