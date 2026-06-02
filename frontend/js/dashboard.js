@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V1.9 Email Verification Guard
+  V2.0 Controlli rapidi UX
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -77,7 +77,7 @@ function bindDashboardActions(){
     }
 
     if(todayChecksRefreshBtn){
-        todayChecksRefreshBtn.addEventListener("click", refreshAll);
+        todayChecksRefreshBtn.addEventListener("click", refreshTodayChecks);
     }
 
     if(addAthleteForm){
@@ -155,6 +155,38 @@ function bindDashboardActions(){
         input.addEventListener("input", renderCertificatesList);
         input.addEventListener("change", renderCertificatesList);
     });
+}
+
+
+async function refreshTodayChecks(){
+    const btn = document.getElementById("todayChecksRefreshBtn");
+
+    if(btn){
+        btn.disabled = true;
+        btn.textContent = "Aggiornamento...";
+    }
+
+    setDashboardMessage("Aggiornamento controlli rapidi...", "info");
+
+    try{
+        await refreshAll();
+        const totalChecks = getTodayChecksTotal();
+
+        if(totalChecks === 0){
+            setDashboardMessage("Controlli aggiornati: tutto sotto controllo.", "success");
+        }else if(totalChecks === 1){
+            setDashboardMessage("Controlli aggiornati: hai 1 attività da controllare.", "success");
+        }else{
+            setDashboardMessage(`Controlli aggiornati: hai ${totalChecks} attività da controllare.`, "success");
+        }
+    }catch(error){
+        setDashboardMessage(error.message || "Errore durante l'aggiornamento dei controlli.", "error");
+    }finally{
+        if(btn){
+            btn.disabled = false;
+            btn.textContent = "Aggiorna controlli";
+        }
+    }
 }
 
 async function refreshAll(){
@@ -1732,18 +1764,39 @@ function escapeCsvCell(value){
 ========================= */
 
 
-function renderTodayChecks(){
+function getTodayChecksData(){
     const pendingRequests = cachedParentRequests.filter(item => item.status === "pending").length;
     const overduePayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length;
     const expiredCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length;
     const expiringCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length;
+
+    return {
+        pendingRequests,
+        overduePayments,
+        expiredCertificates,
+        expiringCertificates,
+        totalChecks: pendingRequests + overduePayments + expiredCertificates + expiringCertificates
+    };
+}
+
+function getTodayChecksTotal(){
+    return getTodayChecksData().totalChecks;
+}
+
+function renderTodayChecks(){
+    const {
+        pendingRequests,
+        overduePayments,
+        expiredCertificates,
+        expiringCertificates,
+        totalChecks
+    } = getTodayChecksData();
 
     setText("todayPendingRequests", pendingRequests);
     setText("todayOverduePayments", overduePayments);
     setText("todayExpiredCertificates", expiredCertificates);
     setText("todayExpiringCertificates", expiringCertificates);
 
-    const totalChecks = pendingRequests + overduePayments + expiredCertificates + expiringCertificates;
     const summary = document.getElementById("todayChecksSummary");
 
     if(!summary){
