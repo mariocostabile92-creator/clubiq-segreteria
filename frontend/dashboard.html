@@ -106,6 +106,50 @@
                 </article>
             </section>
 
+
+
+            <section id="todayChecksSection" class="panel today-checks-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Controllo rapido</p>
+                        <h2>Da controllare oggi</h2>
+                        <p id="todayChecksSummary" class="today-checks-summary">
+                            Caricamento controlli...
+                        </p>
+                    </div>
+
+                    <button id="todayChecksRefreshBtn" class="secondary-btn" type="button">
+                        Aggiorna controlli
+                    </button>
+                </div>
+
+                <div class="today-checks-grid">
+                    <a class="today-check-card" href="#parentRequestsSection">
+                        <span>Richieste in attesa</span>
+                        <strong id="todayPendingRequests">0</strong>
+                        <small>Genitori da verificare</small>
+                    </a>
+
+                    <a class="today-check-card danger" href="#paymentsSection">
+                        <span>Quote scadute</span>
+                        <strong id="todayOverduePayments">0</strong>
+                        <small>Pagamenti da sollecitare</small>
+                    </a>
+
+                    <a class="today-check-card danger" href="#certificatesSection">
+                        <span>Certificati scaduti</span>
+                        <strong id="todayExpiredCertificates">0</strong>
+                        <small>Documenti non validi</small>
+                    </a>
+
+                    <a class="today-check-card warning" href="#certificatesSection">
+                        <span>In scadenza</span>
+                        <strong id="todayExpiringCertificates">0</strong>
+                        <small>Entro 30 giorni</small>
+                    </a>
+                </div>
+            </section>
+
             <section id="clubRegistrationSection" class="panel">
                 <div class="section-heading">
                     <div>

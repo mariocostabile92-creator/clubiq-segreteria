@@ -38,6 +38,7 @@ function bindDashboardActions(){
     const clubSettingsForm = document.getElementById("clubSettingsForm");
     const regenerateClubCodeBtn = document.getElementById("regenerateClubCodeBtn");
     const resendVerificationBtn = document.getElementById("resendVerificationBtn");
+    const todayChecksRefreshBtn = document.getElementById("todayChecksRefreshBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -73,6 +74,10 @@ function bindDashboardActions(){
 
     if(resendVerificationBtn){
         resendVerificationBtn.addEventListener("click", resendVerificationEmail);
+    }
+
+    if(todayChecksRefreshBtn){
+        todayChecksRefreshBtn.addEventListener("click", refreshAll);
     }
 
     if(addAthleteForm){
@@ -164,6 +169,7 @@ async function refreshAll(){
     renderAthletesList();
     renderPaymentsList();
     renderCertificatesList();
+    renderTodayChecks();
 
     if(openedAthleteId){
         openAthleteDetail(openedAthleteId, false);
@@ -1724,6 +1730,53 @@ function escapeCsvCell(value){
 /* =========================
    Utility generali
 ========================= */
+
+
+function renderTodayChecks(){
+    const pendingRequests = cachedParentRequests.filter(item => item.status === "pending").length;
+    const overduePayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length;
+    const expiredCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length;
+    const expiringCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length;
+
+    setText("todayPendingRequests", pendingRequests);
+    setText("todayOverduePayments", overduePayments);
+    setText("todayExpiredCertificates", expiredCertificates);
+    setText("todayExpiringCertificates", expiringCertificates);
+
+    const totalChecks = pendingRequests + overduePayments + expiredCertificates + expiringCertificates;
+    const summary = document.getElementById("todayChecksSummary");
+
+    if(!summary){
+        return;
+    }
+
+    if(totalChecks === 0){
+        summary.textContent = "Tutto sotto controllo: nessuna urgenza operativa al momento.";
+        summary.className = "today-checks-summary success";
+        return;
+    }
+
+    const parts = [];
+
+    if(pendingRequests > 0){
+        parts.push(`${pendingRequests} richieste genitori in attesa`);
+    }
+
+    if(overduePayments > 0){
+        parts.push(`${overduePayments} quote scadute`);
+    }
+
+    if(expiredCertificates > 0){
+        parts.push(`${expiredCertificates} certificati scaduti`);
+    }
+
+    if(expiringCertificates > 0){
+        parts.push(`${expiringCertificates} certificati in scadenza`);
+    }
+
+    summary.textContent = `Hai ${totalChecks} attività da controllare: ${parts.join(", ")}.`;
+    summary.className = "today-checks-summary warning";
+}
 
 function getTodaySlug(){
     return new Date().toISOString().slice(0, 10);
