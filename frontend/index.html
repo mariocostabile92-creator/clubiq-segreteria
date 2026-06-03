@@ -16,24 +16,25 @@
     <link rel="stylesheet" href="css/mobile.css" />
 
     <style>
-        .landing-pricing-section{margin-top:28px;padding:22px;border:1px solid rgba(148,163,184,.28);border-radius:26px;background:rgba(255,255,255,.08);box-shadow:0 22px 48px rgba(15,23,42,.18)}
-        .landing-pricing-header{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:16px}
-        .landing-pricing-header h2{margin:4px 0 0;font-size:26px;letter-spacing:-.04em;color:#fff}
-        .landing-pricing-header p{margin:6px 0 0;color:rgba(255,255,255,.78);line-height:1.45;font-weight:700}
-        .landing-price-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-        .landing-price-card{display:grid;gap:10px;padding:18px;border-radius:22px;background:#fff;color:#0f172a;border:1px solid rgba(226,232,240,.9)}
-        .landing-price-card.featured{border-color:#2563eb;box-shadow:0 18px 40px rgba(37,99,235,.25)}
-        .landing-price-card.premium{border-color:#f59e0b}
-        .landing-price-card span{font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;color:#2563eb}
-        .landing-price-card.premium span{color:#b45309}
-        .landing-price-card strong{font-size:25px;letter-spacing:-.04em}
-        .landing-price-card small{color:#64748b;font-weight:800;line-height:1.35}
-        .landing-price-card ul{margin:0;padding-left:18px;color:#334155;font-weight:800;line-height:1.55;font-size:13px}
-        .landing-price-card .primary-btn,.landing-price-card .secondary-btn{width:100%;text-align:center;justify-content:center;text-decoration:none}
-        .landing-pwa-guide{margin-top:14px;padding:14px 16px;border-radius:20px;background:rgba(37,99,235,.12);color:#e0ecff;font-weight:800;line-height:1.45}
-        @media(max-width:900px){.landing-pricing-header{display:block}.landing-price-grid{grid-template-columns:1fr}}
+        .landing-shell{max-width:1080px;margin:42px auto;padding:0 18px;display:grid;grid-template-columns:minmax(0,1.15fr) 380px;gap:22px;align-items:start;}
+        .landing-hero{padding:28px;border-radius:24px;min-height:auto;}
+        .landing-hero h1{font-size:clamp(32px,4vw,52px);line-height:.95;margin:22px 0 14px;}
+        .hero-lead{max-width:620px;}
+        .landing-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px;}
+        .landing-feature-grid div{padding:14px;border-radius:16px;}
+        .landing-auth-card{margin-top:86px;}
+        .landing-pricing-section{grid-column:1 / -1;background:#fff;border:1px solid #dbeafe;border-radius:24px;padding:24px;box-shadow:0 18px 45px rgba(15,23,42,.08);}
+        .landing-pricing-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px;}
+        .landing-pricing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+        .landing-price-card{border:1px solid #e2e8f0;border-radius:20px;padding:18px;background:#f8fafc;}
+        .landing-price-card.pro{border-color:#bfdbfe;background:#eff6ff;}
+        .landing-price-card.premium{border-color:#fde68a;background:#fffbeb;}
+        .landing-price-card span{display:block;font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;color:#2563eb;}
+        .landing-price-card strong{display:block;font-size:28px;margin:10px 0;color:#0f172a;}
+        .landing-price-card small{display:block;color:#64748b;font-weight:800;line-height:1.45;margin-bottom:10px;}
+        .landing-price-card ul{margin:0 0 14px 18px;padding:0;color:#334155;font-weight:800;line-height:1.55;}
+        @media(max-width:900px){.landing-shell{grid-template-columns:1fr;margin:18px auto}.landing-auth-card{margin-top:0}.landing-pricing-grid{grid-template-columns:1fr}.landing-pricing-header{display:block}.landing-feature-grid{grid-template-columns:1fr}}
     </style>
-
 </head>
 <body class="auth-page landing-v2">
 
@@ -71,56 +72,6 @@
                 <span>✅ Pensata per mobile</span>
                 <span>✅ Dashboard unica</span>
             </div>
-
-            <section id="prezzi" class="landing-pricing-section">
-                <div class="landing-pricing-header">
-                    <div>
-                        <div class="badge">Piani ClubIQ</div>
-                        <h2>Scegli il piano giusto per la tua società.</h2>
-                        <p>Parti gratis, poi sblocca report, storico, export e gestione avanzata quando la segreteria cresce.</p>
-                    </div>
-                    <a class="secondary-btn hero-link" href="#accesso">Inizia ora</a>
-                </div>
-                <div class="landing-price-grid">
-                    <article class="landing-price-card">
-                        <span>Free</span>
-                        <strong>0 €</strong>
-                        <small>Per iniziare e provare ClubIQ senza rischi.</small>
-                        <ul>
-                            <li>Fino a 5 atleti</li>
-                            <li>Gestione base segreteria</li>
-                            <li>Link iscrizione genitori</li>
-                        </ul>
-                        <a class="secondary-btn" href="#accesso">Crea società</a>
-                    </article>
-                    <article class="landing-price-card featured">
-                        <span>Pro</span>
-                        <strong>19 €/mese</strong>
-                        <small>Per società operative e scuole calcio piccole/medie.</small>
-                        <ul>
-                            <li>Fino a 80 atleti</li>
-                            <li>Report PDF e export CSV</li>
-                            <li>Storico WhatsApp e comunicazioni</li>
-                        </ul>
-                        <a class="primary-btn" href="#accesso">Passa a Pro</a>
-                    </article>
-                    <article class="landing-price-card premium">
-                        <span>Premium</span>
-                        <strong>39 €/mese</strong>
-                        <small>Per società strutturate che vogliono crescere.</small>
-                        <ul>
-                            <li>Atleti illimitati</li>
-                            <li>Tutto Pro incluso</li>
-                            <li>Priorità funzioni future premium</li>
-                        </ul>
-                        <a class="primary-btn" href="#accesso">Scopri Premium</a>
-                    </article>
-                </div>
-                <div class="landing-pwa-guide">
-                    📱 ClubIQ è installabile come app: su iPhone apri Safari → Condividi → Aggiungi alla schermata Home.
-                </div>
-            </section>
-
         </section>
 
         <section id="accesso" class="auth-card landing-auth-card">
@@ -178,6 +129,6 @@
 
     <script src="js/api.js?v=3.0"></script>
     <script src="js/auth.js?v=3.0"></script>
-    <script src="js/pwa.js?v=install1"></script>
+    <script src="js/pwa.js?v=hotfix1"></script>
 </body>
 </html>

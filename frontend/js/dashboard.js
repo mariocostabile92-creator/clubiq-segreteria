@@ -49,8 +49,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function bindDashboardActions(){
     const logoutBtn = document.getElementById("logoutBtn");
-    const installPwaBtn = document.getElementById("installPwaBtn");
-    const closePwaGuideBtn = document.getElementById("closePwaGuideBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const generateSecretaryReportPdfBtn = document.getElementById("generateSecretaryReportPdfBtn");
     const checkoutProMonthlyBtn = document.getElementById("checkoutProMonthlyBtn");
@@ -102,14 +100,6 @@ function bindDashboardActions(){
     const certificateSearchInput = document.getElementById("certificateSearchInput");
     const certificateGroupFilter = document.getElementById("certificateGroupFilter");
     const certificateStatusFilter = document.getElementById("certificateStatusFilter");
-
-    if(installPwaBtn){
-        installPwaBtn.addEventListener("click", showPwaInstallGuide);
-    }
-
-    if(closePwaGuideBtn){
-        closePwaGuideBtn.addEventListener("click", hidePwaInstallGuide);
-    }
 
     if(logoutBtn){
         logoutBtn.addEventListener("click", () => {
@@ -264,23 +254,6 @@ function bindDashboardActions(){
 
 
 
-
-function showPwaInstallGuide(){
-    const guide = document.getElementById("pwaInstallGuide");
-    if(guide){
-        guide.classList.remove("hidden");
-        guide.scrollIntoView({ behavior:"smooth", block:"start" });
-    }
-    setDashboardMessage("Guida installazione app aperta. Su iPhone usa Safari → Condividi → Aggiungi alla schermata Home.", "info");
-}
-
-function hidePwaInstallGuide(){
-    const guide = document.getElementById("pwaInstallGuide");
-    if(guide){
-        guide.classList.add("hidden");
-    }
-}
-
 function getOperativeNotifications(){
     const pendingRequests = cachedParentRequests.filter(item => item.status === "pending").length;
     const overduePayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length;
@@ -390,6 +363,8 @@ function renderBillingStatus(errorMessage = ""){
     if(summary){
         summary.textContent = `Piano attuale: ${label} · Stato: ${statusLabel}`;
     }
+    setText("billingCurrentPlan", `Piano attuale: ${label}`);
+    setText("billingCurrentLimits", plan === "premium" ? "Premium: atleti illimitati e tutte le funzioni avanzate." : plan === "pro" ? "Pro: fino a 80 atleti, PDF, export CSV e storico WhatsApp." : "Free: fino a 5 atleti. Passa a Pro quando la segreteria cresce.");
 
     if(portalBtn){
         portalBtn.classList.toggle("hidden", !cachedBilling?.stripe_customer_id);
@@ -403,9 +378,9 @@ async function openBillingCheckout(plan){
     setDashboardMessage(`Apro Stripe Checkout per il piano ${label}...`, "info");
 
     try{
-        const data = await apiRequest(`/billing/checkout/${plan}`, { method:"POST" });
-        if(!data?.url) throw new Error("URL Stripe Checkout non ricevuto.");
-        window.location.href = data.url;
+        const data = await apiRequest(`/billing/checkout/${plan}/monthly`, { method:"POST" });
+        if(!data?.checkout_url && !data?.url) throw new Error("URL Stripe Checkout non ricevuto.");
+        window.location.href = data.checkout_url || data.url;
     }catch(error){
         setDashboardMessage(error.message || "Errore apertura Stripe Checkout.", "error");
     }
@@ -418,8 +393,8 @@ async function openBillingPortal(){
 
     try{
         const data = await apiRequest("/billing/portal", { method:"POST" });
-        if(!data?.url) throw new Error("URL portale Stripe non ricevuto.");
-        window.location.href = data.url;
+        if(!data?.portal_url && !data?.url) throw new Error("URL portale Stripe non ricevuto.");
+        window.location.href = data.portal_url || data.url;
     }catch(error){
         setDashboardMessage(error.message || "Errore apertura portale Stripe.", "error");
     }

@@ -1423,39 +1423,10 @@ body{
 @media(max-width:760px){.billing-actions{display:grid;width:100%;}.billing-actions .primary-btn,.billing-actions .secondary-btn{width:100%;}.billing-cards{grid-template-columns:1fr;}}
 
 
-/* ================================
-   Billing compatto + PWA install guide
-================================ */
-.pwa-install-panel{
-    border-color:#bfdbfe;
-    background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%);
-}
-.pwa-install-grid{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:14px;
-}
-.pwa-install-grid article{
-    display:grid;
-    gap:8px;
-    padding:16px;
-    border:1px solid #dbeafe;
-    border-radius:18px;
-    background:#fff;
-}
-.pwa-install-grid strong{
-    color:#1d4ed8;
-    font-size:15px;
-}
-.pwa-install-grid span{
-    color:#475569;
-    font-weight:800;
-    line-height:1.4;
-}
-.billing-panel{
-    scroll-margin-top:20px;
-}
-@media(max-width:760px){
-    .pwa-install-grid{grid-template-columns:1fr;}
-    #installPwaBtn{display:block;width:100%;}
-}
+/* Hotfix billing compatto + sidebar */
+.billing-compact-panel{border-color:#bfdbfe;background:linear-gradient(180deg,#ffffff 0%,#eff6ff 100%);}
+.billing-compact-note{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #dbeafe;border-radius:18px;background:#fff;padding:16px;}
+.billing-compact-note strong{font-size:18px;color:#0f172a;}
+.billing-compact-note span{color:#64748b;font-weight:800;}
+.billing-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+@media(max-width:760px){.billing-compact-note{display:grid}.billing-actions{width:100%;justify-content:stretch}.billing-actions button{width:100%;}}

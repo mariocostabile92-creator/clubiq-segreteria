@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=install1" />
+    <link rel="stylesheet" href="css/dashboard.css?v=hotfix1" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
@@ -37,6 +37,7 @@
                 <a href="#paymentsSection">Pagamenti</a>
                 <a href="#certificatesSection">Certificati</a>
                 <a href="#billingSection">Abbonamento</a>
+                <a href="#" data-open-pwa-guide>Installa app</a>
             </nav>
 
             <button id="installPwaBtn" class="ghost-btn hidden" type="button">Installa app</button>
@@ -57,23 +58,7 @@
             </header>
 
             <div id="dashboardMessage" class="message hidden"></div>
-            <section id="pwaInstallGuide" class="panel pwa-install-panel hidden">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">App ClubIQ</p>
-                        <h2>Installa ClubIQ sul telefono</h2>
-                        <p class="club-link-description">Su iPhone l’installazione non parte con popup automatico: apri ClubIQ con Safari, tocca Condividi e poi “Aggiungi alla schermata Home”. Su Android usa il popup Installa app oppure il menu del browser.</p>
-                    </div>
-                    <button id="closePwaGuideBtn" class="secondary-btn" type="button">Chiudi</button>
-                </div>
-                <div class="pwa-install-grid">
-                    <article><strong>iPhone</strong><span>Safari → Condividi → Aggiungi alla schermata Home</span></article>
-                    <article><strong>Android</strong><span>Menu ⋮ → Installa app / Aggiungi a schermata Home</span></article>
-                    <article><strong>Desktop</strong><span>Chrome/Edge → icona installazione nella barra indirizzi</span></article>
-                </div>
-            </section>
-
-            <section id="billingSection" class="panel billing-panel hidden">
+            <section id="billingSection" class="panel billing-panel hidden billing-compact-panel">
                 <div class="section-heading billing-heading">
                     <div>
                         <p class="eyebrow">Abbonamento ClubIQ</p>
@@ -81,27 +66,13 @@
                         <p id="billingPlanSummary" class="club-link-description">Caricamento piano...</p>
                     </div>
                     <div class="billing-actions">
-                        <button id="billingProBtn" class="secondary-btn" type="button">Passa a Pro</button>
-                        <button id="billingPremiumBtn" class="primary-btn" type="button">Passa a Premium</button>
-                        <button id="billingPortalBtn" class="secondary-btn" type="button">Gestisci abbonamento</button>
+                        <button id="manageBillingBtn" class="secondary-btn" type="button">Gestisci abbonamento</button>
+                        <button id="checkoutProMonthlyBtn" class="primary-btn" type="button">Upgrade piano</button>
                     </div>
                 </div>
-                <div class="billing-cards">
-                    <article class="billing-card">
-                        <span>Free</span>
-                        <strong>0 €/mese</strong>
-                        <small>Base per provare ClubIQ.</small>
-                    </article>
-                    <article class="billing-card highlighted">
-                        <span>Pro</span>
-                        <strong>19 €/mese</strong>
-                        <small>Funzioni avanzate per segreterie operative.</small>
-                    </article>
-                    <article class="billing-card premium">
-                        <span>Premium</span>
-                        <strong>39 €/mese</strong>
-                        <small>Massimo controllo e funzioni future premium.</small>
-                    </article>
+                <div class="billing-compact-note">
+                    <strong id="billingCurrentPlan">Piano attuale: Free</strong>
+                    <span id="billingCurrentLimits">Free include fino a 5 atleti. Pro arriva a 80, Premium è illimitato.</span>
                 </div>
             </section>
 
@@ -591,7 +562,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js?v=install1"></script>
+    <script src="js/dashboard.js?v=stripe1"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">
@@ -603,6 +574,7 @@
         <a href="#paymentsSection">Quote</a>
         <a href="#certificatesSection">Certificati</a>
                 <a href="#billingSection">Abbonamento</a>
+                <a href="#" data-open-pwa-guide>Installa app</a>
     </nav>
 </body>
 </html>
