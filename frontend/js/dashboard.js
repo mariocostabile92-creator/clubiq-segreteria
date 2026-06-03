@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V2.3.3 WhatsApp V1.5.2 CSV Hotfix
+  V2.3.1 WhatsApp V1.3.1 Hotfix Storico
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -2052,40 +2052,8 @@ function exportCertificatesCsv(){
     setDashboardMessage("Export certificati CSV creato.", "success");
 }
 
-function downloadCsv(rowsOrFilename, filenameOrRows){
-    let rows = rowsOrFilename;
-    let filename = filenameOrRows;
-
-    // Compatibilità: supporta sia downloadCsv(rows, filename) sia downloadCsv(filename, rows).
-    if(typeof rowsOrFilename === "string"){
-        filename = rowsOrFilename;
-        rows = filenameOrRows;
-    }
-
-    if(!Array.isArray(rows)){
-        rows = Object.values(rows || {});
-    }
-
-    if(!Array.isArray(rows) || rows.length === 0){
-        setDashboardMessage("Nessun dato da esportare.", "error");
-        return;
-    }
-
-    let csvRows = rows;
-
-    // Se arrivano oggetti, li trasformo in matrice CSV mantenendo le intestazioni.
-    if(!Array.isArray(csvRows[0])){
-        const headers = Object.keys(csvRows[0] || {});
-
-        if(!headers.length){
-            setDashboardMessage("Nessuna colonna disponibile per il CSV.", "error");
-            return;
-        }
-
-        csvRows = [headers, ...csvRows.map(row => headers.map(header => row?.[header] ?? ""))];
-    }
-
-    const csvContent = csvRows
+function downloadCsv(rows, filename){
+    const csvContent = rows
         .map(row => row.map(escapeCsvCell).join(";"))
         .join("\n");
 
@@ -2097,7 +2065,7 @@ function downloadCsv(rowsOrFilename, filenameOrRows){
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = filename || `export_clubiq_${getTodaySlug()}.csv`;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
 
@@ -2181,27 +2149,6 @@ function renderTodayChecks(){
 
     summary.textContent = `Hai ${totalChecks} attività da controllare: ${parts.join(", ")}.`;
     summary.className = "today-checks-summary warning";
-}
-
-
-function formatDateTime(value){
-    if(!value){
-        return "-";
-    }
-
-    const date = new Date(value);
-
-    if(Number.isNaN(date.getTime())){
-        return String(value);
-    }
-
-    return date.toLocaleString("it-IT", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-    });
 }
 
 function getTodaySlug(){
@@ -2611,7 +2558,8 @@ function renderCommunicationHistory(){
 }
 
 function exportCommunicationHistoryCsv(){
-    const history = getFilteredCommunicationHistory();
+    const allHistory = getCommunicationHistory();
+    const history = getFilteredCommunicationHistory(allHistory);
 
     if(!Array.isArray(history) || history.length === 0){
         setDashboardMessage("Nessuna comunicazione da esportare con i filtri attivi.", "error");
@@ -2629,12 +2577,12 @@ function exportCommunicationHistoryCsv(){
 
     history.forEach(item => {
         csvRows.push([
-            formatDateTime(item.created_at || item.date || item.timestamp),
-            item.type_label || item.type || "Comunicazione",
+            formatDateTime(item.created_at || item.date || item.timestamp || item.createdAt),
+            item.type_label || item.type || item.kind || item.title || "Comunicazione",
             item.recipient || item.name || "-",
             item.phone || "-",
-            item.athlete || "-",
-            item.message || "-"
+            item.athlete || item.athleteName || "-",
+            item.message || item.text || "-"
         ]);
     });
 
@@ -2642,6 +2590,25 @@ function exportCommunicationHistoryCsv(){
     setDashboardMessage("Storico comunicazioni esportato in CSV.", "success");
 }
 
+function formatDateTime(value){
+    if(!value){
+        return "-";
+    }
+
+    const date = new Date(value);
+
+    if(Number.isNaN(date.getTime())){
+        return String(value);
+    }
+
+    return date.toLocaleString("it-IT", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
 function clearCommunicationHistory(){
     if(!confirm("Vuoi pulire lo storico comunicazioni WhatsApp da questo dispositivo?")){
         return;
