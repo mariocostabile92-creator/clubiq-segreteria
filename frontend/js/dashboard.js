@@ -49,6 +49,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function bindDashboardActions(){
     const logoutBtn = document.getElementById("logoutBtn");
+    const installPwaBtn = document.getElementById("installPwaBtn");
+    const closePwaGuideBtn = document.getElementById("closePwaGuideBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const generateSecretaryReportPdfBtn = document.getElementById("generateSecretaryReportPdfBtn");
     const checkoutProMonthlyBtn = document.getElementById("checkoutProMonthlyBtn");
@@ -100,6 +102,14 @@ function bindDashboardActions(){
     const certificateSearchInput = document.getElementById("certificateSearchInput");
     const certificateGroupFilter = document.getElementById("certificateGroupFilter");
     const certificateStatusFilter = document.getElementById("certificateStatusFilter");
+
+    if(installPwaBtn){
+        installPwaBtn.addEventListener("click", showPwaInstallGuide);
+    }
+
+    if(closePwaGuideBtn){
+        closePwaGuideBtn.addEventListener("click", hidePwaInstallGuide);
+    }
 
     if(logoutBtn){
         logoutBtn.addEventListener("click", () => {
@@ -253,6 +263,23 @@ function bindDashboardActions(){
 }
 
 
+
+
+function showPwaInstallGuide(){
+    const guide = document.getElementById("pwaInstallGuide");
+    if(guide){
+        guide.classList.remove("hidden");
+        guide.scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+    setDashboardMessage("Guida installazione app aperta. Su iPhone usa Safari → Condividi → Aggiungi alla schermata Home.", "info");
+}
+
+function hidePwaInstallGuide(){
+    const guide = document.getElementById("pwaInstallGuide");
+    if(guide){
+        guide.classList.add("hidden");
+    }
+}
 
 function getOperativeNotifications(){
     const pendingRequests = cachedParentRequests.filter(item => item.status === "pending").length;
@@ -3059,203 +3086,3 @@ function clearCommunicationHistory(){
    Report Segreteria PDF V1
 ========================= */
 
-
-
-/* ================================
-   Billing UI + Pro Lock V1
-================================ */
-
-function getCurrentPlan(){
-    return (cachedBilling?.plan || "free").toLowerCase();
-}
-
-function getPlanLimits(){
-    const plan = getCurrentPlan();
-    if(plan === "premium"){
-        return { athletesLimit:null, pdf:true, csv:true, whatsappHistory:true, label:"Premium" };
-    }
-    if(plan === "pro"){
-        return { athletesLimit:80, pdf:true, csv:true, whatsappHistory:true, label:"Pro" };
-    }
-    return { athletesLimit:5, pdf:false, csv:false, whatsappHistory:false, label:"Free" };
-}
-
-function isPlanAtLeastPro(){
-    const plan = getCurrentPlan();
-    return plan === "pro" || plan === "premium";
-}
-
-function showUpgradeMessage(feature){
-    setDashboardMessage(`${feature} è disponibile nei piani Pro e Premium. Scegli un piano dalla sezione Abbonamento ClubIQ.`, "error");
-    document.getElementById("billingSection")?.scrollIntoView({ behavior:"smooth", block:"start" });
-}
-
-function canAddAthleteByPlan(){
-    const limits = getPlanLimits();
-    if(limits.athletesLimit === null) return true;
-    return cachedAthletes.length < limits.athletesLimit;
-}
-
-function applyPlanLocks(){
-    const limits = getPlanLimits();
-    const notice = document.getElementById("planLockNotice");
-    const addAthleteBtn = document.querySelector('#addAthleteForm button[type="submit"]');
-    const pdfBtn = document.getElementById("generateSecretaryReportPdfBtn");
-    const exportPaymentsBtn = document.getElementById("exportPaymentsCsvBtn");
-    const exportCertificatesBtn = document.getElementById("exportCertificatesCsvBtn");
-    const exportHistoryBtn = document.getElementById("exportCommunicationHistoryCsvBtn");
-
-    if(addAthleteBtn){
-        const blocked = !canAddAthleteByPlan();
-        addAthleteBtn.disabled = blocked;
-        addAthleteBtn.textContent = blocked ? `Limite ${limits.athletesLimit} atleti raggiunto` : "Salva atleta";
-    }
-
-    [pdfBtn, exportPaymentsBtn, exportCertificatesBtn, exportHistoryBtn].filter(Boolean).forEach(btn => {
-        btn.classList.toggle("pro-locked", !limits.csv && btn !== pdfBtn);
-    });
-    if(pdfBtn) pdfBtn.classList.toggle("pro-locked", !limits.pdf);
-
-    const historySection = document.getElementById("communicationHistorySection");
-    if(historySection){
-        historySection.classList.toggle("pro-feature-muted", !limits.whatsappHistory);
-    }
-
-    if(notice){
-        if(getCurrentPlan() === "free"){
-            notice.classList.remove("hidden");
-            notice.innerHTML = `Piano Free attivo: puoi gestire fino a <strong>5 atleti</strong>. Report PDF, export CSV e storico WhatsApp si sbloccano con Pro.`;
-        }else if(getCurrentPlan() === "pro"){
-            notice.classList.remove("hidden");
-            notice.innerHTML = `Piano Pro attivo: limite <strong>80 atleti</strong>, report PDF, export CSV e storico WhatsApp sbloccati.`;
-        }else{
-            notice.classList.remove("hidden");
-            notice.innerHTML = `Piano Premium attivo: <strong>atleti illimitati</strong> e tutte le funzioni Pro sbloccate.`;
-        }
-    }
-}
-
-const __originalRenderBillingStatus = typeof renderBillingStatus === "function" ? renderBillingStatus : null;
-renderBillingStatus = function(errorMessage = ""){
-    const section = document.getElementById("billingSection");
-    const summary = document.getElementById("billingPlanSummary");
-    const portalBtn = document.getElementById("manageBillingBtn") || document.getElementById("billingPortalBtn");
-
-    if(!section) return;
-    section.classList.remove("hidden");
-
-    if(errorMessage){
-        if(summary) summary.textContent = errorMessage;
-        if(portalBtn) portalBtn.classList.add("hidden");
-        return;
-    }
-
-    const plan = getCurrentPlan();
-    const status = cachedBilling?.subscription_status || "active";
-    const limits = getPlanLimits();
-    const statusLabel = status === "suspended" ? "sospeso" : "attivo";
-    const athleteLimitText = limits.athletesLimit === null ? "atleti illimitati" : `fino a ${limits.athletesLimit} atleti`;
-
-    if(summary){
-        summary.textContent = `Piano attuale: ${limits.label} · Stato: ${statusLabel} · ${athleteLimitText}`;
-    }
-
-    document.querySelectorAll("[data-plan-card]").forEach(card => {
-        card.classList.toggle("current", card.dataset.planCard === plan);
-    });
-
-    if(portalBtn){
-        portalBtn.classList.toggle("hidden", !cachedBilling?.stripe_customer_id);
-    }
-
-    applyPlanLocks();
-};
-
-async function startCheckout(plan, interval){
-    if(!requireVerifiedEmail("l'attivazione dell'abbonamento")) return;
-    const planLabel = plan === "premium" ? "Premium" : "Pro";
-    const intervalLabel = interval === "yearly" ? "annuale" : "mensile";
-    setDashboardMessage(`Apro Stripe Checkout per ${planLabel} ${intervalLabel}...`, "info");
-    try{
-        const data = await apiRequest(`/billing/checkout/${plan}/${interval}`, { method:"POST" });
-        const url = data?.checkout_url || data?.url;
-        if(!url) throw new Error("URL Stripe Checkout non ricevuto.");
-        window.location.href = url;
-    }catch(error){
-        setDashboardMessage(error.message || "Errore apertura Stripe Checkout.", "error");
-    }
-}
-
-openBillingCheckout = function(plan){
-    return startCheckout(plan, "monthly");
-};
-
-const __originalHandleAddAthlete = typeof handleAddAthlete === "function" ? handleAddAthlete : null;
-if(__originalHandleAddAthlete){
-    handleAddAthlete = async function(event){
-        if(!canAddAthleteByPlan()){
-            event.preventDefault();
-            showUpgradeMessage("Limite atleti raggiunto");
-            return;
-        }
-        return __originalHandleAddAthlete(event);
-    };
-}
-
-const __originalGenerateSecretaryReportPdf = typeof generateSecretaryReportPdf === "function" ? generateSecretaryReportPdf : null;
-if(__originalGenerateSecretaryReportPdf){
-    generateSecretaryReportPdf = function(){
-        if(!isPlanAtLeastPro()){
-            showUpgradeMessage("Report PDF");
-            return;
-        }
-        return __originalGenerateSecretaryReportPdf();
-    };
-}
-
-const __originalExportPaymentsCsv = typeof exportPaymentsCsv === "function" ? exportPaymentsCsv : null;
-if(__originalExportPaymentsCsv){
-    exportPaymentsCsv = function(){
-        if(!isPlanAtLeastPro()){
-            showUpgradeMessage("Export CSV pagamenti");
-            return;
-        }
-        return __originalExportPaymentsCsv();
-    };
-}
-
-const __originalExportCertificatesCsv = typeof exportCertificatesCsv === "function" ? exportCertificatesCsv : null;
-if(__originalExportCertificatesCsv){
-    exportCertificatesCsv = function(){
-        if(!isPlanAtLeastPro()){
-            showUpgradeMessage("Export CSV certificati");
-            return;
-        }
-        return __originalExportCertificatesCsv();
-    };
-}
-
-const __originalExportCommunicationHistoryCsv = typeof exportCommunicationHistoryCsv === "function" ? exportCommunicationHistoryCsv : null;
-if(__originalExportCommunicationHistoryCsv){
-    exportCommunicationHistoryCsv = function(){
-        if(!isPlanAtLeastPro()){
-            showUpgradeMessage("Export CSV storico WhatsApp");
-            return;
-        }
-        return __originalExportCommunicationHistoryCsv();
-    };
-}
-
-const __originalRenderCommunicationHistory = typeof renderCommunicationHistory === "function" ? renderCommunicationHistory : null;
-if(__originalRenderCommunicationHistory){
-    renderCommunicationHistory = function(){
-        if(!isPlanAtLeastPro()){
-            const list = document.getElementById("communicationHistoryList");
-            if(list){
-                list.innerHTML = `<div class="empty pro-lock-box">Storico WhatsApp disponibile nei piani Pro e Premium.</div>`;
-            }
-            return;
-        }
-        return __originalRenderCommunicationHistory();
-    };
-}

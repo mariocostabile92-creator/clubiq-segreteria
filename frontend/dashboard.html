@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=prolock1" />
+    <link rel="stylesheet" href="css/dashboard.css?v=install1" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
@@ -36,6 +36,7 @@
                 <a href="#addAthleteSection">Nuovo atleta</a>
                 <a href="#paymentsSection">Pagamenti</a>
                 <a href="#certificatesSection">Certificati</a>
+                <a href="#billingSection">Abbonamento</a>
             </nav>
 
             <button id="installPwaBtn" class="ghost-btn hidden" type="button">Installa app</button>
@@ -56,6 +57,22 @@
             </header>
 
             <div id="dashboardMessage" class="message hidden"></div>
+            <section id="pwaInstallGuide" class="panel pwa-install-panel hidden">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">App ClubIQ</p>
+                        <h2>Installa ClubIQ sul telefono</h2>
+                        <p class="club-link-description">Su iPhone l’installazione non parte con popup automatico: apri ClubIQ con Safari, tocca Condividi e poi “Aggiungi alla schermata Home”. Su Android usa il popup Installa app oppure il menu del browser.</p>
+                    </div>
+                    <button id="closePwaGuideBtn" class="secondary-btn" type="button">Chiudi</button>
+                </div>
+                <div class="pwa-install-grid">
+                    <article><strong>iPhone</strong><span>Safari → Condividi → Aggiungi alla schermata Home</span></article>
+                    <article><strong>Android</strong><span>Menu ⋮ → Installa app / Aggiungi a schermata Home</span></article>
+                    <article><strong>Desktop</strong><span>Chrome/Edge → icona installazione nella barra indirizzi</span></article>
+                </div>
+            </section>
+
             <section id="billingSection" class="panel billing-panel hidden">
                 <div class="section-heading billing-heading">
                     <div>
@@ -63,59 +80,31 @@
                         <h2>Piano società</h2>
                         <p id="billingPlanSummary" class="club-link-description">Caricamento piano...</p>
                     </div>
-                    <button id="manageBillingBtn" class="secondary-btn hidden" type="button">Gestisci abbonamento</button>
+                    <div class="billing-actions">
+                        <button id="billingProBtn" class="secondary-btn" type="button">Passa a Pro</button>
+                        <button id="billingPremiumBtn" class="primary-btn" type="button">Passa a Premium</button>
+                        <button id="billingPortalBtn" class="secondary-btn" type="button">Gestisci abbonamento</button>
+                    </div>
                 </div>
-
-                <div class="billing-plans-grid">
-                    <article class="billing-plan-card free" data-plan-card="free">
-                        <span class="billing-plan-badge">Free</span>
-                        <h3>Per iniziare</h3>
-                        <strong>0 €</strong>
-                        <p>Ideale per provare ClubIQ e capire se può aiutare la tua segreteria.</p>
-                        <ul>
-                            <li>Fino a 5 atleti</li>
-                            <li>Gestione base di quote e certificati</li>
-                            <li>Link iscrizione genitori</li>
-                        </ul>
+                <div class="billing-cards">
+                    <article class="billing-card">
+                        <span>Free</span>
+                        <strong>0 €/mese</strong>
+                        <small>Base per provare ClubIQ.</small>
                     </article>
-
-                    <article class="billing-plan-card pro" data-plan-card="pro">
-                        <span class="billing-plan-badge">Pro</span>
-                        <h3>Per società operative</h3>
+                    <article class="billing-card highlighted">
+                        <span>Pro</span>
                         <strong>19 €/mese</strong>
-                        <p>Per scuole calcio e società piccole/medie che vogliono gestire davvero la segreteria.</p>
-                        <ul>
-                            <li>Fino a 80 atleti</li>
-                            <li>Report PDF segreteria</li>
-                            <li>Export CSV pagamenti/certificati</li>
-                            <li>Storico WhatsApp sbloccato</li>
-                        </ul>
-                        <div class="billing-plan-actions">
-                            <button id="checkoutProMonthlyBtn" class="secondary-btn" type="button">Pro mensile</button>
-                            <button id="checkoutProYearlyBtn" class="primary-btn" type="button">Pro annuale · risparmi 2 mesi</button>
-                        </div>
+                        <small>Funzioni avanzate per segreterie operative.</small>
                     </article>
-
-                    <article class="billing-plan-card premium" data-plan-card="premium">
-                        <span class="billing-plan-badge">Premium</span>
-                        <h3>Per società strutturate</h3>
+                    <article class="billing-card premium">
+                        <span>Premium</span>
                         <strong>39 €/mese</strong>
-                        <p>Per chi vuole limiti più alti, crescita e priorità sulle funzioni avanzate future.</p>
-                        <ul>
-                            <li>Atleti illimitati</li>
-                            <li>Tutto il piano Pro</li>
-                            <li>Badge Premium</li>
-                            <li>Pronto per multi-staff, statistiche avanzate e automazioni</li>
-                        </ul>
-                        <div class="billing-plan-actions">
-                            <button id="checkoutPremiumMonthlyBtn" class="secondary-btn" type="button">Premium mensile</button>
-                            <button id="checkoutPremiumYearlyBtn" class="primary-btn" type="button">Premium annuale · risparmi 2 mesi</button>
-                        </div>
+                        <small>Massimo controllo e funzioni future premium.</small>
                     </article>
                 </div>
-
-                <div id="planLockNotice" class="plan-lock-notice hidden"></div>
             </section>
+
 
             <section id="operativeNotificationsSection" class="panel operative-notifications-panel hidden">
                 <div class="section-heading operative-notifications-heading">
@@ -602,7 +591,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js?v=prolock1"></script>
+    <script src="js/dashboard.js?v=install1"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">
@@ -613,6 +602,7 @@
         <a href="#athletesSection">Atleti</a>
         <a href="#paymentsSection">Quote</a>
         <a href="#certificatesSection">Certificati</a>
+                <a href="#billingSection">Abbonamento</a>
     </nav>
 </body>
 </html>
