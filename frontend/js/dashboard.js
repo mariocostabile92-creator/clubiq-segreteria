@@ -2639,7 +2639,14 @@ function generateSecretaryReportPdf(){
     try{
         const clubName = cachedClub?.name || "ClubIQ Segreteria";
         const today = new Date();
-        const todayLabel = today.toLocaleString("it-IT", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+        const todayLabel = today.toLocaleString("it-IT", {
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric",
+            hour:"2-digit",
+            minute:"2-digit"
+        });
+
         const checks = getTodayChecksData();
         const history = getCommunicationHistory().slice(0, 8);
         const openPayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "open").length;
@@ -2648,44 +2655,77 @@ function generateSecretaryReportPdf(){
         const validCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "valid").length;
         const expiringCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length;
         const expiredCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length;
-        const totalResidual = cachedPayments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0)), 0);
+        const totalResidual = cachedPayments.reduce((sum, payment) => {
+            return sum + Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
+        }, 0);
 
         const rows = history.length ? history.map(item => `
             <tr>
-                <td>${escapeHtml(formatDateTime(item.created_at || item.date || item.timestamp))}</td>
-                <td>${escapeHtml(item.type_label || item.type || "Comunicazione")}</td>
+                <td>${escapeHtml(formatDateTime(item.created_at || item.date || item.timestamp || item.createdAt))}</td>
+                <td>${escapeHtml(item.type_label || item.type || item.kind || item.title || "Comunicazione")}</td>
                 <td>${escapeHtml(item.recipient || item.name || "-")}</td>
                 <td>${escapeHtml(item.phone || "-")}</td>
             </tr>
         `).join("") : `<tr><td colspan="4">Nessuna comunicazione registrata su questo dispositivo.</td></tr>`;
 
-        const html = `<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<title>Report Segreteria - ${escapeHtml(clubName)}</title>
-<style>
-body{font-family:Arial,sans-serif;color:#0f172a;margin:32px;background:#fff} .header{border-bottom:3px solid #2563eb;padding-bottom:16px;margin-bottom:22px}.eyebrow{color:#2563eb;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}h1{margin:6px 0;font-size:28px}h2{font-size:18px;margin:26px 0 12px}.muted{color:#64748b}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{border:1px solid #dbe3ef;border-radius:14px;padding:14px;background:#f8fafc}.card span{display:block;color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase}.card strong{display:block;font-size:24px;margin-top:8px}.danger strong{color:#dc2626}.warning strong{color:#d97706}.success strong{color:#16a34a}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #dbe3ef;padding:9px;text-align:left;font-size:12px}th{background:#eff6ff;color:#1d4ed8}.footer{margin-top:30px;color:#64748b;font-size:11px;border-top:1px solid #dbe3ef;padding-top:12px}@media print{button{display:none}body{margin:18px}.grid{grid-template-columns:repeat(4,1fr)}}
-</style>
-</head>
-<body>
-<div class="header"><div class="eyebrow">ClubIQ Segreteria</div><h1>Report segreteria</h1><div class="muted">${escapeHtml(clubName)} · Generato il ${escapeHtml(todayLabel)}</div></div>
-<h2>Riepilogo operativo</h2><div class="grid">
-<div class="card"><span>Atleti totali</span><strong>${cachedAthletes.length}</strong></div>
-<div class="card warning"><span>Richieste in attesa</span><strong>${checks.pendingRequests}</strong></div>
-<div class="card danger"><span>Quote scadute</span><strong>${overduePayments}</strong></div>
-<div class="card danger"><span>Certificati scaduti</span><strong>${expiredCertificates}</strong></div>
-</div>
-<h2>Pagamenti</h2><div class="grid"><div class="card"><span>Pagati</span><strong>${paidPayments}</strong></div><div class="card warning"><span>Aperti</span><strong>${openPayments}</strong></div><div class="card danger"><span>Scaduti</span><strong>${overduePayments}</strong></div><div class="card"><span>Residuo</span><strong>${formatEuro(totalResidual)}</strong></div></div>
-<h2>Certificati</h2><div class="grid"><div class="card success"><span>Validi</span><strong>${validCertificates}</strong></div><div class="card warning"><span>In scadenza</span><strong>${expiringCertificates}</strong></div><div class="card danger"><span>Scaduti</span><strong>${expiredCertificates}</strong></div><div class="card"><span>Totali</span><strong>${cachedCertificates.length}</strong></div></div>
-<h2>Ultime comunicazioni WhatsApp</h2><table><thead><tr><th>Data</th><th>Tipo</th><th>Destinatario</th><th>Telefono</th></tr></thead><tbody>${rows}</tbody></table>
-<div class="footer">Report generato da ClubIQ. I dati WhatsApp sono salvati localmente sul dispositivo della segreteria.</div>
-<script>window.onload=function(){setTimeout(function(){window.print()},300)}</script>
-</body></html>`;
-        const reportWindow = window.open("", "_blank", "noopener,noreferrer");
-        if(!reportWindow){ setDashboardMessage("Popup bloccato: abilita le finestre popup per generare il PDF.", "error"); return; }
-        reportWindow.document.open(); reportWindow.document.write(html); reportWindow.document.close();
-        setDashboardMessage("Report segreteria aperto. Usa Salva come PDF dalla finestra di stampa.", "success");
+        const html = `
+            <section id="clubiqPrintReport" class="clubiq-print-report">
+                <div class="report-header">
+                    <div class="report-eyebrow">ClubIQ Segreteria</div>
+                    <h1>Report segreteria</h1>
+                    <p>${escapeHtml(clubName)} · Generato il ${escapeHtml(todayLabel)}</p>
+                </div>
+
+                <h2>Riepilogo operativo</h2>
+                <div class="report-grid">
+                    <article><span>Atleti totali</span><strong>${cachedAthletes.length}</strong></article>
+                    <article><span>Richieste in attesa</span><strong>${checks.pendingRequests}</strong></article>
+                    <article><span>Quote scadute</span><strong>${overduePayments}</strong></article>
+                    <article><span>Certificati scaduti</span><strong>${expiredCertificates}</strong></article>
+                </div>
+
+                <h2>Pagamenti</h2>
+                <div class="report-grid">
+                    <article><span>Pagati</span><strong>${paidPayments}</strong></article>
+                    <article><span>Aperti</span><strong>${openPayments}</strong></article>
+                    <article><span>Scaduti</span><strong>${overduePayments}</strong></article>
+                    <article><span>Residuo</span><strong>${formatEuro(totalResidual)}</strong></article>
+                </div>
+
+                <h2>Certificati</h2>
+                <div class="report-grid">
+                    <article><span>Validi</span><strong>${validCertificates}</strong></article>
+                    <article><span>In scadenza</span><strong>${expiringCertificates}</strong></article>
+                    <article><span>Scaduti</span><strong>${expiredCertificates}</strong></article>
+                    <article><span>Totali</span><strong>${cachedCertificates.length}</strong></article>
+                </div>
+
+                <h2>Ultime comunicazioni WhatsApp</h2>
+                <table>
+                    <thead>
+                        <tr><th>Data</th><th>Tipo</th><th>Destinatario</th><th>Telefono</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+
+                <p class="report-footer">Report generato da ClubIQ. I dati WhatsApp sono salvati localmente sul dispositivo della segreteria.</p>
+            </section>
+        `;
+
+        const oldReport = document.getElementById("clubiqPrintReport");
+        if(oldReport){
+            oldReport.remove();
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = html;
+        document.body.appendChild(wrapper.firstElementChild);
+
+        setDashboardMessage("Report pronto. Si apre la stampa: scegli Salva come PDF.", "success");
+
+        setTimeout(() => {
+            window.print();
+        }, 250);
     }catch(error){
         console.error(error);
         setDashboardMessage("Errore durante la generazione del report PDF.", "error");
