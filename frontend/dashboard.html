@@ -31,6 +31,7 @@
                 <a class="active" href="#top">Dashboard</a>
                 <a href="#clubRegistrationSection">Link iscrizione</a>
                 <a href="#parentRequestsSection">Richieste</a>
+                <a href="#quickCommunicationsSection">Comunicazioni</a>
                 <a href="#athletesSection">Atleti</a>
                 <a href="#addAthleteSection">Nuovo atleta</a>
                 <a href="#paymentsSection">Pagamenti</a>
@@ -291,6 +292,46 @@
                 </div>
             </section>
 
+
+            <section id="quickCommunicationsSection" class="panel communications-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">WhatsApp rapido</p>
+                        <h2>Comunicazioni rapide</h2>
+                        <p class="club-link-description">Prepara messaggi già pronti da inviare ai genitori tramite WhatsApp. Nessuna API esterna: ClubIQ apre WhatsApp con il testo compilato.</p>
+                    </div>
+                </div>
+
+                <div class="quick-communications-grid">
+                    <article class="quick-communication-card">
+                        <span>Iscrizioni</span>
+                        <strong>Invia link iscrizione</strong>
+                        <p>Condividi il modulo pubblico della società con un genitore.</p>
+                        <label>Telefono genitore<input id="quickRegistrationPhone" type="text" placeholder="347..." /></label>
+                        <label>Nome genitore<input id="quickRegistrationParentName" type="text" placeholder="Nome genitore" /></label>
+                        <button id="sendQuickRegistrationLinkBtn" class="mini-btn whatsapp" type="button">💬 Invia link iscrizione</button>
+                    </article>
+
+                    <article class="quick-communication-card">
+                        <span>Documenti</span>
+                        <strong>Richiedi documenti mancanti</strong>
+                        <p>Chiedi certificato medico o ricevuta pagamento non ancora consegnati.</p>
+                        <label>Telefono genitore<input id="quickDocumentsPhone" type="text" placeholder="347..." /></label>
+                        <label>Nome atleta<input id="quickDocumentsAthleteName" type="text" placeholder="Nome atleta" /></label>
+                        <button id="sendQuickDocumentsBtn" class="mini-btn whatsapp" type="button">📄 Richiedi documenti</button>
+                    </article>
+
+                    <article class="quick-communication-card">
+                        <span>Gruppo</span>
+                        <strong>Comunicazione generale</strong>
+                        <p>Scrivi un messaggio libero per un genitore o referente.</p>
+                        <label>Telefono<input id="quickCustomPhone" type="text" placeholder="347..." /></label>
+                        <label>Messaggio<textarea id="quickCustomMessage" rows="4" placeholder="Scrivi qui il messaggio..."></textarea></label>
+                        <button id="sendQuickCustomBtn" class="mini-btn whatsapp" type="button">💬 Apri WhatsApp</button>
+                    </article>
+                </div>
+            </section>
+
             <section id="athletesSection" class="panel">
                 <div class="section-heading">
                     <div>
@@ -430,6 +471,7 @@
         <a href="#top">Home</a>
         <a href="#clubRegistrationSection">Link</a>
         <a href="#parentRequestsSection">Richieste</a>
+        <a href="#quickCommunicationsSection">Chat</a>
         <a href="#athletesSection">Atleti</a>
         <a href="#paymentsSection">Quote</a>
         <a href="#certificatesSection">Certificati</a>

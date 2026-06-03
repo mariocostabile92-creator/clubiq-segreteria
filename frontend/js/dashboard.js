@@ -40,6 +40,9 @@ function bindDashboardActions(){
     const regenerateClubCodeBtn = document.getElementById("regenerateClubCodeBtn");
     const resendVerificationBtn = document.getElementById("resendVerificationBtn");
     const todayChecksRefreshBtn = document.getElementById("todayChecksRefreshBtn");
+    const sendQuickRegistrationLinkBtn = document.getElementById("sendQuickRegistrationLinkBtn");
+    const sendQuickDocumentsBtn = document.getElementById("sendQuickDocumentsBtn");
+    const sendQuickCustomBtn = document.getElementById("sendQuickCustomBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -79,6 +82,18 @@ function bindDashboardActions(){
 
     if(todayChecksRefreshBtn){
         todayChecksRefreshBtn.addEventListener("click", refreshTodayChecks);
+    }
+
+    if(sendQuickRegistrationLinkBtn){
+        sendQuickRegistrationLinkBtn.addEventListener("click", sendQuickRegistrationLinkWhatsApp);
+    }
+
+    if(sendQuickDocumentsBtn){
+        sendQuickDocumentsBtn.addEventListener("click", sendQuickDocumentsWhatsApp);
+    }
+
+    if(sendQuickCustomBtn){
+        sendQuickCustomBtn.addEventListener("click", sendQuickCustomWhatsApp);
     }
 
     if(addAthleteForm){
@@ -1664,6 +1679,74 @@ Segreteria ${clubName}`;
     openWhatsApp(phone, message);
 }
 
+
+
+/* =========================
+   Comunicazioni rapide V1.2
+========================= */
+
+function sendQuickRegistrationLinkWhatsApp(){
+    const phone = document.getElementById("quickRegistrationPhone")?.value || "";
+    const parentName = document.getElementById("quickRegistrationParentName")?.value.trim() || "";
+    const clubName = getClubDisplayName();
+    const link = getRegistrationLinkValue();
+
+    if(!link){
+        setDashboardMessage("Link iscrizione non disponibile. Controlla il codice società.", "error");
+        return;
+    }
+
+    const greeting = parentName ? `Ciao ${parentName},` : "Ciao,";
+    const message =
+`${greeting}
+ti inviamo il link per compilare la richiesta di iscrizione atleta per ${clubName}.
+
+${link}
+
+Una volta inviato il modulo, la segreteria controllerà i dati e ti aggiornerà appena possibile.
+
+Grazie,
+Segreteria ${clubName}`;
+
+    openWhatsApp(phone, message);
+}
+
+function sendQuickDocumentsWhatsApp(){
+    const phone = document.getElementById("quickDocumentsPhone")?.value || "";
+    const athleteName = document.getElementById("quickDocumentsAthleteName")?.value.trim() || "l'atleta";
+    const clubName = getClubDisplayName();
+
+    const message =
+`Ciao,
+ti contattiamo dalla segreteria di ${clubName} per completare la pratica di ${athleteName}.
+
+Ti chiediamo gentilmente di inviarci i documenti mancanti, come certificato medico e/o ricevuta di pagamento, appena disponibili.
+
+Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria ${clubName}`;
+
+    openWhatsApp(phone, message);
+}
+
+function sendQuickCustomWhatsApp(){
+    const phone = document.getElementById("quickCustomPhone")?.value || "";
+    const customMessage = document.getElementById("quickCustomMessage")?.value.trim() || "";
+    const clubName = getClubDisplayName();
+
+    if(!customMessage){
+        setDashboardMessage("Scrivi prima il messaggio da inviare.", "error");
+        return;
+    }
+
+    const message =
+`${customMessage}
+
+Segreteria ${clubName}`;
+
+    openWhatsApp(phone, message);
+}
 
 /* =========================
    Utility stato e filtri
