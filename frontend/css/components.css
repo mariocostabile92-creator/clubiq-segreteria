@@ -786,3 +786,42 @@
         padding:20px;
     }
 }
+
+
+/* ================================
+   Brand / Logo ClubIQ ufficiale
+================================ */
+
+.brand-logo-img{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    object-fit:contain;
+    display:block;
+    background:#ffffff;
+    box-shadow:0 14px 30px rgba(37,99,235,.25);
+    flex:0 0 auto;
+}
+
+.brand-row .brand-logo-img{
+    width:52px;
+    height:52px;
+    border-radius:18px;
+    box-shadow:0 14px 30px rgba(37,99,235,.35);
+}
+
+.logo-dot{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    display:inline-block;
+    background:linear-gradient(135deg, #2563eb, #22c55e);
+    box-shadow:0 14px 30px rgba(37,99,235,.25);
+}
+
+/* Fallback: se l'immagine logo non viene caricata, resta visibile il vecchio segno grafico */
+.brand-logo-img[src=""],
+.brand-logo-img:not([src]){
+    display:none;
+}
+
