@@ -1789,6 +1789,127 @@ Segreteria ${clubName}`;
     openWhatsApp(phone, message, { type: "Comunicazione generale", recipient: "Contatto" });
 }
 
+
+function generateSecretaryReportPdf(){
+    const reportArea = document.getElementById("secretaryReportPrintArea");
+
+    if(!reportArea){
+        setDashboardMessage("Area report non trovata. Aggiorna i file dashboard.", "error");
+        return;
+    }
+
+    const today = formatDateTime(new Date().toISOString());
+    const clubName = cachedClub?.name || "Società sportiva";
+    const clubEmail = cachedClub?.email || "-";
+    const clubPhone = cachedClub?.phone || "-";
+    const clubAddress = cachedClub?.address || "-";
+
+    const pendingRequests = cachedParentRequests.filter(item => item.status === "pending").length;
+    const approvedRequests = cachedParentRequests.filter(item => item.status === "approved").length;
+    const rejectedRequests = cachedParentRequests.filter(item => item.status === "rejected").length;
+
+    const paidPayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "paid").length;
+    const openPayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "open").length;
+    const overduePayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length;
+    const totalResidual = cachedPayments.reduce((sum, payment) => {
+        return sum + Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
+    }, 0);
+
+    const validCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "valid").length;
+    const expiringCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length;
+    const expiredCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length;
+
+    const history = getCommunicationHistory().slice(0, 8);
+
+    reportArea.innerHTML = `
+        <div class="secretary-report-page">
+            <div class="secretary-report-header">
+                <div>
+                    <p class="secretary-report-eyebrow">ClubIQ Segreteria</p>
+                    <h1>Report segreteria</h1>
+                    <p>Generato il ${escapeHtml(today)}</p>
+                </div>
+                <div class="secretary-report-brand">ClubIQ</div>
+            </div>
+
+            <section class="secretary-report-section">
+                <h2>Dati società</h2>
+                <div class="secretary-report-grid two">
+                    <div><span>Società</span><strong>${escapeHtml(clubName)}</strong></div>
+                    <div><span>Email</span><strong>${escapeHtml(clubEmail)}</strong></div>
+                    <div><span>Telefono</span><strong>${escapeHtml(clubPhone)}</strong></div>
+                    <div><span>Indirizzo</span><strong>${escapeHtml(clubAddress)}</strong></div>
+                </div>
+            </section>
+
+            <section class="secretary-report-section">
+                <h2>Riepilogo operativo</h2>
+                <div class="secretary-report-grid five">
+                    <div><span>Atleti</span><strong>${cachedAthletes.length}</strong></div>
+                    <div><span>Richieste attesa</span><strong>${pendingRequests}</strong></div>
+                    <div><span>Quote scadute</span><strong>${overduePayments}</strong></div>
+                    <div><span>Certificati scaduti</span><strong>${expiredCertificates}</strong></div>
+                    <div><span>Residuo quote</span><strong>${formatEuro(totalResidual)}</strong></div>
+                </div>
+            </section>
+
+            <section class="secretary-report-section">
+                <h2>Pagamenti</h2>
+                <table class="secretary-report-table">
+                    <thead><tr><th>Pagati</th><th>Aperti</th><th>Scaduti</th><th>Residuo totale</th></tr></thead>
+                    <tbody><tr><td>${paidPayments}</td><td>${openPayments}</td><td>${overduePayments}</td><td>${formatEuro(totalResidual)}</td></tr></tbody>
+                </table>
+            </section>
+
+            <section class="secretary-report-section">
+                <h2>Certificati</h2>
+                <table class="secretary-report-table">
+                    <thead><tr><th>Validi</th><th>In scadenza</th><th>Scaduti</th></tr></thead>
+                    <tbody><tr><td>${validCertificates}</td><td>${expiringCertificates}</td><td>${expiredCertificates}</td></tr></tbody>
+                </table>
+            </section>
+
+            <section class="secretary-report-section">
+                <h2>Richieste genitori</h2>
+                <table class="secretary-report-table">
+                    <thead><tr><th>In attesa</th><th>Approvate</th><th>Rifiutate</th></tr></thead>
+                    <tbody><tr><td>${pendingRequests}</td><td>${approvedRequests}</td><td>${rejectedRequests}</td></tr></tbody>
+                </table>
+            </section>
+
+            <section class="secretary-report-section">
+                <h2>Ultime comunicazioni WhatsApp</h2>
+                ${history.length ? `
+                    <table class="secretary-report-table">
+                        <thead><tr><th>Data</th><th>Tipo</th><th>Destinatario</th><th>Telefono</th></tr></thead>
+                        <tbody>
+                            ${history.map(item => `
+                                <tr>
+                                    <td>${escapeHtml(formatDateTime(item.created_at || item.date || item.timestamp))}</td>
+                                    <td>${escapeHtml(item.type || "Comunicazione")}</td>
+                                    <td>${escapeHtml(item.recipient || item.name || "-")}</td>
+                                    <td>${escapeHtml(item.phone || "-")}</td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                ` : `<p class="secretary-report-empty">Nessuna comunicazione WhatsApp registrata su questo dispositivo.</p>`}
+            </section>
+        </div>
+    `;
+
+    reportArea.classList.remove("hidden");
+    document.body.classList.add("printing-secretary-report");
+
+    setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+            document.body.classList.remove("printing-secretary-report");
+            reportArea.classList.add("hidden");
+        }, 700);
+    }, 250);
+}
+
 /* =========================
    Utility stato e filtri
 ========================= */
@@ -2635,99 +2756,3 @@ function clearCommunicationHistory(){
    Report Segreteria PDF V1
 ========================= */
 
-function generateSecretaryReportPdf(){
-    try{
-        const clubName = cachedClub?.name || "ClubIQ Segreteria";
-        const today = new Date();
-        const todayLabel = today.toLocaleString("it-IT", {
-            day:"2-digit",
-            month:"2-digit",
-            year:"numeric",
-            hour:"2-digit",
-            minute:"2-digit"
-        });
-
-        const checks = getTodayChecksData();
-        const history = getCommunicationHistory().slice(0, 8);
-        const openPayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "open").length;
-        const paidPayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "paid").length;
-        const overduePayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length;
-        const validCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "valid").length;
-        const expiringCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length;
-        const expiredCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length;
-        const totalResidual = cachedPayments.reduce((sum, payment) => {
-            return sum + Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
-        }, 0);
-
-        const rows = history.length ? history.map(item => `
-            <tr>
-                <td>${escapeHtml(formatDateTime(item.created_at || item.date || item.timestamp || item.createdAt))}</td>
-                <td>${escapeHtml(item.type_label || item.type || item.kind || item.title || "Comunicazione")}</td>
-                <td>${escapeHtml(item.recipient || item.name || "-")}</td>
-                <td>${escapeHtml(item.phone || "-")}</td>
-            </tr>
-        `).join("") : `<tr><td colspan="4">Nessuna comunicazione registrata su questo dispositivo.</td></tr>`;
-
-        const html = `
-            <section id="clubiqPrintReport" class="clubiq-print-report">
-                <div class="report-header">
-                    <div class="report-eyebrow">ClubIQ Segreteria</div>
-                    <h1>Report segreteria</h1>
-                    <p>${escapeHtml(clubName)} · Generato il ${escapeHtml(todayLabel)}</p>
-                </div>
-
-                <h2>Riepilogo operativo</h2>
-                <div class="report-grid">
-                    <article><span>Atleti totali</span><strong>${cachedAthletes.length}</strong></article>
-                    <article><span>Richieste in attesa</span><strong>${checks.pendingRequests}</strong></article>
-                    <article><span>Quote scadute</span><strong>${overduePayments}</strong></article>
-                    <article><span>Certificati scaduti</span><strong>${expiredCertificates}</strong></article>
-                </div>
-
-                <h2>Pagamenti</h2>
-                <div class="report-grid">
-                    <article><span>Pagati</span><strong>${paidPayments}</strong></article>
-                    <article><span>Aperti</span><strong>${openPayments}</strong></article>
-                    <article><span>Scaduti</span><strong>${overduePayments}</strong></article>
-                    <article><span>Residuo</span><strong>${formatEuro(totalResidual)}</strong></article>
-                </div>
-
-                <h2>Certificati</h2>
-                <div class="report-grid">
-                    <article><span>Validi</span><strong>${validCertificates}</strong></article>
-                    <article><span>In scadenza</span><strong>${expiringCertificates}</strong></article>
-                    <article><span>Scaduti</span><strong>${expiredCertificates}</strong></article>
-                    <article><span>Totali</span><strong>${cachedCertificates.length}</strong></article>
-                </div>
-
-                <h2>Ultime comunicazioni WhatsApp</h2>
-                <table>
-                    <thead>
-                        <tr><th>Data</th><th>Tipo</th><th>Destinatario</th><th>Telefono</th></tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-
-                <p class="report-footer">Report generato da ClubIQ. I dati WhatsApp sono salvati localmente sul dispositivo della segreteria.</p>
-            </section>
-        `;
-
-        const oldReport = document.getElementById("clubiqPrintReport");
-        if(oldReport){
-            oldReport.remove();
-        }
-
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = html;
-        document.body.appendChild(wrapper.firstElementChild);
-
-        setDashboardMessage("Report pronto. Si apre la stampa: scegli Salva come PDF.", "success");
-
-        setTimeout(() => {
-            window.print();
-        }, 250);
-    }catch(error){
-        console.error(error);
-        setDashboardMessage("Errore durante la generazione del report PDF.", "error");
-    }
-}

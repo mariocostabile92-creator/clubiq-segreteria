@@ -1052,3 +1052,173 @@ body{
         width:100%;
     }
 }
+
+
+/* ================================
+   Report Segreteria PDF pulito
+================================ */
+.secretary-report-print-area{
+    display:block;
+    max-width:980px;
+    margin:24px auto;
+}
+
+.secretary-report-print-area.hidden{
+    display:none;
+}
+
+.secretary-report-page{
+    background:#ffffff;
+    color:#0f172a;
+    border:1px solid #dbeafe;
+    border-radius:24px;
+    padding:34px;
+    box-shadow:0 18px 40px rgba(15,23,42,.08);
+    font-family:Arial, sans-serif;
+}
+
+.secretary-report-header{
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    border-bottom:2px solid #dbeafe;
+    padding-bottom:18px;
+    margin-bottom:22px;
+}
+
+.secretary-report-eyebrow{
+    margin:0 0 6px;
+    color:#2563eb;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.secretary-report-header h1{
+    margin:0;
+    font-size:32px;
+    letter-spacing:-.04em;
+}
+
+.secretary-report-header p{
+    margin:8px 0 0;
+    color:#64748b;
+    font-weight:700;
+}
+
+.secretary-report-brand{
+    align-self:flex-start;
+    padding:10px 14px;
+    border-radius:16px;
+    background:#eff6ff;
+    color:#1d4ed8;
+    font-weight:1000;
+}
+
+.secretary-report-section{
+    margin-top:22px;
+    break-inside:avoid;
+}
+
+.secretary-report-section h2{
+    margin:0 0 12px;
+    font-size:18px;
+}
+
+.secretary-report-grid{
+    display:grid;
+    gap:12px;
+}
+
+.secretary-report-grid.two{ grid-template-columns:repeat(2, 1fr); }
+.secretary-report-grid.five{ grid-template-columns:repeat(5, 1fr); }
+
+.secretary-report-grid div{
+    border:1px solid #e2e8f0;
+    border-radius:16px;
+    padding:14px;
+    background:#f8fafc;
+}
+
+.secretary-report-grid span{
+    display:block;
+    color:#64748b;
+    font-size:11px;
+    text-transform:uppercase;
+    font-weight:900;
+    letter-spacing:.06em;
+}
+
+.secretary-report-grid strong{
+    display:block;
+    margin-top:7px;
+    font-size:18px;
+}
+
+.secretary-report-table{
+    width:100%;
+    border-collapse:collapse;
+    overflow:hidden;
+    border-radius:14px;
+    border:1px solid #e2e8f0;
+}
+
+.secretary-report-table th,
+.secretary-report-table td{
+    padding:11px 12px;
+    border-bottom:1px solid #e2e8f0;
+    text-align:left;
+    font-size:13px;
+}
+
+.secretary-report-table th{
+    background:#eff6ff;
+    color:#1e3a8a;
+    font-weight:1000;
+}
+
+.secretary-report-empty{
+    padding:14px;
+    border:1px dashed #cbd5e1;
+    border-radius:14px;
+    color:#64748b;
+    background:#f8fafc;
+}
+
+@media print{
+    body.printing-secretary-report *{
+        visibility:hidden !important;
+    }
+
+    body.printing-secretary-report #secretaryReportPrintArea,
+    body.printing-secretary-report #secretaryReportPrintArea *{
+        visibility:visible !important;
+    }
+
+    body.printing-secretary-report #secretaryReportPrintArea{
+        display:block !important;
+        position:absolute !important;
+        left:0 !important;
+        top:0 !important;
+        width:100% !important;
+        max-width:none !important;
+        margin:0 !important;
+        padding:0 !important;
+    }
+
+    body.printing-secretary-report .secretary-report-page{
+        box-shadow:none !important;
+        border:0 !important;
+        border-radius:0 !important;
+        padding:16mm !important;
+    }
+
+    body.printing-secretary-report .secretary-report-grid.five{
+        grid-template-columns:repeat(5, 1fr) !important;
+    }
+
+    @page{
+        margin:12mm;
+    }
+}
