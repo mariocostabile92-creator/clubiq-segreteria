@@ -29,13 +29,16 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 Base.metadata.create_all(bind=engine)
 
 
-def ensure_user_auth_columns():
+def run_safe_migrations():
     statements = [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at TIMESTAMP",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP",
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS plan VARCHAR DEFAULT 'free'",
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS subscription_status VARCHAR DEFAULT 'active'",
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS admin_notes TEXT",
     ]
 
     with engine.begin() as connection:
@@ -43,7 +46,7 @@ def ensure_user_auth_columns():
             connection.execute(text(statement))
 
 
-ensure_user_auth_columns()
+run_safe_migrations()
 
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
