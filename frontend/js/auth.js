@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Auth
-  V2.3 Login Click Hard Fix + Cache Bust
+  V3.0 Smart Redirect Owner/Admin
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -99,8 +99,8 @@ async function handleLogin(event){
         if(!data?.access_token) throw new Error("Token di accesso non ricevuto dal server.");
         setToken(data.access_token);
         localStorage.setItem("clubiq_token", data.access_token);
-        setAuthMessage("Login effettuato. Apro la dashboard...", "success");
-        forceRedirectToDashboard();
+        setAuthMessage("Login effettuato. Controllo ruolo account...", "success");
+        await smartRedirectAfterLogin();
     }catch(error){
         console.error("Errore login ClubIQ:", error);
         setAuthMessage(error.message || "Credenziali non valide.", "error");
@@ -125,8 +125,8 @@ async function handleSignup(event){
         if(!data?.access_token) throw new Error("Token di accesso non ricevuto dal server.");
         setToken(data.access_token);
         localStorage.setItem("clubiq_token", data.access_token);
-        setAuthMessage("Società creata. Apro la dashboard...", "success");
-        forceRedirectToDashboard();
+        setAuthMessage("Società creata. Controllo ruolo account...", "success");
+        await smartRedirectAfterLogin();
     }catch(error){
         console.error("Errore registrazione ClubIQ:", error);
         setAuthMessage(error.message || "Errore durante la creazione della società.", "error");
@@ -134,8 +134,25 @@ async function handleSignup(event){
     }
 }
 
-function forceRedirectToDashboard(){
-    const target = window.location.origin + "/dashboard.html?v=" + Date.now();
+async function smartRedirectAfterLogin(){
+    try{
+        const me = await apiRequest("/auth/me");
+        const role = String(me?.role || "").toLowerCase().trim();
+
+        if(role === "owner" || role === "admin"){
+            forceRedirectTo("/admin.html");
+            return;
+        }
+
+        forceRedirectTo("/dashboard.html");
+    }catch(error){
+        console.warn("Ruolo non letto, apro dashboard società.", error);
+        forceRedirectTo("/dashboard.html");
+    }
+}
+
+function forceRedirectTo(path){
+    const target = window.location.origin + path + "?v=" + Date.now();
     window.location.href = target;
     setTimeout(() => { window.location.assign(target); }, 500);
     setTimeout(() => { window.location.replace(target); }, 1200);
