@@ -42,6 +42,7 @@ function bindDashboardActions(){
     const regenerateClubCodeBtn = document.getElementById("regenerateClubCodeBtn");
     const resendVerificationBtn = document.getElementById("resendVerificationBtn");
     const todayChecksRefreshBtn = document.getElementById("todayChecksRefreshBtn");
+    const operativeNotificationsRefreshBtn = document.getElementById("operativeNotificationsRefreshBtn");
     const sendQuickRegistrationLinkBtn = document.getElementById("sendQuickRegistrationLinkBtn");
     const sendQuickDocumentsBtn = document.getElementById("sendQuickDocumentsBtn");
     const sendQuickCustomBtn = document.getElementById("sendQuickCustomBtn");
@@ -92,6 +93,10 @@ function bindDashboardActions(){
 
     if(todayChecksRefreshBtn){
         todayChecksRefreshBtn.addEventListener("click", refreshTodayChecks);
+    }
+
+    if(operativeNotificationsRefreshBtn){
+        operativeNotificationsRefreshBtn.addEventListener("click", refreshOperativeNotifications);
     }
 
     if(sendQuickRegistrationLinkBtn){
@@ -201,6 +206,84 @@ function bindDashboardActions(){
 }
 
 
+
+function getOperativeNotifications(){
+    const pendingRequests = cachedParentRequests.filter(item => item.status === "pending").length;
+    const overduePayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length;
+    const openPayments = cachedPayments.filter(payment => getPaymentStatusKey(payment) === "open").length;
+    const totalResidual = cachedPayments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0)), 0);
+    const expiredCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length;
+    const expiringCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length;
+
+    const items = [];
+
+    if(pendingRequests > 0){
+        items.push({ type:"warning", title:`${pendingRequests} richiesta${pendingRequests === 1 ? "" : "e"} da verificare`, text:"Controlla le richieste genitori in attesa e approva o rifiuta la pratica.", href:"#parentRequestsSection" });
+    }
+
+    if(totalResidual > 0){
+        items.push({ type: overduePayments > 0 ? "danger" : "warning", title:`${formatEuro(totalResidual)} ancora da incassare`, text: overduePayments > 0 ? `${overduePayments} quota${overduePayments === 1 ? "" : "e"} scaduta${overduePayments === 1 ? "" : "e"} da sollecitare.` : `${openPayments} pagamento${openPayments === 1 ? "" : "i"} aperto${openPayments === 1 ? "" : "i"} da monitorare.`, href:"#paymentsSection" });
+    }
+
+    if(expiredCertificates > 0){
+        items.push({ type:"danger", title:`${expiredCertificates} certificato${expiredCertificates === 1 ? "" : "i"} scaduto${expiredCertificates === 1 ? "" : "i"}`, text:"Richiedi subito il rinnovo del certificato medico.", href:"#certificatesSection" });
+    }
+
+    if(expiringCertificates > 0){
+        items.push({ type:"warning", title:`${expiringCertificates} certificato${expiringCertificates === 1 ? "" : "i"} in scadenza`, text:"Invia un promemoria prima della scadenza.", href:"#certificatesSection" });
+    }
+
+    if(!items.length){
+        items.push({ type:"success", title:"Tutto sotto controllo", text:"Nessuna urgenza operativa al momento.", href:"#top" });
+    }
+
+    return items;
+}
+
+function renderOperativeNotifications(){
+    const section = document.getElementById("operativeNotificationsSection");
+    const list = document.getElementById("operativeNotificationsList");
+    const summary = document.getElementById("operativeNotificationsSummary");
+
+    if(!section || !list) return;
+
+    const items = getOperativeNotifications();
+    section.classList.remove("hidden");
+
+    const urgentItems = items.filter(item => item.type !== "success");
+    if(summary){
+        summary.textContent = urgentItems.length ? `${urgentItems.length} priorità operative da gestire oggi.` : "Nessuna urgenza: la segreteria è sotto controllo.";
+        summary.className = urgentItems.length ? "operative-notifications-summary warning" : "operative-notifications-summary success";
+    }
+
+    list.innerHTML = items.map(item => `
+        <a class="operative-notification-card ${escapeHtml(item.type)}" href="${escapeHtml(item.href)}">
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${escapeHtml(item.text)}</span>
+        </a>
+    `).join("");
+}
+
+async function refreshOperativeNotifications(){
+    const btn = document.getElementById("operativeNotificationsRefreshBtn");
+    if(btn){
+        btn.disabled = true;
+        btn.textContent = "Aggiornamento...";
+    }
+
+    try{
+        await refreshAll();
+        setDashboardMessage("Priorità operative aggiornate.", "success");
+    }catch(error){
+        setDashboardMessage(error.message || "Errore durante l'aggiornamento delle priorità.", "error");
+    }finally{
+        if(btn){
+            btn.disabled = false;
+            btn.textContent = "Aggiorna priorità";
+        }
+    }
+}
+
 async function refreshTodayChecks(){
     const btn = document.getElementById("todayChecksRefreshBtn");
 
@@ -245,6 +328,7 @@ async function refreshAll(){
     renderPaymentsList();
     renderCertificatesList();
     renderTodayChecks();
+    renderOperativeNotifications();
 
     if(openedAthleteId){
         openAthleteDetail(openedAthleteId, false);
