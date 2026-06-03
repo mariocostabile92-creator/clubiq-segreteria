@@ -46,6 +46,8 @@ function bindDashboardActions(){
     const sendQuickCustomBtn = document.getElementById("sendQuickCustomBtn");
     const clearCommunicationHistoryBtn = document.getElementById("clearCommunicationHistoryBtn");
     const exportCommunicationHistoryCsvBtn = document.getElementById("exportCommunicationHistoryCsvBtn");
+    const communicationHistorySearchInput = document.getElementById("communicationHistorySearchInput");
+    const communicationHistoryTypeFilter = document.getElementById("communicationHistoryTypeFilter");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -106,6 +108,11 @@ function bindDashboardActions(){
     if(exportCommunicationHistoryCsvBtn){
         exportCommunicationHistoryCsvBtn.addEventListener("click", exportCommunicationHistoryCsv);
     }
+
+    [communicationHistorySearchInput, communicationHistoryTypeFilter].filter(Boolean).forEach(input => {
+        input.addEventListener("input", renderCommunicationHistory);
+        input.addEventListener("change", renderCommunicationHistory);
+    });
 
     if(addAthleteForm){
         addAthleteForm.addEventListener("submit", handleAddAthlete);
@@ -2463,74 +2470,99 @@ function saveCommunicationHistory(entry){
     renderCommunicationHistory();
 }
 
+function populateCommunicationHistoryTypeFilter(history){
+    const select = document.getElementById("communicationHistoryTypeFilter");
+    if(!select) return;
+
+    const currentValue = select.value || "";
+    const types = [...new Set((history || []).map(item => item.type || item.kind || item.title || "Comunicazione").filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "it"));
+
+    select.innerHTML = `<option value="">Tutte</option>` + types.map(type => `
+        <option value="${escapeHtml(type)}">${escapeHtml(type)}</option>
+    `).join("");
+
+    if(currentValue && types.includes(currentValue)){
+        select.value = currentValue;
+    }
+}
+
+function getFilteredCommunicationHistory(history){
+    const search = (document.getElementById("communicationHistorySearchInput")?.value || "").trim().toLowerCase();
+    const typeFilter = document.getElementById("communicationHistoryTypeFilter")?.value || "";
+
+    return (history || []).filter(item => {
+        const type = item.type || item.kind || item.title || "Comunicazione";
+        const haystack = [
+            item.date,
+            item.created_at,
+            item.timestamp,
+            type,
+            item.recipient,
+            item.name,
+            item.phone,
+            item.athlete,
+            item.athleteName,
+            item.message,
+            item.text
+        ].join(" ").toLowerCase();
+
+        return (!search || haystack.includes(search)) &&
+               (!typeFilter || String(type) === String(typeFilter));
+    });
+}
+
 function renderCommunicationHistory(){
     const list = document.getElementById("communicationHistoryList");
     if(!list) return;
 
     const history = getCommunicationHistory();
+    populateCommunicationHistoryTypeFilter(history);
+
+    const filtered = getFilteredCommunicationHistory(history);
+    const summary = document.getElementById("communicationHistorySummary");
+
+    if(summary){
+        summary.textContent = `${filtered.length} comunicazioni visualizzate su ${history.length} totali`;
+    }
 
     if(!history.length){
         list.innerHTML = `<div class="empty">Nessuna comunicazione registrata.</div>`;
         return;
     }
 
-    list.innerHTML = history.map(item => {
-        const date = formatCommunicationDate(item.created_at);
-        const preview = String(item.message || "").replace(/\s+/g, " ").trim();
+    if(!filtered.length){
+        list.innerHTML = `<div class="empty">Nessuna comunicazione trovata con questi filtri.</div>`;
+        return;
+    }
+
+    list.innerHTML = filtered.map(item => {
+        const type = item.type || item.kind || item.title || "Comunicazione";
+        const recipient = item.recipient || item.name || "Destinatario non indicato";
+        const phone = item.phone || "Telefono non indicato";
+        const athlete = item.athlete || item.athleteName || "";
+        const message = item.message || item.text || "";
+        const date = item.date || item.created_at || item.timestamp || item.createdAt || new Date().toISOString();
 
         return `
-            <article class="communication-history-card">
+            <article class="data-card communication-history-card">
                 <div>
-                    <span>${escapeHtml(item.type || "WhatsApp")}</span>
-                    <strong>${escapeHtml(item.recipient || "Contatto")}</strong>
-                    <small>${escapeHtml(date)}${item.athlete ? ` · ${escapeHtml(item.athlete)}` : ""}</small>
-                    <p>${escapeHtml(preview.slice(0, 170))}${preview.length > 170 ? "..." : ""}</p>
-                </div>
-                <div class="communication-history-meta">
-                    <b>${escapeHtml(item.phone || "")}</b>
+                    <strong>${escapeHtml(type)}</strong>
+                    <span>${escapeHtml(formatDateTime(date))} · ${escapeHtml(recipient)} · ${escapeHtml(phone)}</span>
+                    ${athlete ? `<span>Atleta: ${escapeHtml(athlete)}</span>` : ""}
+                    ${message ? `<small>${escapeHtml(message)}</small>` : ""}
                 </div>
             </article>
         `;
     }).join("");
 }
 
-function formatCommunicationDate(value){
-    if(!value) return "Data non disponibile";
-
-    const date = new Date(value);
-    if(Number.isNaN(date.getTime())) return "Data non disponibile";
-
-    return date.toLocaleString("it-IT", {
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit"
-    });
-}
-
-function clearCommunicationHistory(){
-    if(!confirm("Vuoi cancellare lo storico comunicazioni salvato su questo dispositivo?")){
-        return;
-    }
-
-    localStorage.removeItem(COMMUNICATION_HISTORY_KEY);
-    window.__clubiqCommunicationHistoryFallback = [];
-    renderCommunicationHistory();
-    setDashboardMessage("Storico comunicazioni cancellato.", "success");
-}
-
-
-function escapeCsvValue(value){
-    const text = String(value ?? "").replace(/\r?\n|\r/g, " ").trim();
-    return `"${text.replace(/"/g, '""')}"`;
-}
-
 function exportCommunicationHistoryCsv(){
     const history = getCommunicationHistory();
+    const filtered = getFilteredCommunicationHistory(history);
 
-    if(!history.length){
-        setDashboardMessage("Nessuna comunicazione da esportare.", "error");
+    if(!filtered.length){
+        setDashboardMessage("Nessuna comunicazione da esportare con i filtri attuali.", "error");
         return;
     }
 
@@ -2538,34 +2570,21 @@ function exportCommunicationHistoryCsv(){
         ["Data", "Tipo", "Destinatario", "Telefono", "Atleta", "Messaggio"]
     ];
 
-    history.forEach(item => {
+    filtered.forEach(item => {
         rows.push([
-            item.created_at ? formatDateTime(item.created_at) : "",
-            item.type || "",
-            item.recipient || "",
+            formatDateTime(item.date || item.created_at || item.timestamp || item.createdAt),
+            item.type || item.kind || item.title || "Comunicazione",
+            item.recipient || item.name || "",
             item.phone || "",
-            item.athlete || "",
-            item.message || ""
+            item.athlete || item.athleteName || "",
+            item.message || item.text || ""
         ]);
     });
 
-    const csv = rows
-        .map(row => row.map(escapeCsvValue).join(";"))
-        .join("\n");
-
-    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "storico_comunicazioni_clubiq.csv";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    URL.revokeObjectURL(url);
-    setDashboardMessage("Storico comunicazioni esportato in CSV.", "success");
+    downloadCsv("storico_comunicazioni_clubiq.csv", rows);
+    setDashboardMessage(`CSV esportato: ${filtered.length} comunicazioni.`, "success");
 }
+
 function formatDateTime(value){
     if(!value){
         return "-";

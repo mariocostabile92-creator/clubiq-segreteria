@@ -981,3 +981,53 @@ body{
         width:100%;
     }
 }
+
+
+/* ================================
+   Filtri storico comunicazioni WhatsApp
+================================ */
+
+.communication-history-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.communication-history-filters{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:14px;
+    margin:18px 0 12px;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:#f8fafc;
+}
+
+.communication-history-summary{
+    margin:0 0 14px;
+    color:var(--muted);
+    font-weight:900;
+}
+
+.communication-history-card small{
+    display:block;
+    margin-top:8px;
+    color:var(--muted);
+    line-height:1.45;
+}
+
+@media (max-width: 760px){
+    .communication-history-actions,
+    .communication-history-filters{
+        display:grid;
+        grid-template-columns:1fr;
+        width:100%;
+    }
+
+    .communication-history-actions .secondary-btn{
+        width:100%;
+    }
+}

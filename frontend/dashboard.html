@@ -350,6 +350,24 @@
                     </div>
                 </div>
 
+                <div class="communication-history-filters">
+                    <div class="filter-field">
+                        <label for="communicationHistorySearchInput">Cerca comunicazione</label>
+                        <input id="communicationHistorySearchInput" type="search" placeholder="Nome, telefono, atleta, messaggio..." />
+                    </div>
+
+                    <div class="filter-field">
+                        <label for="communicationHistoryTypeFilter">Tipo comunicazione</label>
+                        <select id="communicationHistoryTypeFilter">
+                            <option value="">Tutte</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="communicationHistorySummary" class="filter-summary communication-history-summary">
+                    Comunicazioni visualizzate: 0
+                </div>
+
                 <div id="communicationHistoryList" class="records-list communication-history-list">
                     <div class="empty">Nessuna comunicazione registrata.</div>
                 </div>
