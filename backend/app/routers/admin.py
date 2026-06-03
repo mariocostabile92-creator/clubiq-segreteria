@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from ..db.database import get_db
 from ..models.user import User
@@ -31,22 +31,37 @@ def require_admin(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-def club_plan_value(club: Club):
-    return getattr(club, "plan", None) or "free"
+def get_club_admin_meta(db: Session, club_id: int) -> dict:
+    row = db.execute(
+        text("""
+            SELECT
+                COALESCE(plan, 'free') AS plan,
+                COALESCE(subscription_status, 'active') AS subscription_status,
+                COALESCE(admin_notes, '') AS admin_notes
+            FROM clubs
+            WHERE id = :club_id
+        """),
+        {"club_id": club_id},
+    ).mappings().first()
 
+    if not row:
+        return {"plan": "free", "subscription_status": "active", "admin_notes": ""}
 
-def club_subscription_status_value(club: Club):
-    return getattr(club, "subscription_status", None) or "active"
-
-
-def club_admin_notes_value(club: Club):
-    return getattr(club, "admin_notes", None) or ""
+    return {
+        "plan": row.get("plan") or "free",
+        "subscription_status": row.get("subscription_status") or "active",
+        "admin_notes": row.get("admin_notes") or "",
+    }
 
 
 @router.get("/summary")
 def admin_summary(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     total_due = db.query(func.coalesce(func.sum(Payment.amount_due), 0)).scalar() or 0
     total_paid = db.query(func.coalesce(func.sum(Payment.amount_paid), 0)).scalar() or 0
+
+    pro_clubs_count = db.execute(text("SELECT COUNT(*) FROM clubs WHERE COALESCE(plan, 'free') = 'pro'")).scalar() or 0
+    premium_clubs_count = db.execute(text("SELECT COUNT(*) FROM clubs WHERE COALESCE(plan, 'free') = 'premium'")).scalar() or 0
+    suspended_clubs_count = db.execute(text("SELECT COUNT(*) FROM clubs WHERE COALESCE(subscription_status, 'active') = 'suspended'")).scalar() or 0
 
     return {
         "users_count": db.query(User).count(),
@@ -56,9 +71,9 @@ def admin_summary(db: Session = Depends(get_db), current_user: User = Depends(re
         "certificates_count": db.query(Certificate).count(),
         "verified_users_count": db.query(User).filter(User.email_verified == True).count(),
         "active_users_count": db.query(User).filter(User.is_active == True).count(),
-        "pro_clubs_count": db.query(Club).filter(getattr(Club, "plan") == "pro").count() if hasattr(Club, "plan") else 0,
-        "premium_clubs_count": db.query(Club).filter(getattr(Club, "plan") == "premium").count() if hasattr(Club, "plan") else 0,
-        "suspended_clubs_count": db.query(Club).filter(getattr(Club, "subscription_status") == "suspended").count() if hasattr(Club, "subscription_status") else 0,
+        "pro_clubs_count": int(pro_clubs_count),
+        "premium_clubs_count": int(premium_clubs_count),
+        "suspended_clubs_count": int(suspended_clubs_count),
         "total_due": float(total_due),
         "total_paid": float(total_paid),
         "total_residual": float(total_due) - float(total_paid),
@@ -68,8 +83,11 @@ def admin_summary(db: Session = Depends(get_db), current_user: User = Depends(re
 @router.get("/users")
 def admin_users(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     users = db.query(User).order_by(User.id.desc()).limit(500).all()
-    return [
-        {
+    rows = []
+
+    for user in users:
+        meta = get_club_admin_meta(db, user.club_id) if user.club_id else {"plan": "free", "subscription_status": "active"}
+        rows.append({
             "id": user.id,
             "club_id": user.club_id,
             "club_name": user.club.name if user.club else "-",
@@ -78,11 +96,11 @@ def admin_users(db: Session = Depends(get_db), current_user: User = Depends(requ
             "role": user.role or "member",
             "is_active": bool(user.is_active),
             "email_verified": bool(user.email_verified),
-            "plan": club_plan_value(user.club) if user.club else "free",
-            "subscription_status": club_subscription_status_value(user.club) if user.club else "active",
-        }
-        for user in users
-    ]
+            "plan": meta["plan"],
+            "subscription_status": meta["subscription_status"],
+        })
+
+    return rows
 
 
 @router.get("/clubs")
@@ -93,6 +111,7 @@ def admin_clubs(db: Session = Depends(get_db), current_user: User = Depends(requ
     for club in clubs:
         total_due = db.query(func.coalesce(func.sum(Payment.amount_due), 0)).filter(Payment.club_id == club.id).scalar() or 0
         total_paid = db.query(func.coalesce(func.sum(Payment.amount_paid), 0)).filter(Payment.club_id == club.id).scalar() or 0
+        meta = get_club_admin_meta(db, club.id)
 
         rows.append({
             "id": club.id,
@@ -108,9 +127,9 @@ def admin_clubs(db: Session = Depends(get_db), current_user: User = Depends(requ
             "total_due": float(total_due),
             "total_paid": float(total_paid),
             "total_residual": float(total_due) - float(total_paid),
-            "plan": club_plan_value(club),
-            "subscription_status": club_subscription_status_value(club),
-            "admin_notes": club_admin_notes_value(club),
+            "plan": meta["plan"],
+            "subscription_status": meta["subscription_status"],
+            "admin_notes": meta["admin_notes"],
         })
 
     return rows
@@ -125,6 +144,7 @@ def update_club_plan(
 ):
     plan = (payload.plan or "free").lower().strip()
     status = (payload.subscription_status or "active").lower().strip()
+    notes = (payload.admin_notes or "").strip()
 
     if plan not in ALLOWED_PLANS:
         raise HTTPException(status_code=400, detail="Piano non valido")
@@ -136,18 +156,25 @@ def update_club_plan(
     if not club:
         raise HTTPException(status_code=404, detail="Società non trovata")
 
-    club.plan = plan
-    club.subscription_status = status
-    club.admin_notes = (payload.admin_notes or "").strip() or None
-
+    db.execute(
+        text("""
+            UPDATE clubs
+            SET plan = :plan,
+                subscription_status = :status,
+                admin_notes = :notes
+            WHERE id = :club_id
+        """),
+        {"plan": plan, "status": status, "notes": notes if notes else None, "club_id": club_id},
+    )
     db.commit()
-    db.refresh(club)
+
+    meta = get_club_admin_meta(db, club_id)
 
     return {
         "id": club.id,
         "name": club.name,
-        "plan": club_plan_value(club),
-        "subscription_status": club_subscription_status_value(club),
-        "admin_notes": club_admin_notes_value(club),
+        "plan": meta["plan"],
+        "subscription_status": meta["subscription_status"],
+        "admin_notes": meta["admin_notes"],
         "message": "Piano società aggiornato correttamente",
     }
