@@ -1031,3 +1031,24 @@ body{
         width:100%;
     }
 }
+
+
+/* Report segreteria PDF */
+.topbar-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    flex-wrap:wrap;
+}
+@media (max-width: 760px){
+    .topbar-actions{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr;
+    }
+    .topbar-actions .primary-btn,
+    .topbar-actions .secondary-btn{
+        width:100%;
+    }
+}
