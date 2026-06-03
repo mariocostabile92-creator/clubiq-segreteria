@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V2.0 Controlli rapidi UX
+  V2.1 Documenti richieste UX
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -533,21 +533,24 @@ function renderParentRequestsList(){
                     <span>Gruppo richiesto: ${escapeHtml(request.requested_group || "Senza gruppo")} · Nato il: ${formatDate(request.athlete_birth_date)}</span>
                     <span>Genitore: ${escapeHtml(request.parent_name || "Non indicato")} · ${escapeHtml(request.parent_phone || "Telefono non indicato")} · ${escapeHtml(request.parent_email || "Email non indicata")}</span>
                     ${request.notes ? `<span>Note: ${escapeHtml(request.notes)}</span>` : ""}
-                    ${request.certificate_file_url ? `
-                        <span>
-                            Certificato:
-                            <a href="${escapeHtml(request.certificate_file_url)}" target="_blank" rel="noopener noreferrer">
-                                Apri certificato
-                            </a>
-                        </span>
-                    ` : ""}
-                    ${request.payment_receipt_url ? `
-                        <span>
-                            Ricevuta:
-                            <a href="${escapeHtml(request.payment_receipt_url)}" target="_blank" rel="noopener noreferrer">
-                                Apri ricevuta
-                            </a>
-                        </span>
+                    ${(request.certificate_file_url || request.payment_receipt_url) ? `
+                        <div class="request-documents">
+                            <span class="request-documents-title">Documenti caricati</span>
+                            <div class="request-documents-actions">
+                                ${request.certificate_file_url ? `
+                                    <a class="document-btn document-btn-certificate" href="${escapeHtml(request.certificate_file_url)}" target="_blank" rel="noopener noreferrer">
+                                        <span class="document-btn-icon">📄</span>
+                                        <span>Apri certificato medico</span>
+                                    </a>
+                                ` : ""}
+                                ${request.payment_receipt_url ? `
+                                    <a class="document-btn document-btn-receipt" href="${escapeHtml(request.payment_receipt_url)}" target="_blank" rel="noopener noreferrer">
+                                        <span class="document-btn-icon">🧾</span>
+                                        <span>Apri ricevuta pagamento</span>
+                                    </a>
+                                ` : ""}
+                            </div>
+                        </div>
                     ` : ""}
                     ${request.review_note ? `<span>Esito: ${escapeHtml(request.review_note)}</span>` : ""}
                 </div>
