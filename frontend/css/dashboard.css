@@ -1402,3 +1402,22 @@ body{
         min-height:110px;
     }
 }
+
+
+/* ================================
+   Stripe Billing V1
+================================ */
+.billing-panel{
+    border-color:#c7d2fe;
+    background:radial-gradient(circle at top right, rgba(79,70,229,.10), transparent 34%), #ffffff;
+}
+.billing-heading{align-items:flex-start;}
+.billing-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+.billing-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px;}
+.billing-card{border:1px solid var(--line);border-radius:20px;background:#f8fafc;padding:18px;}
+.billing-card span{display:block;color:var(--muted);font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;}
+.billing-card strong{display:block;margin:8px 0 6px;font-size:24px;letter-spacing:-.04em;}
+.billing-card small{color:var(--muted);font-weight:800;line-height:1.4;}
+.billing-card.highlighted{border-color:#bfdbfe;background:#eff6ff;}
+.billing-card.premium{border-color:#ddd6fe;background:#f5f3ff;}
+@media(max-width:760px){.billing-actions{display:grid;width:100%;}.billing-actions .primary-btn,.billing-actions .secondary-btn{width:100%;}.billing-cards{grid-template-columns:1fr;}}

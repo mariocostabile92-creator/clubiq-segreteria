@@ -16,6 +16,7 @@ let editingPaymentId = null;
 let editingCertificateId = null;
 
 const CLUB_PAYMENT_SETTINGS_KEY = "clubiq_club_payment_settings_v1";
+let cachedBilling = null;
 
 function getClubPaymentSettings(){
     try{
@@ -43,6 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     bindDashboardActions();
     await refreshAll();
     renderCommunicationHistory();
+    handleBillingQueryMessage();
 });
 
 function bindDashboardActions(){
@@ -69,6 +71,9 @@ function bindDashboardActions(){
     const exportCommunicationHistoryCsvBtn = document.getElementById("exportCommunicationHistoryCsvBtn");
     const communicationHistorySearchInput = document.getElementById("communicationHistorySearchInput");
     const communicationHistoryTypeFilter = document.getElementById("communicationHistoryTypeFilter");
+    const billingProBtn = document.getElementById("billingProBtn");
+    const billingPremiumBtn = document.getElementById("billingPremiumBtn");
+    const billingPortalBtn = document.getElementById("billingPortalBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -132,6 +137,18 @@ function bindDashboardActions(){
 
     if(clearCommunicationHistoryBtn){
         clearCommunicationHistoryBtn.addEventListener("click", clearCommunicationHistory);
+    }
+
+    if(billingProBtn){
+        billingProBtn.addEventListener("click", () => openBillingCheckout("pro"));
+    }
+
+    if(billingPremiumBtn){
+        billingPremiumBtn.addEventListener("click", () => openBillingCheckout("premium"));
+    }
+
+    if(billingPortalBtn){
+        billingPortalBtn.addEventListener("click", openBillingPortal);
     }
 
     if(exportCommunicationHistoryCsvBtn){
@@ -303,6 +320,85 @@ async function refreshOperativeNotifications(){
     }
 }
 
+async function loadBillingStatus(){
+    try{
+        cachedBilling = await apiRequest("/billing/me");
+        renderBillingStatus();
+    }catch(error){
+        cachedBilling = null;
+        renderBillingStatus(error.message || "Piano non disponibile");
+    }
+}
+
+function renderBillingStatus(errorMessage = ""){
+    const section = document.getElementById("billingSection");
+    const summary = document.getElementById("billingPlanSummary");
+    const portalBtn = document.getElementById("billingPortalBtn");
+
+    if(!section) return;
+    section.classList.remove("hidden");
+
+    if(errorMessage){
+        if(summary) summary.textContent = errorMessage;
+        if(portalBtn) portalBtn.classList.add("hidden");
+        return;
+    }
+
+    const plan = cachedBilling?.plan || "free";
+    const status = cachedBilling?.subscription_status || "active";
+    const label = plan === "premium" ? "Premium" : plan === "pro" ? "Pro" : "Free";
+    const statusLabel = status === "suspended" ? "sospeso" : "attivo";
+
+    if(summary){
+        summary.textContent = `Piano attuale: ${label} · Stato: ${statusLabel}`;
+    }
+
+    if(portalBtn){
+        portalBtn.classList.toggle("hidden", !cachedBilling?.stripe_customer_id);
+    }
+}
+
+async function openBillingCheckout(plan){
+    if(!requireVerifiedEmail("l'attivazione dell'abbonamento")) return;
+
+    const label = plan === "premium" ? "Premium" : "Pro";
+    setDashboardMessage(`Apro Stripe Checkout per il piano ${label}...`, "info");
+
+    try{
+        const data = await apiRequest(`/billing/checkout/${plan}`, { method:"POST" });
+        if(!data?.url) throw new Error("URL Stripe Checkout non ricevuto.");
+        window.location.href = data.url;
+    }catch(error){
+        setDashboardMessage(error.message || "Errore apertura Stripe Checkout.", "error");
+    }
+}
+
+async function openBillingPortal(){
+    if(!requireVerifiedEmail("la gestione dell'abbonamento")) return;
+
+    setDashboardMessage("Apro il portale abbonamento Stripe...", "info");
+
+    try{
+        const data = await apiRequest("/billing/portal", { method:"POST" });
+        if(!data?.url) throw new Error("URL portale Stripe non ricevuto.");
+        window.location.href = data.url;
+    }catch(error){
+        setDashboardMessage(error.message || "Errore apertura portale Stripe.", "error");
+    }
+}
+
+function handleBillingQueryMessage(){
+    const params = new URLSearchParams(window.location.search);
+    const billing = params.get("billing");
+    if(billing === "success"){
+        setDashboardMessage("Pagamento completato. Il piano verrà aggiornato automaticamente da Stripe.", "success");
+    }else if(billing === "cancel"){
+        setDashboardMessage("Pagamento annullato. Puoi riprovare quando vuoi.", "info");
+    }else if(billing === "portal"){
+        setDashboardMessage("Bentornato dal portale abbonamento.", "success");
+    }
+}
+
 async function refreshTodayChecks(){
     const btn = document.getElementById("todayChecksRefreshBtn");
 
@@ -337,6 +433,7 @@ async function refreshTodayChecks(){
 async function refreshAll(){
     await loadCurrentUser();
     await loadMyClub();
+    await loadBillingStatus();
     await loadDashboard();
     await loadAthletesPreview();
     await loadPaymentsList();

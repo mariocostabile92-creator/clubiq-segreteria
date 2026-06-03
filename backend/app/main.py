@@ -11,6 +11,7 @@ from .db.database import engine, Base
 
 from .routers import auth, clubs, athletes, payments, certificates, dashboard
 from .routers.admin import router as admin_router
+from .routers.billing import router as billing_router
 from .routers.parent_requests import router as parent_requests_router
 from .routers.public_parent_requests import router as public_parent_requests_router
 
@@ -39,6 +40,10 @@ def run_safe_migrations():
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS plan VARCHAR DEFAULT 'free'",
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS subscription_status VARCHAR DEFAULT 'active'",
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS admin_notes TEXT",
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR",
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR",
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_current_period_end TIMESTAMP",
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_last_event_id VARCHAR",
     ]
 
     with engine.begin() as connection:
@@ -71,6 +76,7 @@ app.include_router(payments)
 app.include_router(certificates)
 app.include_router(dashboard)
 app.include_router(admin_router)
+app.include_router(billing_router)
 app.include_router(parent_requests_router)
 app.include_router(public_parent_requests_router)
 

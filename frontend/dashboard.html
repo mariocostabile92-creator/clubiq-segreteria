@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/dashboard.css?v=stripe1" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
@@ -56,6 +56,38 @@
             </header>
 
             <div id="dashboardMessage" class="message hidden"></div>
+            <section id="billingSection" class="panel billing-panel hidden">
+                <div class="section-heading billing-heading">
+                    <div>
+                        <p class="eyebrow">Abbonamento ClubIQ</p>
+                        <h2>Piano società</h2>
+                        <p id="billingPlanSummary" class="club-link-description">Caricamento piano...</p>
+                    </div>
+                    <div class="billing-actions">
+                        <button id="billingProBtn" class="secondary-btn" type="button">Passa a Pro</button>
+                        <button id="billingPremiumBtn" class="primary-btn" type="button">Passa a Premium</button>
+                        <button id="billingPortalBtn" class="secondary-btn" type="button">Gestisci abbonamento</button>
+                    </div>
+                </div>
+                <div class="billing-cards">
+                    <article class="billing-card">
+                        <span>Free</span>
+                        <strong>0 €/mese</strong>
+                        <small>Base per provare ClubIQ.</small>
+                    </article>
+                    <article class="billing-card highlighted">
+                        <span>Pro</span>
+                        <strong>19 €/mese</strong>
+                        <small>Funzioni avanzate per segreterie operative.</small>
+                    </article>
+                    <article class="billing-card premium">
+                        <span>Premium</span>
+                        <strong>39 €/mese</strong>
+                        <small>Massimo controllo e funzioni future premium.</small>
+                    </article>
+                </div>
+            </section>
+
 
             <section id="operativeNotificationsSection" class="panel operative-notifications-panel hidden">
                 <div class="section-heading operative-notifications-heading">
@@ -542,7 +574,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="js/dashboard.js?v=stripe1"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">
