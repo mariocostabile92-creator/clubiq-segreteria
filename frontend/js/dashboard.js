@@ -1506,7 +1506,7 @@ function renderDetailCertificates(certificates){
 }
 
 /* =========================
-   WhatsApp V1
+   WhatsApp V1.1 - Messaggi professionali
 ========================= */
 
 function normalizeItalianPhone(phone){
@@ -1515,17 +1515,9 @@ function normalizeItalianPhone(phone){
 
     raw = raw.replace(/[^0-9+]/g, "");
 
-    if(raw.startsWith("+")){
-        return raw.substring(1);
-    }
-
-    if(raw.startsWith("00")){
-        return raw.substring(2);
-    }
-
-    if(raw.startsWith("39")){
-        return raw;
-    }
+    if(raw.startsWith("+")) return raw.substring(1);
+    if(raw.startsWith("00")) return raw.substring(2);
+    if(raw.startsWith("39")) return raw;
 
     return `39${raw}`;
 }
@@ -1556,13 +1548,33 @@ function openWhatsAppParentRequest(requestId, type = "generic"){
     }
 
     const athleteName = `${request.athlete_first_name || ""} ${request.athlete_last_name || ""}`.trim() || "l'atleta";
-    const parentName = request.parent_name || "";
+    const parentName = request.parent_name || "Genitore";
     const clubName = getClubDisplayName();
 
-    let message = `Ciao ${parentName}, ti contattiamo da ${clubName} in merito alla richiesta di iscrizione di ${athleteName}.`;
+    let message =
+`Ciao ${parentName},
+ti contattiamo dalla segreteria di ${clubName} in merito alla richiesta di iscrizione di ${athleteName}.
+
+Abbiamo ricevuto la richiesta e la stiamo verificando.
+
+Ti aggiorneremo appena la pratica sarà completata.
+
+Per qualsiasi informazione puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria ${clubName}`;
 
     if(type === "confirm"){
-        message = `Ciao ${parentName}, ti confermiamo che abbiamo ricevuto la richiesta di iscrizione di ${athleteName}. La segreteria la verificherà e ti aggiornerà appena possibile. Grazie, ${clubName}.`;
+        message =
+`Ciao ${parentName},
+ti confermiamo che la richiesta di iscrizione di ${athleteName} è stata ricevuta correttamente.
+
+La segreteria verificherà i dati inseriti, il certificato medico e l'eventuale ricevuta di pagamento.
+
+Ti aggiorneremo appena la pratica sarà completata.
+
+Grazie,
+Segreteria ${clubName}`;
     }
 
     openWhatsApp(request.parent_phone, message);
@@ -1577,11 +1589,19 @@ function openWhatsAppAthlete(athleteId, type = "generic"){
     }
 
     const athleteName = `${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() || "l'atleta";
-    const parentName = athlete.parent_name_1 || "";
+    const parentName = athlete.parent_name_1 || "Genitore";
     const phone = athlete.parent_phone_1 || athlete.phone;
     const clubName = getClubDisplayName();
 
-    const message = `Ciao ${parentName}, ti contattiamo da ${clubName} per una comunicazione relativa a ${athleteName}. Puoi rispondere direttamente a questo messaggio. Grazie.`;
+    const message =
+`Ciao ${parentName},
+ti contattiamo dalla segreteria di ${clubName} per una comunicazione relativa a ${athleteName}.
+
+Per qualsiasi informazione puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria ${clubName}`;
+
     openWhatsApp(phone, message);
 }
 
@@ -1595,12 +1615,23 @@ function openWhatsAppPayment(paymentId){
 
     const athlete = getAthleteById(payment.athlete_id);
     const athleteName = athlete ? `${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() : findAthlete(payment.athlete_id);
-    const parentName = athlete?.parent_name_1 || "";
+    const parentName = athlete?.parent_name_1 || "Genitore";
     const phone = athlete?.parent_phone_1 || athlete?.phone;
     const residuo = Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
     const clubName = getClubDisplayName();
 
-    const message = `Ciao ${parentName}, ti ricordiamo che per ${athleteName} risulta una quota ancora aperta di ${formatEuro(residuo)} con scadenza ${formatDate(payment.due_date)}. Per qualsiasi informazione puoi rispondere a questo messaggio. Grazie, ${clubName}.`;
+    const message =
+`Ciao ${parentName},
+ti ricordiamo che risulta ancora aperto un pagamento relativo a ${athleteName}.
+
+Importo residuo: ${formatEuro(residuo)}
+Scadenza: ${formatDate(payment.due_date)}
+
+Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria ${clubName}`;
+
     openWhatsApp(phone, message);
 }
 
@@ -1614,14 +1645,25 @@ function openWhatsAppCertificate(certificateId){
 
     const athlete = getAthleteById(cert.athlete_id);
     const athleteName = athlete ? `${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() : findAthlete(cert.athlete_id);
-    const parentName = athlete?.parent_name_1 || "";
+    const parentName = athlete?.parent_name_1 || "Genitore";
     const phone = athlete?.parent_phone_1 || athlete?.phone;
-    const status = getCertificateDisplayStatus(cert);
     const clubName = getClubDisplayName();
+    const status = getCertificateDisplayStatus(cert);
 
-    const message = `Ciao ${parentName}, ti ricordiamo che il certificato medico di ${athleteName} risulta ${status.label.toLowerCase()} con scadenza ${formatDate(cert.expiry_date)}. Ti chiediamo di aggiornarlo appena possibile. Grazie, ${clubName}.`;
+    const message =
+`Ciao ${parentName},
+ti ricordiamo che il certificato medico di ${athleteName} risulta ${String(status.label || "").toLowerCase()}.
+
+Scadenza certificato: ${formatDate(cert.expiry_date)}
+
+Ti chiediamo gentilmente di consegnare o caricare il nuovo certificato appena disponibile.
+
+Grazie,
+Segreteria ${clubName}`;
+
     openWhatsApp(phone, message);
 }
+
 
 /* =========================
    Utility stato e filtri
@@ -2048,4 +2090,213 @@ function escapeHtml(value){
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+/* =========================
+   WhatsApp V1.1 - Messaggi professionali
+========================= */
+
+function normalizePhoneForWhatsApp(phone){
+    let raw = String(phone || "").trim();
+
+    if(!raw){
+        return "";
+    }
+
+    raw = raw.replace(/[^\d+]/g, "");
+
+    if(raw.startsWith("+")){
+        raw = raw.substring(1);
+    }
+
+    if(raw.startsWith("00")){
+        raw = raw.substring(2);
+    }
+
+    if(raw.startsWith("39")){
+        return raw;
+    }
+
+    return `39${raw}`;
+}
+
+function getClubDisplayName(){
+    return cachedClub?.name || "la società";
+}
+
+function getAthleteFullNameFromObject(item){
+    const firstName = item?.athlete_first_name || item?.first_name || "";
+    const lastName = item?.athlete_last_name || item?.last_name || "";
+
+    return `${firstName} ${lastName}`.trim() || "l'atleta";
+}
+
+function buildWhatsAppUrl(phone, message){
+    const cleanPhone = normalizePhoneForWhatsApp(phone);
+
+    if(!cleanPhone){
+        return "";
+    }
+
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+}
+
+function openWhatsAppMessage(phone, message){
+    const url = buildWhatsAppUrl(phone, message);
+
+    if(!url){
+        setDashboardMessage("Numero WhatsApp non disponibile o non valido.", "error");
+        return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function openParentRequestWhatsApp(requestId){
+    const request = cachedParentRequests.find(item => Number(item.id) === Number(requestId));
+
+    if(!request){
+        setDashboardMessage("Richiesta non trovata.", "error");
+        return;
+    }
+
+    const parentName = request.parent_name || "Genitore";
+    const athleteName = getAthleteFullNameFromObject(request);
+    const clubName = getClubDisplayName();
+
+    const message =
+`Ciao ${parentName},
+ti contattiamo dalla segreteria di ${clubName} in merito alla richiesta di iscrizione di ${athleteName}.
+
+Abbiamo ricevuto la richiesta e la stiamo verificando.
+
+Ti aggiorneremo appena la pratica sarà completata.
+
+Per qualsiasi informazione puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria ${clubName}`;
+
+    openWhatsAppMessage(request.parent_phone, message);
+}
+
+function openParentRequestConfirmationWhatsApp(requestId){
+    const request = cachedParentRequests.find(item => Number(item.id) === Number(requestId));
+
+    if(!request){
+        setDashboardMessage("Richiesta non trovata.", "error");
+        return;
+    }
+
+    const parentName = request.parent_name || "Genitore";
+    const athleteName = getAthleteFullNameFromObject(request);
+    const clubName = getClubDisplayName();
+
+    const message =
+`Ciao ${parentName},
+ti confermiamo che la richiesta di iscrizione di ${athleteName} è stata ricevuta correttamente.
+
+La segreteria verificherà i dati inseriti, il certificato medico e l'eventuale ricevuta di pagamento.
+
+Ti aggiorneremo appena la pratica sarà completata.
+
+Grazie,
+Segreteria ${clubName}`;
+
+    openWhatsAppMessage(request.parent_phone, message);
+}
+
+function openAthleteWhatsApp(athleteId){
+    const athlete = cachedAthletes.find(item => Number(item.id) === Number(athleteId));
+
+    if(!athlete){
+        setDashboardMessage("Atleta non trovato.", "error");
+        return;
+    }
+
+    const parentName = athlete.parent_name_1 || "Genitore";
+    const athleteName = getAthleteFullNameFromObject(athlete);
+    const clubName = getClubDisplayName();
+
+    const message =
+`Ciao ${parentName},
+ti contattiamo dalla segreteria di ${clubName} per una comunicazione relativa a ${athleteName}.
+
+Per qualsiasi informazione puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria ${clubName}`;
+
+    openWhatsAppMessage(athlete.parent_phone_1 || athlete.phone, message);
+}
+
+function openPaymentReminderWhatsApp(paymentId){
+    const payment = cachedPayments.find(item => Number(item.id) === Number(paymentId));
+
+    if(!payment){
+        setDashboardMessage("Pagamento non trovato.", "error");
+        return;
+    }
+
+    const athlete = cachedAthletes.find(item => Number(item.id) === Number(payment.athlete_id));
+
+    if(!athlete){
+        setDashboardMessage("Atleta collegato al pagamento non trovato.", "error");
+        return;
+    }
+
+    const parentName = athlete.parent_name_1 || "Genitore";
+    const athleteName = getAthleteFullNameFromObject(athlete);
+    const clubName = getClubDisplayName();
+
+    const amountDue = Number(payment.amount_due || 0);
+    const amountPaid = Number(payment.amount_paid || 0);
+    const residual = Math.max(0, amountDue - amountPaid);
+
+    const message =
+`Ciao ${parentName},
+ti ricordiamo che risulta ancora aperto un pagamento relativo a ${athleteName}.
+
+Importo residuo: ${formatEuro(residual)}
+Scadenza: ${formatDate(payment.due_date)}
+
+Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria ${clubName}`;
+
+    openWhatsAppMessage(athlete.parent_phone_1 || athlete.phone, message);
+}
+
+function openCertificateReminderWhatsApp(certificateId){
+    const cert = cachedCertificates.find(item => Number(item.id) === Number(certificateId));
+
+    if(!cert){
+        setDashboardMessage("Certificato non trovato.", "error");
+        return;
+    }
+
+    const athlete = cachedAthletes.find(item => Number(item.id) === Number(cert.athlete_id));
+
+    if(!athlete){
+        setDashboardMessage("Atleta collegato al certificato non trovato.", "error");
+        return;
+    }
+
+    const parentName = athlete.parent_name_1 || "Genitore";
+    const athleteName = getAthleteFullNameFromObject(athlete);
+    const clubName = getClubDisplayName();
+    const status = getCertificateDisplayStatus(cert);
+
+    const message =
+`Ciao ${parentName},
+ti ricordiamo che il certificato medico di ${athleteName} risulta ${String(status.label || "").toLowerCase()}.
+
+Scadenza certificato: ${formatDate(cert.expiry_date)}
+
+Ti chiediamo gentilmente di consegnare o caricare il nuovo certificato appena disponibile.
+
+Grazie,
+Segreteria ${clubName}`;
+
+    openWhatsAppMessage(athlete.parent_phone_1 || athlete.phone, message);
 }
