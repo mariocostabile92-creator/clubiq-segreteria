@@ -2604,4 +2604,18 @@ function formatDateTime(value){
         minute: "2-digit"
     });
 }
+function clearCommunicationHistory(){
+    if(!confirm("Vuoi pulire lo storico comunicazioni WhatsApp da questo dispositivo?")){
+        return;
+    }
+
+    try{
+        localStorage.removeItem("clubiq_communication_history_v1");
+        localStorage.removeItem("clubiq_whatsapp_history_v1");
+        renderCommunicationHistory();
+        setDashboardMessage("Storico comunicazioni pulito.", "success");
+    }catch(error){
+        setDashboardMessage("Impossibile pulire lo storico comunicazioni.", "error");
+    }
+}
 
