@@ -10,3 +10,4 @@ python-multipart
 email-validator
 psycopg2-binary
 openai
+stripe>=12.0.0
