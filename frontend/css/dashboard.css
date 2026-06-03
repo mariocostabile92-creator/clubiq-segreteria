@@ -956,3 +956,28 @@ body{
         text-align:left;
     }
 }
+
+
+/* ================================
+   Export storico comunicazioni
+================================ */
+
+.communication-history-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+@media (max-width: 560px){
+    .communication-history-actions{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr;
+    }
+
+    .communication-history-actions .secondary-btn{
+        width:100%;
+    }
+}

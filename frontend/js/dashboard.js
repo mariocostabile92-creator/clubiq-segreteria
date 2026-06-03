@@ -45,6 +45,7 @@ function bindDashboardActions(){
     const sendQuickDocumentsBtn = document.getElementById("sendQuickDocumentsBtn");
     const sendQuickCustomBtn = document.getElementById("sendQuickCustomBtn");
     const clearCommunicationHistoryBtn = document.getElementById("clearCommunicationHistoryBtn");
+    const exportCommunicationHistoryCsvBtn = document.getElementById("exportCommunicationHistoryCsvBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -100,6 +101,10 @@ function bindDashboardActions(){
 
     if(clearCommunicationHistoryBtn){
         clearCommunicationHistoryBtn.addEventListener("click", clearCommunicationHistory);
+    }
+
+    if(exportCommunicationHistoryCsvBtn){
+        exportCommunicationHistoryCsvBtn.addEventListener("click", exportCommunicationHistoryCsv);
     }
 
     if(addAthleteForm){
@@ -2514,3 +2519,51 @@ function clearCommunicationHistory(){
     renderCommunicationHistory();
     setDashboardMessage("Storico comunicazioni cancellato.", "success");
 }
+
+
+function escapeCsvValue(value){
+    const text = String(value ?? "").replace(/\r?\n|\r/g, " ").trim();
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+function exportCommunicationHistoryCsv(){
+    const history = getCommunicationHistory();
+
+    if(!history.length){
+        setDashboardMessage("Nessuna comunicazione da esportare.", "error");
+        return;
+    }
+
+    const rows = [
+        ["Data", "Tipo", "Destinatario", "Telefono", "Atleta", "Messaggio"]
+    ];
+
+    history.forEach(item => {
+        rows.push([
+            item.created_at ? formatDateTime(item.created_at) : "",
+            item.type || "",
+            item.recipient || "",
+            item.phone || "",
+            item.athlete || "",
+            item.message || ""
+        ]);
+    });
+
+    const csv = rows
+        .map(row => row.map(escapeCsvValue).join(";"))
+        .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "storico_comunicazioni_clubiq.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+    setDashboardMessage("Storico comunicazioni esportato in CSV.", "success");
+}
+
