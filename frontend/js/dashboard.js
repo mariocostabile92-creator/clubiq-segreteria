@@ -1790,25 +1790,38 @@ function openWhatsAppPayment(paymentId){
     const phone = athlete?.parent_phone_1 || athlete?.phone;
     const residuo = Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
     const clubName = getClubDisplayName();
-
     const paymentSettings = getClubPaymentSettings();
-    const ibanBlock = paymentSettings.iban ?
-`
-Puoi effettuare il pagamento tramite bonifico:
-IBAN: ${paymentSettings.iban}
-Intestato a: ${paymentSettings.bank_account_holder || clubName}
-Causale consigliata: quota ${athleteName}` : "";
 
-    const paymentNotesBlock = paymentSettings.payment_notes ?
-`
-Note pagamento: ${paymentSettings.payment_notes}` : "";
+    const dueDateLabel = formatDate(payment.due_date);
+    const causale = `Quota atleta ${athleteName}`;
+
+    const paymentLines = [];
+    if(paymentSettings.iban){
+        paymentLines.push("Puoi effettuare il pagamento tramite bonifico:");
+        paymentLines.push(`IBAN: ${paymentSettings.iban}`);
+        if(paymentSettings.bank_account_holder){
+            paymentLines.push(`Intestato a: ${paymentSettings.bank_account_holder}`);
+        }
+        paymentLines.push(`Causale consigliata: ${causale}`);
+    }
+
+    if(paymentSettings.payment_notes){
+        paymentLines.push(`Note pagamento: ${paymentSettings.payment_notes}`);
+    }
+
+    const paymentBlock = paymentLines.length ? `
+
+${paymentLines.join("
+")}` : "";
 
     const message =
 `Ciao ${parentName},
-ti ricordiamo che risulta ancora aperto un pagamento relativo a ${athleteName}.
+ti contattiamo dalla segreteria di ${clubName} per ricordarti che risulta ancora aperto un pagamento relativo a ${athleteName}.
 
 Importo residuo: ${formatEuro(residuo)}
-Scadenza: ${formatDate(payment.due_date)}${ibanBlock}${paymentNotesBlock}
+Scadenza: ${dueDateLabel}${paymentBlock}
+
+Se hai già effettuato il pagamento, puoi ignorare questo promemoria o inviarci la ricevuta.
 
 Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
 
