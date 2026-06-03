@@ -1890,156 +1890,41 @@ function generateSecretaryReportPdf(){
         </main>
     `;
 
-    const originalTitle = document.title;
-    const originalBody = document.body.innerHTML;
+    const printCss = `
+        <style>
+            html, body{margin:0;padding:0;background:#fff;color:#0f172a;font-family:Arial,sans-serif;height:auto;min-height:0;overflow:visible;}
+            .secretary-report-page{width:190mm;max-width:190mm;margin:0 auto;padding:8mm;box-sizing:border-box;background:#fff;}
+            .secretary-report-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #2563eb;padding-bottom:10px;margin-bottom:12px;}
+            .secretary-report-eyebrow{margin:0 0 4px;color:#2563eb;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;}
+            .secretary-report-header h1{margin:0;font-size:24px;line-height:1.05;}
+            .secretary-report-header p{margin:5px 0 0;font-size:11px;color:#475569;}.secretary-report-brand{font-size:13px;font-weight:900;color:#2563eb;}
+            .secretary-report-section{margin:10px 0;break-inside:avoid;page-break-inside:avoid;}.secretary-report-section h2{margin:0 0 7px;font-size:14px;color:#0f172a;}
+            .secretary-report-grid{display:grid;gap:6px;}.secretary-report-grid.two{grid-template-columns:1fr 1fr;}.secretary-report-grid.five{grid-template-columns:repeat(5,1fr);}
+            .secretary-report-grid div{border:1px solid #dbeafe;border-radius:8px;padding:7px;min-height:34px;}.secretary-report-grid span{display:block;font-size:8px;color:#64748b;text-transform:uppercase;font-weight:900;margin-bottom:3px;}.secretary-report-grid strong{display:block;font-size:11px;color:#0f172a;}
+            .secretary-report-table{width:100%;border-collapse:collapse;font-size:10px;break-inside:avoid;page-break-inside:avoid;}.secretary-report-table th,.secretary-report-table td{border:1px solid #dbeafe;padding:5px 6px;text-align:left;vertical-align:top;}.secretary-report-table th{background:#eff6ff;color:#1d4ed8;font-weight:900;}
+            .secretary-report-empty{border:1px dashed #cbd5e1;border-radius:8px;padding:8px;color:#64748b;font-size:10px;}@page{size:A4 portrait;margin:8mm;}@media print{.secretary-report-page{width:auto;max-width:none;margin:0;padding:0;}}
+        </style>`;
 
-    document.title = `Report ClubIQ - ${clubName}`;
-    document.body.innerHTML = reportHtml;
-    document.body.className = "secretary-report-only-body";
-
-    const style = document.createElement("style");
-    style.textContent = `
-        html, body{
-            margin:0 !important;
-            padding:0 !important;
-            background:#fff !important;
-            color:#0f172a !important;
-            font-family:Arial, sans-serif !important;
-            height:auto !important;
-            min-height:0 !important;
-            overflow:visible !important;
-        }
-        .secretary-report-page{
-            width:190mm;
-            max-width:190mm;
-            margin:0 auto;
-            padding:8mm;
-            box-sizing:border-box;
-            background:#fff;
-        }
-        .secretary-report-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:flex-start;
-            border-bottom:2px solid #2563eb;
-            padding-bottom:10px;
-            margin-bottom:12px;
-        }
-        .secretary-report-eyebrow{
-            margin:0 0 4px;
-            color:#2563eb;
-            font-size:10px;
-            font-weight:900;
-            text-transform:uppercase;
-            letter-spacing:.08em;
-        }
-        .secretary-report-header h1{
-            margin:0;
-            font-size:24px;
-            line-height:1.05;
-        }
-        .secretary-report-header p{
-            margin:5px 0 0;
-            font-size:11px;
-            color:#475569;
-        }
-        .secretary-report-brand{
-            font-size:13px;
-            font-weight:900;
-            color:#2563eb;
-        }
-        .secretary-report-section{
-            margin:10px 0;
-            break-inside:avoid;
-            page-break-inside:avoid;
-        }
-        .secretary-report-section h2{
-            margin:0 0 7px;
-            font-size:14px;
-            color:#0f172a;
-        }
-        .secretary-report-grid{
-            display:grid;
-            gap:6px;
-        }
-        .secretary-report-grid.two{
-            grid-template-columns:1fr 1fr;
-        }
-        .secretary-report-grid.five{
-            grid-template-columns:repeat(5, 1fr);
-        }
-        .secretary-report-grid div{
-            border:1px solid #dbeafe;
-            border-radius:8px;
-            padding:7px;
-            min-height:34px;
-        }
-        .secretary-report-grid span{
-            display:block;
-            font-size:8px;
-            color:#64748b;
-            text-transform:uppercase;
-            font-weight:900;
-            margin-bottom:3px;
-        }
-        .secretary-report-grid strong{
-            display:block;
-            font-size:11px;
-            color:#0f172a;
-        }
-        .secretary-report-table{
-            width:100%;
-            border-collapse:collapse;
-            font-size:10px;
-            break-inside:avoid;
-            page-break-inside:avoid;
-        }
-        .secretary-report-table th,
-        .secretary-report-table td{
-            border:1px solid #dbeafe;
-            padding:5px 6px;
-            text-align:left;
-            vertical-align:top;
-        }
-        .secretary-report-table th{
-            background:#eff6ff;
-            color:#1d4ed8;
-            font-weight:900;
-        }
-        .secretary-report-empty{
-            border:1px dashed #cbd5e1;
-            border-radius:8px;
-            padding:8px;
-            color:#64748b;
-            font-size:10px;
-        }
-        @page{
-            size:A4 portrait;
-            margin:8mm;
-        }
-        @media print{
-            html, body{
-                height:auto !important;
-                min-height:0 !important;
-            }
-            .secretary-report-page{
-                width:auto !important;
-                max-width:none !important;
-                margin:0 !important;
-                padding:0 !important;
-            }
-        }
+    const originalHtml = document.documentElement.innerHTML;
+    document.documentElement.innerHTML = `
+        <head>
+            <title>Report ClubIQ - ${escapeHtml(clubName)}</title>
+            ${printCss}
+        </head>
+        <body>${reportHtml}</body>
     `;
-    document.head.appendChild(style);
 
-    setTimeout(() => {
-        window.print();
-        setTimeout(() => {
-            document.title = originalTitle;
-            document.body.innerHTML = originalBody;
-            window.location.reload();
-        }, 800);
-    }, 200);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            window.print();
+            setTimeout(() => {
+                document.open();
+                document.write(`<!DOCTYPE html><html>${originalHtml}</html>`);
+                document.close();
+                window.location.reload();
+            }, 1000);
+        });
+    });
 }
 
 /* =========================
