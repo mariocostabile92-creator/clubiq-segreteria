@@ -10,6 +10,7 @@ from .core.config import settings
 from .db.database import engine, Base
 
 from .routers import auth, clubs, athletes, payments, certificates, dashboard
+from .routers.admin import router as admin_router
 from .routers.parent_requests import router as parent_requests_router
 from .routers.public_parent_requests import router as public_parent_requests_router
 
@@ -29,12 +30,6 @@ Base.metadata.create_all(bind=engine)
 
 
 def ensure_user_auth_columns():
-    """
-    Migrazione sicura per allineare la tabella users ai campi usati da
-    verifica email e reset password.
-
-    ADD COLUMN IF NOT EXISTS evita errori se le colonne esistono già.
-    """
     statements = [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR",
@@ -72,6 +67,7 @@ app.include_router(athletes)
 app.include_router(payments)
 app.include_router(certificates)
 app.include_router(dashboard)
+app.include_router(admin_router)
 app.include_router(parent_requests_router)
 app.include_router(public_parent_requests_router)
 
@@ -92,6 +88,11 @@ async def serve_index():
 @app.get("/dashboard.html")
 async def serve_dashboard():
     return FileResponse(FRONTEND_DIR / "dashboard.html")
+
+
+@app.get("/admin.html")
+async def serve_admin():
+    return FileResponse(FRONTEND_DIR / "admin.html")
 
 
 @app.get("/iscrizione.html")

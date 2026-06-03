@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - ClubIQ</title>
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+    <main class="admin-shell">
+        <header class="admin-hero">
+            <div>
+                <p class="eyebrow">ClubIQ Owner</p>
+                <h1>Admin Panel</h1>
+                <p>Controllo globale su società, utenti, attività e futuri abbonamenti.</p>
+            </div>
+            <div class="admin-actions">
+                <a class="secondary-btn" href="dashboard.html">Dashboard società</a>
+                <button id="refreshAdminBtn" class="primary-btn" type="button">Aggiorna</button>
+            </div>
+        </header>
+
+        <div id="adminMessage" class="message hidden"></div>
+
+        <section class="admin-stats-grid">
+            <article><span>Utenti</span><strong id="adminUsersCount">0</strong><small>Account registrati</small></article>
+            <article><span>Società</span><strong id="adminClubsCount">0</strong><small>Club creati</small></article>
+            <article><span>Atleti</span><strong id="adminAthletesCount">0</strong><small>Tesserati gestiti</small></article>
+            <article><span>Pagamenti</span><strong id="adminPaymentsCount">0</strong><small>Quote registrate</small></article>
+            <article><span>Da incassare</span><strong id="adminResidualCount">0 €</strong><small>Residuo globale</small></article>
+        </section>
+
+        <section class="admin-panel">
+            <div class="section-heading">
+                <div><p class="eyebrow">Clienti SaaS</p><h2>Società registrate</h2></div>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>Società</th><th>Contatti</th><th>Utenti</th><th>Atleti</th><th>Pagamenti</th><th>Residuo</th><th>Piano</th></tr></thead>
+                    <tbody id="adminClubsTable"><tr><td colspan="7">Caricamento...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-panel">
+            <div class="section-heading">
+                <div><p class="eyebrow">Account</p><h2>Utenti registrati</h2></div>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>Utente</th><th>Email</th><th>Società</th><th>Ruolo</th><th>Verifica</th><th>Piano</th></tr></thead>
+                    <tbody id="adminUsersTable"><tr><td colspan="6">Caricamento...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
