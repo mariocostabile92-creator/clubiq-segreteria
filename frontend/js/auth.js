@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Auth
-  V2.0 Brevo Email Verification + Password Reset
+  V2.1 Redirect Login Fix
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -67,6 +67,12 @@ function cleanAuthUrl(){
     window.history.replaceState({}, document.title, window.location.pathname + "#accesso");
 }
 
+function goToDashboard(){
+    setTimeout(() => {
+        window.location.href = `${window.location.origin}/dashboard.html`;
+    }, 300);
+}
+
 function showAuthPanel(type){
     const panels = {
         login: document.getElementById("loginForm"),
@@ -103,9 +109,13 @@ async function handleLogin(event){
             body: JSON.stringify({ username, password })
         });
 
+        if(!data || !data.access_token){
+            throw new Error("Token di accesso non ricevuto dal server.");
+        }
+
         setToken(data.access_token);
         setAuthMessage("Login effettuato. Apro la dashboard...", "success");
-        window.location.assign("/dashboard.html");
+        goToDashboard();
     }catch(error){
         setAuthMessage(error.message || "Credenziali non valide.", "error");
     }
@@ -137,9 +147,13 @@ async function handleSignup(event){
             body: JSON.stringify({ club_name, username, email, password })
         });
 
+        if(!data || !data.access_token){
+            throw new Error("Token di accesso non ricevuto dal server.");
+        }
+
         setToken(data.access_token);
-        setAuthMessage("Società creata. Ti abbiamo inviato una email di verifica. Apro la dashboard...", "success");
-        window.location.assign("/dashboard.html");
+        setAuthMessage("Società creata. Apro la dashboard...", "success");
+        goToDashboard();
     }catch(error){
         setAuthMessage(error.message || "Errore durante la creazione della società.", "error");
     }
@@ -210,6 +224,7 @@ function setAuthMessage(message, type){
 
     box.textContent = message;
     box.className = `message ${type}`;
+    box.classList.remove("hidden");
 }
 
 function clearAuthMessage(){
