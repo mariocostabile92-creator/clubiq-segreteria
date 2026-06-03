@@ -1381,3 +1381,24 @@ body{
         grid-template-columns:1fr;
     }
 }
+
+
+/* ================================
+   Dati pagamento società V1
+================================ */
+
+#clubIbanInput{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    letter-spacing:.03em;
+    font-weight:800;
+}
+
+#clubPaymentNotesInput{
+    min-height:86px;
+}
+
+@media (max-width: 760px){
+    #clubPaymentNotesInput{
+        min-height:110px;
+    }
+}

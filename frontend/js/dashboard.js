@@ -15,6 +15,25 @@ let editingAthleteId = null;
 let editingPaymentId = null;
 let editingCertificateId = null;
 
+const CLUB_PAYMENT_SETTINGS_KEY = "clubiq_club_payment_settings_v1";
+
+function getClubPaymentSettings(){
+    try{
+        const raw = localStorage.getItem(CLUB_PAYMENT_SETTINGS_KEY);
+        return raw ? JSON.parse(raw) || {} : {};
+    }catch(error){
+        return {};
+    }
+}
+
+function saveClubPaymentSettings(settings){
+    try{
+        localStorage.setItem(CLUB_PAYMENT_SETTINGS_KEY, JSON.stringify(settings || {}));
+    }catch(error){
+        console.warn("Salvataggio dati pagamento società non disponibile", error);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     if(!isLoggedIn()){
         window.location.href = "index.html";
@@ -506,6 +525,11 @@ function fillClubSettingsForm(){
     setInputValue("clubAddressInput", cachedClub.address || "");
     setInputValue("clubPresidentInput", cachedClub.president || "");
     setInputValue("clubSecretaryInput", cachedClub.secretary || "");
+
+    const paymentSettings = getClubPaymentSettings();
+    setInputValue("clubIbanInput", paymentSettings.iban || cachedClub.iban || "");
+    setInputValue("clubBankAccountHolderInput", paymentSettings.bank_account_holder || cachedClub.bank_account_holder || cachedClub.name || "");
+    setInputValue("clubPaymentNotesInput", paymentSettings.payment_notes || cachedClub.payment_notes || "");
 }
 
 async function handleUpdateClubSettings(event){
@@ -514,6 +538,12 @@ async function handleUpdateClubSettings(event){
     if(!requireVerifiedEmail("la modifica dei dati società")){
         return;
     }
+
+    const paymentSettings = {
+        iban: document.getElementById("clubIbanInput")?.value.trim() || "",
+        bank_account_holder: document.getElementById("clubBankAccountHolderInput")?.value.trim() || "",
+        payment_notes: document.getElementById("clubPaymentNotesInput")?.value.trim() || ""
+    };
 
     const payload = {
         name: document.getElementById("clubNameInput").value.trim(),
@@ -537,8 +567,9 @@ async function handleUpdateClubSettings(event){
             body: JSON.stringify(payload)
         });
 
+        saveClubPaymentSettings(paymentSettings);
         renderClubRegistrationLink();
-        setDashboardMessage("Dati società aggiornati correttamente.", "success");
+        setDashboardMessage("Dati società e dati pagamento aggiornati correttamente.", "success");
     }catch(error){
         setDashboardMessage(error.message, "error");
     }
@@ -1760,12 +1791,24 @@ function openWhatsAppPayment(paymentId){
     const residuo = Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
     const clubName = getClubDisplayName();
 
+    const paymentSettings = getClubPaymentSettings();
+    const ibanBlock = paymentSettings.iban ?
+`
+Puoi effettuare il pagamento tramite bonifico:
+IBAN: ${paymentSettings.iban}
+Intestato a: ${paymentSettings.bank_account_holder || clubName}
+Causale consigliata: quota ${athleteName}` : "";
+
+    const paymentNotesBlock = paymentSettings.payment_notes ?
+`
+Note pagamento: ${paymentSettings.payment_notes}` : "";
+
     const message =
 `Ciao ${parentName},
 ti ricordiamo che risulta ancora aperto un pagamento relativo a ${athleteName}.
 
 Importo residuo: ${formatEuro(residuo)}
-Scadenza: ${formatDate(payment.due_date)}
+Scadenza: ${formatDate(payment.due_date)}${ibanBlock}${paymentNotesBlock}
 
 Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
 
@@ -1880,6 +1923,9 @@ function generateSecretaryReportPdf(){
     const clubEmail = cachedClub?.email || "-";
     const clubPhone = cachedClub?.phone || "-";
     const clubAddress = cachedClub?.address || "-";
+    const paymentSettings = getClubPaymentSettings();
+    const clubIban = paymentSettings.iban || "-";
+    const clubBankHolder = paymentSettings.bank_account_holder || clubName;
 
     const pendingRequests = cachedParentRequests.filter(item => item.status === "pending").length;
     const approvedRequests = cachedParentRequests.filter(item => item.status === "approved").length;
@@ -1935,6 +1981,8 @@ function generateSecretaryReportPdf(){
                     <div><span>Email</span><strong>${escapeHtml(clubEmail)}</strong></div>
                     <div><span>Telefono</span><strong>${escapeHtml(clubPhone)}</strong></div>
                     <div><span>Indirizzo</span><strong>${escapeHtml(clubAddress)}</strong></div>
+                    <div><span>IBAN</span><strong>${escapeHtml(clubIban)}</strong></div>
+                    <div><span>Intestatario</span><strong>${escapeHtml(clubBankHolder)}</strong></div>
                 </div>
             </section>
 
