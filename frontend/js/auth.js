@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Auth
-  V2.1 Redirect Login Fix
+  V2.1 Login Redirect Hard Fix
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -18,16 +18,37 @@ function bindAuthActions(){
     const showForgotPasswordBtn = document.getElementById("showForgotPasswordBtn");
     const backToLoginBtns = document.querySelectorAll("[data-auth-back-login]");
 
-    if(showLoginBtn) showLoginBtn.addEventListener("click", () => showAuthPanel("login"));
-    if(showSignupBtn) showSignupBtn.addEventListener("click", () => showAuthPanel("signup"));
-    if(showForgotPasswordBtn) showForgotPasswordBtn.addEventListener("click", () => showAuthPanel("forgot"));
+    if(showLoginBtn){
+        showLoginBtn.addEventListener("click", () => showAuthPanel("login"));
+    }
 
-    backToLoginBtns.forEach(btn => btn.addEventListener("click", () => showAuthPanel("login")));
+    if(showSignupBtn){
+        showSignupBtn.addEventListener("click", () => showAuthPanel("signup"));
+    }
 
-    if(loginForm) loginForm.addEventListener("submit", handleLogin);
-    if(signupForm) signupForm.addEventListener("submit", handleSignup);
-    if(forgotPasswordForm) forgotPasswordForm.addEventListener("submit", handleForgotPassword);
-    if(resetPasswordForm) resetPasswordForm.addEventListener("submit", handleResetPassword);
+    if(showForgotPasswordBtn){
+        showForgotPasswordBtn.addEventListener("click", () => showAuthPanel("forgot"));
+    }
+
+    backToLoginBtns.forEach(btn => {
+        btn.addEventListener("click", () => showAuthPanel("login"));
+    });
+
+    if(loginForm){
+        loginForm.addEventListener("submit", handleLogin);
+    }
+
+    if(signupForm){
+        signupForm.addEventListener("submit", handleSignup);
+    }
+
+    if(forgotPasswordForm){
+        forgotPasswordForm.addEventListener("submit", handleForgotPassword);
+    }
+
+    if(resetPasswordForm){
+        resetPasswordForm.addEventListener("submit", handleResetPassword);
+    }
 
     showAuthPanel("login");
 }
@@ -39,11 +60,13 @@ async function handleAuthQueryParams(){
 
     if(verifyToken){
         setAuthMessage("Verifica email in corso...", "info");
+
         try{
             const data = await apiRequest("/auth/verify-email", {
                 method: "POST",
                 body: JSON.stringify({ token: verifyToken })
             });
+
             cleanAuthUrl();
             showAuthPanel("login");
             setAuthMessage(data.message || "Email verificata. Ora puoi accedere.", "success");
@@ -52,12 +75,17 @@ async function handleAuthQueryParams(){
             showAuthPanel("login");
             setAuthMessage(error.message || "Link verifica email non valido o scaduto.", "error");
         }
+
         return;
     }
 
     if(resetToken){
         const tokenInput = document.getElementById("resetPasswordToken");
-        if(tokenInput) tokenInput.value = resetToken;
+
+        if(tokenInput){
+            tokenInput.value = resetToken;
+        }
+
         showAuthPanel("reset");
         setAuthMessage("Imposta la nuova password per completare il reset.", "info");
     }
@@ -65,12 +93,6 @@ async function handleAuthQueryParams(){
 
 function cleanAuthUrl(){
     window.history.replaceState({}, document.title, window.location.pathname + "#accesso");
-}
-
-function goToDashboard(){
-    setTimeout(() => {
-        window.location.href = `${window.location.origin}/dashboard.html`;
-    }, 300);
 }
 
 function showAuthPanel(type){
@@ -81,26 +103,42 @@ function showAuthPanel(type){
         reset: document.getElementById("resetPasswordForm")
     };
 
-    Object.values(panels).forEach(panel => panel?.classList.add("hidden"));
-    panels[type]?.classList.remove("hidden");
+    Object.values(panels).forEach(panel => {
+        if(panel){
+            panel.classList.add("hidden");
+        }
+    });
+
+    if(panels[type]){
+        panels[type].classList.remove("hidden");
+    }
 
     document.getElementById("showLogin")?.classList.toggle("active", type === "login");
     document.getElementById("showSignup")?.classList.toggle("active", type === "signup");
 
-    if(type !== "reset") clearAuthMessage();
+    if(type !== "reset"){
+        clearAuthMessage();
+    }
 }
 
 async function handleLogin(event){
     event.preventDefault();
 
-    const username = document.getElementById("loginUsername").value.trim();
-    const password = document.getElementById("loginPassword").value.trim();
+    const form = event.currentTarget;
+    const submitBtn = form?.querySelector('button[type="submit"]');
+
+    const usernameInput = document.getElementById("loginUsername");
+    const passwordInput = document.getElementById("loginPassword");
+
+    const username = usernameInput?.value.trim() || "";
+    const password = passwordInput?.value.trim() || "";
 
     if(!username || !password){
         setAuthMessage("Inserisci username/email e password.", "error");
         return;
     }
 
+    setButtonLoading(submitBtn, true, "Accesso...");
     setAuthMessage("Accesso in corso...", "info");
 
     try{
@@ -115,19 +153,25 @@ async function handleLogin(event){
 
         setToken(data.access_token);
         setAuthMessage("Login effettuato. Apro la dashboard...", "success");
-        goToDashboard();
+
+        forceRedirectToDashboard();
     }catch(error){
+        console.error("Errore login ClubIQ:", error);
         setAuthMessage(error.message || "Credenziali non valide.", "error");
+        setButtonLoading(submitBtn, false, "Entra nella dashboard");
     }
 }
 
 async function handleSignup(event){
     event.preventDefault();
 
-    const club_name = document.getElementById("signupClubName").value.trim();
-    const username = document.getElementById("signupUsername").value.trim();
-    const email = document.getElementById("signupEmail").value.trim();
-    const password = document.getElementById("signupPassword").value.trim();
+    const form = event.currentTarget;
+    const submitBtn = form?.querySelector('button[type="submit"]');
+
+    const club_name = document.getElementById("signupClubName")?.value.trim() || "";
+    const username = document.getElementById("signupUsername")?.value.trim() || "";
+    const email = document.getElementById("signupEmail")?.value.trim() || "";
+    const password = document.getElementById("signupPassword")?.value.trim() || "";
 
     if(!club_name || !username || !email || !password){
         setAuthMessage("Compila tutti i campi per creare la società.", "error");
@@ -139,6 +183,7 @@ async function handleSignup(event){
         return;
     }
 
+    setButtonLoading(submitBtn, true, "Creazione...");
     setAuthMessage("Creazione società e invio email di verifica...", "info");
 
     try{
@@ -153,16 +198,47 @@ async function handleSignup(event){
 
         setToken(data.access_token);
         setAuthMessage("Società creata. Apro la dashboard...", "success");
-        goToDashboard();
+
+        forceRedirectToDashboard();
     }catch(error){
+        console.error("Errore registrazione ClubIQ:", error);
         setAuthMessage(error.message || "Errore durante la creazione della società.", "error");
+        setButtonLoading(submitBtn, false, "Crea società");
     }
+}
+
+function forceRedirectToDashboard(){
+    const target = `${window.location.origin}/dashboard.html`;
+
+    setTimeout(() => {
+        window.location.href = target;
+    }, 250);
+
+    setTimeout(() => {
+        if(!window.location.pathname.includes("dashboard.html")){
+            window.location.assign(target);
+        }
+    }, 900);
+
+    setTimeout(() => {
+        if(!window.location.pathname.includes("dashboard.html")){
+            window.location.replace(target);
+        }
+    }, 1600);
+}
+
+function setButtonLoading(button, loading, text){
+    if(!button) return;
+
+    button.disabled = loading;
+    button.textContent = text;
 }
 
 async function handleForgotPassword(event){
     event.preventDefault();
 
-    const email = document.getElementById("forgotPasswordEmail").value.trim();
+    const email = document.getElementById("forgotPasswordEmail")?.value.trim() || "";
+
     if(!email){
         setAuthMessage("Inserisci la tua email.", "error");
         return;
@@ -175,6 +251,7 @@ async function handleForgotPassword(event){
             method: "POST",
             body: JSON.stringify({ email })
         });
+
         setAuthMessage(data.message || "Controlla la tua email.", "success");
     }catch(error){
         setAuthMessage(error.message || "Errore durante l'invio del reset password.", "error");
@@ -184,9 +261,9 @@ async function handleForgotPassword(event){
 async function handleResetPassword(event){
     event.preventDefault();
 
-    const token = document.getElementById("resetPasswordToken").value.trim();
-    const new_password = document.getElementById("resetNewPassword").value.trim();
-    const confirmPassword = document.getElementById("resetConfirmPassword").value.trim();
+    const token = document.getElementById("resetPasswordToken")?.value.trim() || "";
+    const new_password = document.getElementById("resetNewPassword")?.value.trim() || "";
+    const confirmPassword = document.getElementById("resetConfirmPassword")?.value.trim() || "";
 
     if(!token || !new_password){
         setAuthMessage("Link reset non valido o password mancante.", "error");
@@ -210,6 +287,7 @@ async function handleResetPassword(event){
             method: "POST",
             body: JSON.stringify({ token, new_password })
         });
+
         cleanAuthUrl();
         showAuthPanel("login");
         setAuthMessage(data.message || "Password aggiornata. Ora puoi accedere.", "success");
@@ -220,7 +298,11 @@ async function handleResetPassword(event){
 
 function setAuthMessage(message, type){
     const box = document.getElementById("authMessage");
-    if(!box) return;
+
+    if(!box){
+        alert(message);
+        return;
+    }
 
     box.textContent = message;
     box.className = `message ${type}`;
@@ -229,6 +311,7 @@ function setAuthMessage(message, type){
 
 function clearAuthMessage(){
     const box = document.getElementById("authMessage");
+
     if(!box) return;
 
     box.textContent = "";
