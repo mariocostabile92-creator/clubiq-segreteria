@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V2.1 Documenti richieste UX
+  V2.2 WhatsApp V1
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -558,6 +558,8 @@ function renderParentRequestsList(){
                     <b class="${status.className}">${status.label}</b>
                     <small>Richiesta #${request.id}</small>
                     <div class="card-actions">
+                        ${request.parent_phone ? `<button type="button" class="mini-btn whatsapp" onclick="openWhatsAppParentRequest(${request.id}, 'generic')">💬 WhatsApp</button>` : ""}
+                        ${request.parent_phone ? `<button type="button" class="mini-btn whatsapp" onclick="openWhatsAppParentRequest(${request.id}, 'confirm')">✅ Conferma</button>` : ""}
                         ${request.status === "pending" ? `
                             <button type="button" class="mini-btn success" onclick="approveParentRequest(${request.id})">Approva</button>
                             <button type="button" class="mini-btn" onclick="rejectParentRequest(${request.id})">Rifiuta</button>
@@ -731,6 +733,7 @@ function renderAthletesList(){
 
                 <div class="card-actions">
                     <span class="status-badge ${status.className}">${status.label}</span>
+                    ${athlete.parent_phone_1 || athlete.phone ? `<button type="button" class="mini-btn whatsapp" onclick="openWhatsAppAthlete(${athlete.id}, 'generic')">💬 WhatsApp</button>` : ""}
                     <button type="button" class="mini-btn" onclick="openAthleteDetail(${athlete.id})">Apri scheda</button>
                     <button type="button" class="mini-btn" onclick="fillAthleteForm(${athlete.id})">Modifica</button>
                     <button type="button" class="mini-btn danger" onclick="deleteAthlete(${athlete.id})">Elimina</button>
@@ -849,6 +852,7 @@ function renderPaymentsList(){
                     <small>${stateLabel}</small>
 
                     <div class="card-actions">
+                        ${!isPaid ? `<button type="button" class="mini-btn whatsapp" onclick="openWhatsAppPayment(${payment.id})">💸 Sollecito</button>` : ""}
                         <button type="button" class="mini-btn" onclick="fillPaymentForm(${payment.id})">Modifica</button>
 
                         ${!isPaid ? `
@@ -915,6 +919,7 @@ function renderCertificatesList(){
                     <small>Certificato</small>
 
                     <div class="card-actions">
+                        ${status.label !== "Valido" ? `<button type="button" class="mini-btn whatsapp" onclick="openWhatsAppCertificate(${cert.id})">📄 Promemoria</button>` : ""}
                         ${status.label !== "Valido" ? `
                             <button type="button" class="mini-btn success" onclick="markCertificateValid(${cert.id})">
                                 Segna valido
@@ -1498,6 +1503,124 @@ function renderDetailCertificates(certificates){
             </article>
         `;
     }).join("");
+}
+
+/* =========================
+   WhatsApp V1
+========================= */
+
+function normalizeItalianPhone(phone){
+    let raw = String(phone || "").trim();
+    if(!raw) return "";
+
+    raw = raw.replace(/[^0-9+]/g, "");
+
+    if(raw.startsWith("+")){
+        return raw.substring(1);
+    }
+
+    if(raw.startsWith("00")){
+        return raw.substring(2);
+    }
+
+    if(raw.startsWith("39")){
+        return raw;
+    }
+
+    return `39${raw}`;
+}
+
+function getClubDisplayName(){
+    return cachedClub?.name || "la società";
+}
+
+function openWhatsApp(phone, message){
+    const cleanPhone = normalizeItalianPhone(phone);
+
+    if(!cleanPhone){
+        setDashboardMessage("Numero WhatsApp non disponibile.", "error");
+        return;
+    }
+
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    setDashboardMessage("WhatsApp aperto con messaggio precompilato.", "success");
+}
+
+function openWhatsAppParentRequest(requestId, type = "generic"){
+    const request = cachedParentRequests.find(item => Number(item.id) === Number(requestId));
+
+    if(!request){
+        setDashboardMessage("Richiesta non trovata.", "error");
+        return;
+    }
+
+    const athleteName = `${request.athlete_first_name || ""} ${request.athlete_last_name || ""}`.trim() || "l'atleta";
+    const parentName = request.parent_name || "";
+    const clubName = getClubDisplayName();
+
+    let message = `Ciao ${parentName}, ti contattiamo da ${clubName} in merito alla richiesta di iscrizione di ${athleteName}.`;
+
+    if(type === "confirm"){
+        message = `Ciao ${parentName}, ti confermiamo che abbiamo ricevuto la richiesta di iscrizione di ${athleteName}. La segreteria la verificherà e ti aggiornerà appena possibile. Grazie, ${clubName}.`;
+    }
+
+    openWhatsApp(request.parent_phone, message);
+}
+
+function openWhatsAppAthlete(athleteId, type = "generic"){
+    const athlete = cachedAthletes.find(item => Number(item.id) === Number(athleteId));
+
+    if(!athlete){
+        setDashboardMessage("Atleta non trovato.", "error");
+        return;
+    }
+
+    const athleteName = `${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() || "l'atleta";
+    const parentName = athlete.parent_name_1 || "";
+    const phone = athlete.parent_phone_1 || athlete.phone;
+    const clubName = getClubDisplayName();
+
+    const message = `Ciao ${parentName}, ti contattiamo da ${clubName} per una comunicazione relativa a ${athleteName}. Puoi rispondere direttamente a questo messaggio. Grazie.`;
+    openWhatsApp(phone, message);
+}
+
+function openWhatsAppPayment(paymentId){
+    const payment = cachedPayments.find(item => Number(item.id) === Number(paymentId));
+
+    if(!payment){
+        setDashboardMessage("Pagamento non trovato.", "error");
+        return;
+    }
+
+    const athlete = getAthleteById(payment.athlete_id);
+    const athleteName = athlete ? `${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() : findAthlete(payment.athlete_id);
+    const parentName = athlete?.parent_name_1 || "";
+    const phone = athlete?.parent_phone_1 || athlete?.phone;
+    const residuo = Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
+    const clubName = getClubDisplayName();
+
+    const message = `Ciao ${parentName}, ti ricordiamo che per ${athleteName} risulta una quota ancora aperta di ${formatEuro(residuo)} con scadenza ${formatDate(payment.due_date)}. Per qualsiasi informazione puoi rispondere a questo messaggio. Grazie, ${clubName}.`;
+    openWhatsApp(phone, message);
+}
+
+function openWhatsAppCertificate(certificateId){
+    const cert = cachedCertificates.find(item => Number(item.id) === Number(certificateId));
+
+    if(!cert){
+        setDashboardMessage("Certificato non trovato.", "error");
+        return;
+    }
+
+    const athlete = getAthleteById(cert.athlete_id);
+    const athleteName = athlete ? `${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() : findAthlete(cert.athlete_id);
+    const parentName = athlete?.parent_name_1 || "";
+    const phone = athlete?.parent_phone_1 || athlete?.phone;
+    const status = getCertificateDisplayStatus(cert);
+    const clubName = getClubDisplayName();
+
+    const message = `Ciao ${parentName}, ti ricordiamo che il certificato medico di ${athleteName} risulta ${status.label.toLowerCase()} con scadenza ${formatDate(cert.expiry_date)}. Ti chiediamo di aggiornarlo appena possibile. Grazie, ${clubName}.`;
+    openWhatsApp(phone, message);
 }
 
 /* =========================

@@ -763,3 +763,24 @@ body{
         padding:12px 14px;
     }
 }
+
+
+/* ================================
+   WhatsApp V1
+================================ */
+
+.mini-btn.whatsapp{
+    background:#dcfce7;
+    color:#166534;
+    border:1px solid #bbf7d0;
+}
+
+.mini-btn.whatsapp:hover{
+    background:#bbf7d0;
+}
+
+@media (max-width: 560px){
+    .mini-btn.whatsapp{
+        min-height:44px;
+    }
+}
