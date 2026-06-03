@@ -51,6 +51,11 @@ function bindDashboardActions(){
     const logoutBtn = document.getElementById("logoutBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const generateSecretaryReportPdfBtn = document.getElementById("generateSecretaryReportPdfBtn");
+    const checkoutProMonthlyBtn = document.getElementById("checkoutProMonthlyBtn");
+    const checkoutProYearlyBtn = document.getElementById("checkoutProYearlyBtn");
+    const checkoutPremiumMonthlyBtn = document.getElementById("checkoutPremiumMonthlyBtn");
+    const checkoutPremiumYearlyBtn = document.getElementById("checkoutPremiumYearlyBtn");
+    const manageBillingBtn = document.getElementById("manageBillingBtn");
     const addAthleteForm = document.getElementById("addAthleteForm");
     const addPaymentForm = document.getElementById("addPaymentForm");
     const addCertificateForm = document.getElementById("addCertificateForm");
@@ -110,6 +115,12 @@ function bindDashboardActions(){
     if(generateSecretaryReportPdfBtn){
         generateSecretaryReportPdfBtn.addEventListener("click", generateSecretaryReportPdf);
     }
+
+    if(checkoutProMonthlyBtn) checkoutProMonthlyBtn.addEventListener("click", () => startCheckout("pro", "monthly"));
+    if(checkoutProYearlyBtn) checkoutProYearlyBtn.addEventListener("click", () => startCheckout("pro", "yearly"));
+    if(checkoutPremiumMonthlyBtn) checkoutPremiumMonthlyBtn.addEventListener("click", () => startCheckout("premium", "monthly"));
+    if(checkoutPremiumYearlyBtn) checkoutPremiumYearlyBtn.addEventListener("click", () => startCheckout("premium", "yearly"));
+    if(manageBillingBtn) manageBillingBtn.addEventListener("click", openBillingPortal);
 
     if(resendVerificationBtn){
         resendVerificationBtn.addEventListener("click", resendVerificationEmail);
