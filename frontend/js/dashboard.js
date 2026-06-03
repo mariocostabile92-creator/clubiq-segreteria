@@ -2558,31 +2558,24 @@ function renderCommunicationHistory(){
 }
 
 function exportCommunicationHistoryCsv(){
-    const history = getCommunicationHistory();
-    const filtered = getFilteredCommunicationHistory(history);
+    const history = getFilteredCommunicationHistory();
 
-    if(!filtered.length){
-        setDashboardMessage("Nessuna comunicazione da esportare con i filtri attuali.", "error");
+    if(!Array.isArray(history) || history.length === 0){
+        setDashboardMessage("Nessuna comunicazione da esportare con i filtri attivi.", "error");
         return;
     }
 
-    const rows = [
-        ["Data", "Tipo", "Destinatario", "Telefono", "Atleta", "Messaggio"]
-    ];
-
-    filtered.forEach(item => {
-        rows.push([
-            formatDateTime(item.date || item.created_at || item.timestamp || item.createdAt),
-            item.type || item.kind || item.title || "Comunicazione",
-            item.recipient || item.name || "",
-            item.phone || "",
-            item.athlete || item.athleteName || "",
-            item.message || item.text || ""
-        ]);
-    });
+    const rows = history.map(item => ({
+        data: formatDateTime(item.created_at || item.date || item.timestamp),
+        tipo: item.type_label || item.type || "Comunicazione",
+        destinatario: item.recipient || item.name || "-",
+        telefono: item.phone || "-",
+        atleta: item.athlete || "-",
+        messaggio: item.message || "-"
+    }));
 
     downloadCsv("storico_comunicazioni_clubiq.csv", rows);
-    setDashboardMessage(`CSV esportato: ${filtered.length} comunicazioni.`, "success");
+    setDashboardMessage("Storico comunicazioni esportato in CSV.", "success");
 }
 
 function formatDateTime(value){
