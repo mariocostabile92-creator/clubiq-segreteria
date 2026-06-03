@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V2.3 WhatsApp V1.3 Storico
+  V2.3.1 WhatsApp V1.3.1 Hotfix Storico
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     bindDashboardActions();
     await refreshAll();
+    renderCommunicationHistory();
 });
 
 function bindDashboardActions(){
@@ -1556,16 +1557,23 @@ function openWhatsApp(phone, message, meta = {}){
         return;
     }
 
-    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-
-    saveCommunicationHistory({
+    const historyEntry = {
         type: meta.type || "WhatsApp",
         recipient: meta.recipient || meta.parentName || "Contatto",
         phone: cleanPhone,
         athlete: meta.athlete || "",
         message: message
-    });
+    };
+
+    saveCommunicationHistory(historyEntry);
+
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
+
+    if(!openedWindow){
+        setDashboardMessage("Storico aggiornato. Se WhatsApp non si apre, controlla il blocco popup del browser.", "info");
+        return;
+    }
 
     setDashboardMessage("WhatsApp aperto con messaggio precompilato e storico aggiornato.", "success");
 }
@@ -2410,10 +2418,16 @@ function getCommunicationHistory(){
     try{
         const raw = localStorage.getItem(COMMUNICATION_HISTORY_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
+        if(Array.isArray(parsed)){
+            return parsed;
+        }
     }catch(error){
-        return [];
+        console.warn("Storico comunicazioni non leggibile da localStorage:", error);
     }
+
+    return Array.isArray(window.__clubiqCommunicationHistoryFallback)
+        ? window.__clubiqCommunicationHistoryFallback
+        : [];
 }
 
 function saveCommunicationHistory(entry){
@@ -2434,8 +2448,11 @@ function saveCommunicationHistory(entry){
 
     try{
         localStorage.setItem(COMMUNICATION_HISTORY_KEY, JSON.stringify(compact));
+        window.__clubiqCommunicationHistoryFallback = compact;
     }catch(error){
-        console.warn("Storico comunicazioni non salvato:", error);
+        console.warn("Storico comunicazioni non salvato in localStorage:", error);
+        window.__clubiqCommunicationHistoryFallback = compact;
+        setDashboardMessage("WhatsApp aperto. Storico salvato solo in memoria perché il browser blocca localStorage.", "info");
     }
 
     renderCommunicationHistory();
@@ -2493,6 +2510,7 @@ function clearCommunicationHistory(){
     }
 
     localStorage.removeItem(COMMUNICATION_HISTORY_KEY);
+    window.__clubiqCommunicationHistoryFallback = [];
     renderCommunicationHistory();
     setDashboardMessage("Storico comunicazioni cancellato.", "success");
 }
