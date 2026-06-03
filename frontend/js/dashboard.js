@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V2.2 WhatsApp V1
+  V2.3 WhatsApp V1.3 Storico
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -43,6 +43,7 @@ function bindDashboardActions(){
     const sendQuickRegistrationLinkBtn = document.getElementById("sendQuickRegistrationLinkBtn");
     const sendQuickDocumentsBtn = document.getElementById("sendQuickDocumentsBtn");
     const sendQuickCustomBtn = document.getElementById("sendQuickCustomBtn");
+    const clearCommunicationHistoryBtn = document.getElementById("clearCommunicationHistoryBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -94,6 +95,10 @@ function bindDashboardActions(){
 
     if(sendQuickCustomBtn){
         sendQuickCustomBtn.addEventListener("click", sendQuickCustomWhatsApp);
+    }
+
+    if(clearCommunicationHistoryBtn){
+        clearCommunicationHistoryBtn.addEventListener("click", clearCommunicationHistory);
     }
 
     if(addAthleteForm){
@@ -226,6 +231,8 @@ async function refreshAll(){
     if(openedAthleteId){
         openAthleteDetail(openedAthleteId, false);
     }
+
+    renderCommunicationHistory();
 }
 
 async function loadCurrentUser(){
@@ -1541,7 +1548,7 @@ function getClubDisplayName(){
     return cachedClub?.name || "la società";
 }
 
-function openWhatsApp(phone, message){
+function openWhatsApp(phone, message, meta = {}){
     const cleanPhone = normalizeItalianPhone(phone);
 
     if(!cleanPhone){
@@ -1551,7 +1558,16 @@ function openWhatsApp(phone, message){
 
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
-    setDashboardMessage("WhatsApp aperto con messaggio precompilato.", "success");
+
+    saveCommunicationHistory({
+        type: meta.type || "WhatsApp",
+        recipient: meta.recipient || meta.parentName || "Contatto",
+        phone: cleanPhone,
+        athlete: meta.athlete || "",
+        message: message
+    });
+
+    setDashboardMessage("WhatsApp aperto con messaggio precompilato e storico aggiornato.", "success");
 }
 
 function openWhatsAppParentRequest(requestId, type = "generic"){
@@ -1592,7 +1608,7 @@ Grazie,
 Segreteria ${clubName}`;
     }
 
-    openWhatsApp(request.parent_phone, message);
+    openWhatsApp(request.parent_phone, message, { type: type === "confirm" ? "Conferma iscrizione" : "Richiesta iscrizione", recipient: parentName || "Genitore", athlete: athleteName });
 }
 
 function openWhatsAppAthlete(athleteId, type = "generic"){
@@ -1617,7 +1633,7 @@ Per qualsiasi informazione puoi rispondere direttamente a questo messaggio.
 Grazie,
 Segreteria ${clubName}`;
 
-    openWhatsApp(phone, message);
+    openWhatsApp(phone, message, { type: "Comunicazione atleta", recipient: parentName || "Genitore", athlete: athleteName });
 }
 
 function openWhatsAppPayment(paymentId){
@@ -1647,7 +1663,7 @@ Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
 Grazie,
 Segreteria ${clubName}`;
 
-    openWhatsApp(phone, message);
+    openWhatsApp(phone, message, { type: "Sollecito quota", recipient: parentName || "Genitore", athlete: athleteName });
 }
 
 function openWhatsAppCertificate(certificateId){
@@ -1676,7 +1692,7 @@ Ti chiediamo gentilmente di consegnare o caricare il nuovo certificato appena di
 Grazie,
 Segreteria ${clubName}`;
 
-    openWhatsApp(phone, message);
+    openWhatsApp(phone, message, { type: "Promemoria certificato", recipient: parentName || "Genitore", athlete: athleteName });
 }
 
 
@@ -1708,7 +1724,7 @@ Una volta inviato il modulo, la segreteria controllerà i dati e ti aggiornerà 
 Grazie,
 Segreteria ${clubName}`;
 
-    openWhatsApp(phone, message);
+    openWhatsApp(phone, message, { type: "Link iscrizione", recipient: parentName || "Genitore" });
 }
 
 function sendQuickDocumentsWhatsApp(){
@@ -1727,7 +1743,7 @@ Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
 Grazie,
 Segreteria ${clubName}`;
 
-    openWhatsApp(phone, message);
+    openWhatsApp(phone, message, { type: "Documenti mancanti", recipient: "Genitore", athlete: athleteName });
 }
 
 function sendQuickCustomWhatsApp(){
@@ -1745,7 +1761,7 @@ function sendQuickCustomWhatsApp(){
 
 Segreteria ${clubName}`;
 
-    openWhatsApp(phone, message);
+    openWhatsApp(phone, message, { type: "Comunicazione generale", recipient: "Contatto" });
 }
 
 /* =========================
@@ -2382,4 +2398,101 @@ Grazie,
 Segreteria ${clubName}`;
 
     openWhatsAppMessage(athlete.parent_phone_1 || athlete.phone, message);
+}
+
+/* =========================
+   Storico comunicazioni WhatsApp V1.3
+========================= */
+
+const COMMUNICATION_HISTORY_KEY = "clubiq_communication_history_v1";
+
+function getCommunicationHistory(){
+    try{
+        const raw = localStorage.getItem(COMMUNICATION_HISTORY_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    }catch(error){
+        return [];
+    }
+}
+
+function saveCommunicationHistory(entry){
+    const history = getCommunicationHistory();
+
+    const nextEntry = {
+        id: Date.now(),
+        created_at: new Date().toISOString(),
+        type: entry.type || "WhatsApp",
+        recipient: entry.recipient || "Contatto",
+        phone: entry.phone || "",
+        athlete: entry.athlete || "",
+        message: entry.message || ""
+    };
+
+    history.unshift(nextEntry);
+    const compact = history.slice(0, 30);
+
+    try{
+        localStorage.setItem(COMMUNICATION_HISTORY_KEY, JSON.stringify(compact));
+    }catch(error){
+        console.warn("Storico comunicazioni non salvato:", error);
+    }
+
+    renderCommunicationHistory();
+}
+
+function renderCommunicationHistory(){
+    const list = document.getElementById("communicationHistoryList");
+    if(!list) return;
+
+    const history = getCommunicationHistory();
+
+    if(!history.length){
+        list.innerHTML = `<div class="empty">Nessuna comunicazione registrata.</div>`;
+        return;
+    }
+
+    list.innerHTML = history.map(item => {
+        const date = formatCommunicationDate(item.created_at);
+        const preview = String(item.message || "").replace(/\s+/g, " ").trim();
+
+        return `
+            <article class="communication-history-card">
+                <div>
+                    <span>${escapeHtml(item.type || "WhatsApp")}</span>
+                    <strong>${escapeHtml(item.recipient || "Contatto")}</strong>
+                    <small>${escapeHtml(date)}${item.athlete ? ` · ${escapeHtml(item.athlete)}` : ""}</small>
+                    <p>${escapeHtml(preview.slice(0, 170))}${preview.length > 170 ? "..." : ""}</p>
+                </div>
+                <div class="communication-history-meta">
+                    <b>${escapeHtml(item.phone || "")}</b>
+                </div>
+            </article>
+        `;
+    }).join("");
+}
+
+function formatCommunicationDate(value){
+    if(!value) return "Data non disponibile";
+
+    const date = new Date(value);
+    if(Number.isNaN(date.getTime())) return "Data non disponibile";
+
+    return date.toLocaleString("it-IT", {
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit"
+    });
+}
+
+function clearCommunicationHistory(){
+    if(!confirm("Vuoi cancellare lo storico comunicazioni salvato su questo dispositivo?")){
+        return;
+    }
+
+    localStorage.removeItem(COMMUNICATION_HISTORY_KEY);
+    renderCommunicationHistory();
+    setDashboardMessage("Storico comunicazioni cancellato.", "success");
 }
