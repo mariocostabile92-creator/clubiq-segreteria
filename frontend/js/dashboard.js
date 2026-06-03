@@ -1811,7 +1811,27 @@ function generateSecretaryReportPdf(){
     const validCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "valid").length;
     const expiringCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length;
     const expiredCertificates = cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length;
-    const history = getCommunicationHistory().slice(0, 8);
+    const history = getCommunicationHistory().slice(0, 6);
+
+    const recommendedActions = [];
+    if(pendingRequests > 0){
+        recommendedActions.push(`${pendingRequests} richiesta${pendingRequests === 1 ? "" : "e"} genitori da verificare.`);
+    }
+    if(totalResidual > 0){
+        recommendedActions.push(`${formatEuro(totalResidual)} ancora da incassare sulle quote.`);
+    }
+    if(overduePayments > 0){
+        recommendedActions.push(`${overduePayments} quota${overduePayments === 1 ? "" : "e"} scaduta${overduePayments === 1 ? "" : "e"} da sollecitare.`);
+    }
+    if(expiredCertificates > 0){
+        recommendedActions.push(`${expiredCertificates} certificato${expiredCertificates === 1 ? "" : "i"} scaduto${expiredCertificates === 1 ? "" : "i"} da aggiornare.`);
+    }
+    if(expiringCertificates > 0){
+        recommendedActions.push(`${expiringCertificates} certificato${expiringCertificates === 1 ? "" : "i"} in scadenza entro 30 giorni.`);
+    }
+    if(!recommendedActions.length){
+        recommendedActions.push("Situazione ordinata: nessuna urgenza operativa rilevata.");
+    }
 
     const reportHtml = `
         <main class="secretary-report-page">
@@ -1824,7 +1844,7 @@ function generateSecretaryReportPdf(){
                 <div class="secretary-report-brand">ClubIQ</div>
             </header>
 
-            <section class="secretary-report-section">
+            <section class="secretary-report-section compact">
                 <h2>Dati società</h2>
                 <div class="secretary-report-grid two">
                     <div><span>Società</span><strong>${escapeHtml(clubName)}</strong></div>
@@ -1834,7 +1854,14 @@ function generateSecretaryReportPdf(){
                 </div>
             </section>
 
-            <section class="secretary-report-section">
+            <section class="secretary-report-section compact">
+                <h2>Azioni consigliate</h2>
+                <ul class="secretary-report-actions">
+                    ${recommendedActions.map(action => `<li>${escapeHtml(action)}</li>`).join("")}
+                </ul>
+            </section>
+
+            <section class="secretary-report-section compact">
                 <h2>Riepilogo operativo</h2>
                 <div class="secretary-report-grid five">
                     <div><span>Atleti</span><strong>${cachedAthletes.length}</strong></div>
@@ -1845,7 +1872,7 @@ function generateSecretaryReportPdf(){
                 </div>
             </section>
 
-            <section class="secretary-report-section">
+            <section class="secretary-report-section compact">
                 <h2>Pagamenti</h2>
                 <table class="secretary-report-table">
                     <thead><tr><th>Pagati</th><th>Aperti</th><th>Scaduti</th><th>Residuo totale</th></tr></thead>
@@ -1853,7 +1880,7 @@ function generateSecretaryReportPdf(){
                 </table>
             </section>
 
-            <section class="secretary-report-section">
+            <section class="secretary-report-section compact">
                 <h2>Certificati</h2>
                 <table class="secretary-report-table">
                     <thead><tr><th>Validi</th><th>In scadenza</th><th>Scaduti</th></tr></thead>
@@ -1861,7 +1888,7 @@ function generateSecretaryReportPdf(){
                 </table>
             </section>
 
-            <section class="secretary-report-section">
+            <section class="secretary-report-section compact">
                 <h2>Richieste genitori</h2>
                 <table class="secretary-report-table">
                     <thead><tr><th>In attesa</th><th>Approvate</th><th>Rifiutate</th></tr></thead>
@@ -1869,7 +1896,7 @@ function generateSecretaryReportPdf(){
                 </table>
             </section>
 
-            <section class="secretary-report-section">
+            <section class="secretary-report-section compact">
                 <h2>Ultime comunicazioni WhatsApp</h2>
                 ${history.length ? `
                     <table class="secretary-report-table">
@@ -1887,22 +1914,27 @@ function generateSecretaryReportPdf(){
                     </table>
                 ` : `<p class="secretary-report-empty">Nessuna comunicazione WhatsApp registrata su questo dispositivo.</p>`}
             </section>
+
+            <footer class="secretary-report-footer">
+                Report generato da ClubIQ Segreteria · documento operativo interno
+            </footer>
         </main>
     `;
 
     const printCss = `
         <style>
             html, body{margin:0;padding:0;background:#fff;color:#0f172a;font-family:Arial,sans-serif;height:auto;min-height:0;overflow:visible;}
-            .secretary-report-page{width:190mm;max-width:190mm;margin:0 auto;padding:8mm;box-sizing:border-box;background:#fff;}
-            .secretary-report-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #2563eb;padding-bottom:10px;margin-bottom:12px;}
-            .secretary-report-eyebrow{margin:0 0 4px;color:#2563eb;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;}
-            .secretary-report-header h1{margin:0;font-size:24px;line-height:1.05;}
-            .secretary-report-header p{margin:5px 0 0;font-size:11px;color:#475569;}.secretary-report-brand{font-size:13px;font-weight:900;color:#2563eb;}
-            .secretary-report-section{margin:10px 0;break-inside:avoid;page-break-inside:avoid;}.secretary-report-section h2{margin:0 0 7px;font-size:14px;color:#0f172a;}
-            .secretary-report-grid{display:grid;gap:6px;}.secretary-report-grid.two{grid-template-columns:1fr 1fr;}.secretary-report-grid.five{grid-template-columns:repeat(5,1fr);}
-            .secretary-report-grid div{border:1px solid #dbeafe;border-radius:8px;padding:7px;min-height:34px;}.secretary-report-grid span{display:block;font-size:8px;color:#64748b;text-transform:uppercase;font-weight:900;margin-bottom:3px;}.secretary-report-grid strong{display:block;font-size:11px;color:#0f172a;}
-            .secretary-report-table{width:100%;border-collapse:collapse;font-size:10px;break-inside:avoid;page-break-inside:avoid;}.secretary-report-table th,.secretary-report-table td{border:1px solid #dbeafe;padding:5px 6px;text-align:left;vertical-align:top;}.secretary-report-table th{background:#eff6ff;color:#1d4ed8;font-weight:900;}
-            .secretary-report-empty{border:1px dashed #cbd5e1;border-radius:8px;padding:8px;color:#64748b;font-size:10px;}@page{size:A4 portrait;margin:8mm;}@media print{.secretary-report-page{width:auto;max-width:none;margin:0;padding:0;}}
+            .secretary-report-page{width:190mm;max-width:190mm;margin:0 auto;padding:7mm;box-sizing:border-box;background:#fff;}
+            .secretary-report-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #2563eb;padding-bottom:8px;margin-bottom:9px;}
+            .secretary-report-eyebrow{margin:0 0 3px;color:#2563eb;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;}
+            .secretary-report-header h1{margin:0;font-size:22px;line-height:1.05;}.secretary-report-header p{margin:4px 0 0;font-size:10px;color:#475569;}.secretary-report-brand{font-size:12px;font-weight:900;color:#2563eb;}
+            .secretary-report-section{margin:8px 0;break-inside:avoid;page-break-inside:avoid;}.secretary-report-section h2{margin:0 0 5px;font-size:12px;color:#0f172a;}
+            .secretary-report-grid{display:grid;gap:5px;}.secretary-report-grid.two{grid-template-columns:1fr 1fr;}.secretary-report-grid.five{grid-template-columns:repeat(5,1fr);}
+            .secretary-report-grid div{border:1px solid #dbeafe;border-radius:7px;padding:6px;min-height:29px;}.secretary-report-grid span{display:block;font-size:7px;color:#64748b;text-transform:uppercase;font-weight:900;margin-bottom:2px;}.secretary-report-grid strong{display:block;font-size:10px;color:#0f172a;}
+            .secretary-report-actions{margin:0;padding:6px 8px 6px 22px;border:1px solid #dbeafe;border-radius:8px;background:#eff6ff;font-size:10px;color:#0f172a;}.secretary-report-actions li{margin:2px 0;}
+            .secretary-report-table{width:100%;border-collapse:collapse;font-size:9px;break-inside:avoid;page-break-inside:avoid;}.secretary-report-table th,.secretary-report-table td{border:1px solid #dbeafe;padding:4px 5px;text-align:left;vertical-align:top;}.secretary-report-table th{background:#eff6ff;color:#1d4ed8;font-weight:900;}
+            .secretary-report-empty{border:1px dashed #cbd5e1;border-radius:7px;padding:7px;color:#64748b;font-size:9px;}.secretary-report-footer{margin-top:10px;padding-top:6px;border-top:1px solid #dbeafe;color:#64748b;font-size:8px;text-align:center;font-weight:700;}
+            @page{size:A4 portrait;margin:8mm;}@media print{.secretary-report-page{width:auto;max-width:none;margin:0;padding:0;}}
         </style>`;
 
     const originalHtml = document.documentElement.innerHTML;
@@ -1926,6 +1958,7 @@ function generateSecretaryReportPdf(){
         });
     });
 }
+
 
 /* =========================
    Utility stato e filtri
