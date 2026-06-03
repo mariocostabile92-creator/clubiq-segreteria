@@ -17,6 +17,111 @@ let editingCertificateId = null;
 
 const CLUB_PAYMENT_SETTINGS_KEY = "clubiq_club_payment_settings_v1";
 
+const CLUB_WHATSAPP_TEMPLATES_KEY = "clubiq_whatsapp_templates_v1";
+
+const DEFAULT_WHATSAPP_TEMPLATES = {
+    registration:
+`Ciao {parentName},
+ti inviamo il link per compilare la richiesta di iscrizione atleta per {clubName}.
+
+{link}
+
+Una volta inviato il modulo, la segreteria controllerà i dati e ti aggiornerà appena possibile.
+
+Grazie,
+Segreteria {clubName}`,
+    documents:
+`Ciao,
+ti contattiamo dalla segreteria di {clubName} per completare la pratica di {athleteName}.
+
+Ti chiediamo gentilmente di inviarci i documenti mancanti, come certificato medico e/o ricevuta di pagamento, appena disponibili.
+
+Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
+
+Grazie,
+Segreteria {clubName}`,
+    payment:
+`Ciao {parentName},
+ti contattiamo dalla segreteria di {clubName} per ricordarti che risulta ancora aperto un pagamento relativo a {athleteName}.
+
+Importo residuo: {residuo}
+Scadenza: {dueDate}{paymentBlock}
+
+Se hai già effettuato il pagamento, puoi ignorare questo promemoria o inviarci la ricevuta.
+
+Grazie,
+Segreteria {clubName}`,
+    certificate:
+`Ciao {parentName},
+ti ricordiamo che il certificato medico di {athleteName} risulta {certificateStatus}.
+
+Scadenza certificato: {expiryDate}
+
+Ti chiediamo gentilmente di consegnare o caricare il nuovo certificato appena disponibile.
+
+Grazie,
+Segreteria {clubName}`
+};
+
+function getWhatsappTemplates(){
+    try{
+        const raw = localStorage.getItem(CLUB_WHATSAPP_TEMPLATES_KEY);
+        const saved = raw ? JSON.parse(raw) || {} : {};
+        return { ...DEFAULT_WHATSAPP_TEMPLATES, ...saved };
+    }catch(error){
+        return { ...DEFAULT_WHATSAPP_TEMPLATES };
+    }
+}
+
+function saveWhatsappTemplates(templates){
+    try{
+        localStorage.setItem(CLUB_WHATSAPP_TEMPLATES_KEY, JSON.stringify({ ...DEFAULT_WHATSAPP_TEMPLATES, ...(templates || {}) }));
+    }catch(error){
+        console.warn("Salvataggio template WhatsApp non disponibile", error);
+    }
+}
+
+function applyTemplate(template, values = {}){
+    return String(template || "").replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
+        return values[key] ?? "";
+    }).replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function fillWhatsappTemplateForm(){
+    const templates = getWhatsappTemplates();
+    setInputValue("templateRegistrationInput", templates.registration || "");
+    setInputValue("templateDocumentsInput", templates.documents || "");
+    setInputValue("templatePaymentInput", templates.payment || "");
+    setInputValue("templateCertificateInput", templates.certificate || "");
+}
+
+function handleSaveWhatsappTemplates(){
+    const templates = {
+        registration: document.getElementById("templateRegistrationInput")?.value || DEFAULT_WHATSAPP_TEMPLATES.registration,
+        documents: document.getElementById("templateDocumentsInput")?.value || DEFAULT_WHATSAPP_TEMPLATES.documents,
+        payment: document.getElementById("templatePaymentInput")?.value || DEFAULT_WHATSAPP_TEMPLATES.payment,
+        certificate: document.getElementById("templateCertificateInput")?.value || DEFAULT_WHATSAPP_TEMPLATES.certificate
+    };
+
+    saveWhatsappTemplates(templates);
+    fillWhatsappTemplateForm();
+    setDashboardMessage("Template WhatsApp salvati correttamente.", "success");
+}
+
+function handleResetWhatsappTemplates(){
+    if(!confirm("Vuoi ripristinare i template WhatsApp standard?")) return;
+
+    try{
+        localStorage.removeItem(CLUB_WHATSAPP_TEMPLATES_KEY);
+    }catch(error){
+        console.warn("Reset template WhatsApp non disponibile", error);
+    }
+
+    fillWhatsappTemplateForm();
+    setDashboardMessage("Template WhatsApp ripristinati.", "success");
+}
+
+
 function getClubPaymentSettings(){
     try{
         const raw = localStorage.getItem(CLUB_PAYMENT_SETTINGS_KEY);
@@ -43,6 +148,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     bindDashboardActions();
     await refreshAll();
     renderCommunicationHistory();
+    fillWhatsappTemplateForm();
 });
 
 function bindDashboardActions(){
@@ -69,6 +175,8 @@ function bindDashboardActions(){
     const exportCommunicationHistoryCsvBtn = document.getElementById("exportCommunicationHistoryCsvBtn");
     const communicationHistorySearchInput = document.getElementById("communicationHistorySearchInput");
     const communicationHistoryTypeFilter = document.getElementById("communicationHistoryTypeFilter");
+    const saveWhatsappTemplatesBtn = document.getElementById("saveWhatsappTemplatesBtn");
+    const resetWhatsappTemplatesBtn = document.getElementById("resetWhatsappTemplatesBtn");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -132,6 +240,14 @@ function bindDashboardActions(){
 
     if(clearCommunicationHistoryBtn){
         clearCommunicationHistoryBtn.addEventListener("click", clearCommunicationHistory);
+    }
+
+    if(saveWhatsappTemplatesBtn){
+        saveWhatsappTemplatesBtn.addEventListener("click", handleSaveWhatsappTemplates);
+    }
+
+    if(resetWhatsappTemplatesBtn){
+        resetWhatsappTemplatesBtn.addEventListener("click", handleResetWhatsappTemplates);
     }
 
     if(exportCommunicationHistoryCsvBtn){
@@ -1792,41 +1908,35 @@ function openWhatsAppPayment(paymentId){
     const clubName = getClubDisplayName();
     const paymentSettings = getClubPaymentSettings();
 
-    const dueDateLabel = formatDate(payment.due_date);
-    const causale = `Quota atleta ${athleteName}`;
-
     const paymentLines = [];
-
     if(paymentSettings.iban){
         paymentLines.push("Puoi effettuare il pagamento tramite bonifico:");
         paymentLines.push(`IBAN: ${paymentSettings.iban}`);
-
         if(paymentSettings.bank_account_holder){
             paymentLines.push(`Intestato a: ${paymentSettings.bank_account_holder}`);
         }
-
-        paymentLines.push(`Causale consigliata: ${causale}`);
+        paymentLines.push(`Causale consigliata: Quota atleta ${athleteName}`);
     }
-
     if(paymentSettings.payment_notes){
         paymentLines.push(`Note pagamento: ${paymentSettings.payment_notes}`);
     }
 
-    const paymentBlock = paymentLines.length ? `\n\n${paymentLines.join("\n")}` : "";
+    const paymentBlock = paymentLines.length ? `
 
-    const message =
-`Ciao ${parentName},
-ti contattiamo dalla segreteria di ${clubName} per ricordarti che risulta ancora aperto un pagamento relativo a ${athleteName}.
-
-Importo residuo: ${formatEuro(residuo)}
-Scadenza: ${dueDateLabel}${paymentBlock}
-
-Se hai già effettuato il pagamento, puoi ignorare questo promemoria o inviarci la ricevuta.
-
-Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
-
-Grazie,
-Segreteria ${clubName}`;
+${paymentLines.join("
+")}` : "";
+    const templates = getWhatsappTemplates();
+    const message = applyTemplate(templates.payment, {
+        parentName,
+        clubName,
+        athleteName,
+        residuo: formatEuro(residuo),
+        dueDate: formatDate(payment.due_date),
+        iban: paymentSettings.iban || "",
+        bankHolder: paymentSettings.bank_account_holder || "",
+        paymentNotes: paymentSettings.payment_notes || "",
+        paymentBlock
+    });
 
     openWhatsApp(phone, message, { type: "Sollecito quota", recipient: parentName || "Genitore", athlete: athleteName });
 }
@@ -1845,17 +1955,15 @@ function openWhatsAppCertificate(certificateId){
     const phone = athlete?.parent_phone_1 || athlete?.phone;
     const clubName = getClubDisplayName();
     const status = getCertificateDisplayStatus(cert);
+    const templates = getWhatsappTemplates();
 
-    const message =
-`Ciao ${parentName},
-ti ricordiamo che il certificato medico di ${athleteName} risulta ${String(status.label || "").toLowerCase()}.
-
-Scadenza certificato: ${formatDate(cert.expiry_date)}
-
-Ti chiediamo gentilmente di consegnare o caricare il nuovo certificato appena disponibile.
-
-Grazie,
-Segreteria ${clubName}`;
+    const message = applyTemplate(templates.certificate, {
+        parentName,
+        clubName,
+        athleteName,
+        certificateStatus: String(status.label || "").toLowerCase(),
+        expiryDate: formatDate(cert.expiry_date)
+    });
 
     openWhatsApp(phone, message, { type: "Promemoria certificato", recipient: parentName || "Genitore", athlete: athleteName });
 }
@@ -1877,17 +1985,12 @@ function sendQuickRegistrationLinkWhatsApp(){
         return;
     }
 
-    const greeting = parentName ? `Ciao ${parentName},` : "Ciao,";
-    const message =
-`${greeting}
-ti inviamo il link per compilare la richiesta di iscrizione atleta per ${clubName}.
-
-${link}
-
-Una volta inviato il modulo, la segreteria controllerà i dati e ti aggiornerà appena possibile.
-
-Grazie,
-Segreteria ${clubName}`;
+    const templates = getWhatsappTemplates();
+    const message = applyTemplate(templates.registration, {
+        parentName: parentName || "",
+        clubName,
+        link
+    });
 
     openWhatsApp(phone, message, { type: "Link iscrizione", recipient: parentName || "Genitore" });
 }
@@ -1896,17 +1999,12 @@ function sendQuickDocumentsWhatsApp(){
     const phone = document.getElementById("quickDocumentsPhone")?.value || "";
     const athleteName = document.getElementById("quickDocumentsAthleteName")?.value.trim() || "l'atleta";
     const clubName = getClubDisplayName();
+    const templates = getWhatsappTemplates();
 
-    const message =
-`Ciao,
-ti contattiamo dalla segreteria di ${clubName} per completare la pratica di ${athleteName}.
-
-Ti chiediamo gentilmente di inviarci i documenti mancanti, come certificato medico e/o ricevuta di pagamento, appena disponibili.
-
-Per qualsiasi dubbio puoi rispondere direttamente a questo messaggio.
-
-Grazie,
-Segreteria ${clubName}`;
+    const message = applyTemplate(templates.documents, {
+        clubName,
+        athleteName
+    });
 
     openWhatsApp(phone, message, { type: "Documenti mancanti", recipient: "Genitore", athlete: athleteName });
 }

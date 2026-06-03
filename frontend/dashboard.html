@@ -32,6 +32,7 @@
                 <a href="#clubRegistrationSection">Link iscrizione</a>
                 <a href="#parentRequestsSection">Richieste</a>
                 <a href="#quickCommunicationsSection">Comunicazioni</a>
+                <a href="#whatsappTemplatesSection">Template WhatsApp</a>
                 <a href="#athletesSection">Atleti</a>
                 <a href="#addAthleteSection">Nuovo atleta</a>
                 <a href="#paymentsSection">Pagamenti</a>
@@ -362,6 +363,44 @@
                         <label>Messaggio<textarea id="quickCustomMessage" rows="4" placeholder="Scrivi qui il messaggio..."></textarea></label>
                         <button id="sendQuickCustomBtn" class="mini-btn whatsapp" type="button">💬 Apri WhatsApp</button>
                     </article>
+                </div>
+            </section>
+
+            
+
+            <section id="whatsappTemplatesSection" class="panel whatsapp-templates-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Template WhatsApp</p>
+                        <h2>Template messaggi</h2>
+                        <p class="club-link-description">Personalizza i testi usati nei messaggi WhatsApp. Puoi usare le variabili tra parentesi graffe, ad esempio {clubName}, {parentName}, {athleteName}, {link}, {residuo}, {dueDate}, {iban}, {bankHolder}, {paymentNotes}.</p>
+                    </div>
+                    <div class="communication-history-actions">
+                        <button id="saveWhatsappTemplatesBtn" class="primary-btn" type="button">Salva template</button>
+                        <button id="resetWhatsappTemplatesBtn" class="secondary-btn" type="button">Ripristina standard</button>
+                    </div>
+                </div>
+
+                <div class="whatsapp-templates-grid">
+                    <label>
+                        Link iscrizione
+                        <textarea id="templateRegistrationInput" rows="7"></textarea>
+                    </label>
+
+                    <label>
+                        Documenti mancanti
+                        <textarea id="templateDocumentsInput" rows="7"></textarea>
+                    </label>
+
+                    <label>
+                        Sollecito quota
+                        <textarea id="templatePaymentInput" rows="9"></textarea>
+                    </label>
+
+                    <label>
+                        Promemoria certificato
+                        <textarea id="templateCertificateInput" rows="7"></textarea>
+                    </label>
                 </div>
             </section>
 
