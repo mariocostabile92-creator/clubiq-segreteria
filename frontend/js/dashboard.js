@@ -1796,12 +1796,15 @@ function openWhatsAppPayment(paymentId){
     const causale = `Quota atleta ${athleteName}`;
 
     const paymentLines = [];
+
     if(paymentSettings.iban){
         paymentLines.push("Puoi effettuare il pagamento tramite bonifico:");
         paymentLines.push(`IBAN: ${paymentSettings.iban}`);
+
         if(paymentSettings.bank_account_holder){
             paymentLines.push(`Intestato a: ${paymentSettings.bank_account_holder}`);
         }
+
         paymentLines.push(`Causale consigliata: ${causale}`);
     }
 
@@ -1809,10 +1812,7 @@ function openWhatsAppPayment(paymentId){
         paymentLines.push(`Note pagamento: ${paymentSettings.payment_notes}`);
     }
 
-    const paymentBlock = paymentLines.length ? `
-
-${paymentLines.join("
-")}` : "";
+    const paymentBlock = paymentLines.length ? `\n\n${paymentLines.join("\n")}` : "";
 
     const message =
 `Ciao ${parentName},
