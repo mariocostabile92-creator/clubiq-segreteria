@@ -90,6 +90,39 @@ def infer_plan_from_price(price_id: str):
     return "free"
 
 
+
+def get_plan_limits(plan: str):
+    plan = (plan or "free").lower().strip()
+    if plan == "premium":
+        return {
+            "athletes_limit": None,
+            "athletes_label": "Illimitati",
+            "pdf_enabled": True,
+            "csv_enabled": True,
+            "whatsapp_history_enabled": True,
+            "whatsapp_full_enabled": True,
+            "premium_badge": True,
+        }
+    if plan == "pro":
+        return {
+            "athletes_limit": 80,
+            "athletes_label": "80 atleti",
+            "pdf_enabled": True,
+            "csv_enabled": True,
+            "whatsapp_history_enabled": True,
+            "whatsapp_full_enabled": True,
+            "premium_badge": False,
+        }
+    return {
+        "athletes_limit": 5,
+        "athletes_label": "5 atleti",
+        "pdf_enabled": False,
+        "csv_enabled": False,
+        "whatsapp_history_enabled": False,
+        "whatsapp_full_enabled": False,
+        "premium_badge": False,
+    }
+
 def timestamp_to_datetime(value):
     if not value:
         return None
@@ -102,9 +135,12 @@ def timestamp_to_datetime(value):
 @router.get("/me")
 def billing_me(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     meta = get_club_billing_meta(db, current_user.club_id)
+    plan = meta.get("plan") or "free"
+    limits = get_plan_limits(plan)
     return {
-        "plan": meta.get("plan") or "free",
+        "plan": plan,
         "subscription_status": meta.get("subscription_status") or "active",
+        "limits": limits,
         "stripe_customer_id": meta.get("stripe_customer_id") or "",
         "stripe_subscription_id": meta.get("stripe_subscription_id") or "",
         "current_period_end": meta.get("current_period_end").isoformat() if meta.get("current_period_end") else None,
