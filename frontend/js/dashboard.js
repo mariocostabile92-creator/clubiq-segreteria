@@ -405,8 +405,6 @@ function renderBillingStatus(errorMessage = ""){
     }
 }
 
-async function openBillingCheckout
-
 async function openBillingCheckout(plan, interval = "monthly"){
     if(!requireVerifiedEmail("l'attivazione dell'abbonamento")) return;
 
