@@ -333,7 +333,7 @@ async function refreshOperativeNotifications(){
 
 async function loadBillingStatus(){
     try{
-        cachedBilling = await apiRequest("/billing/me");
+        cachedBilling = await apiRequest("/api/billing/me");
         renderBillingStatus();
     }catch(error){
         cachedBilling = null;
@@ -392,7 +392,7 @@ async function openBillingCheckout(plan, interval = "monthly"){
     setDashboardMessage(`Apro Stripe Checkout per il piano ${label} ${intervalLabel}...`, "info");
 
     try{
-        const data = await apiRequest(`/billing/checkout/${plan}`, { method:"POST" });
+        const data = await apiRequest(`/api/billing/checkout/${plan}/${interval}`, { method:"POST" });
         const checkoutUrl = data?.checkout_url || data?.url;
 
         if(!checkoutUrl){
@@ -411,7 +411,7 @@ async function openBillingPortal(){
     setDashboardMessage("Apro il portale abbonamento Stripe...", "info");
 
     try{
-        const data = await apiRequest("/billing/portal", { method:"POST" });
+        const data = await apiRequest("/api/billing/portal", { method:"POST" });
         if(!data?.portal_url && !data?.url) throw new Error("URL portale Stripe non ricevuto.");
         window.location.href = data.portal_url || data.url;
     }catch(error){
