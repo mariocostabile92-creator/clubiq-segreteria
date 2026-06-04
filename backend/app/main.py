@@ -37,11 +37,18 @@ def run_safe_migrations():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at TIMESTAMP",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP",
+
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS plan VARCHAR DEFAULT 'free'",
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS subscription_status VARCHAR DEFAULT 'active'",
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS admin_notes TEXT",
+
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR",
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR",
+
+        # Billing.py legge questa colonna
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMP",
+
+        # La lasciamo anche per compatibilità futura/precedente
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_current_period_end TIMESTAMP",
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_last_event_id VARCHAR",
     ]
