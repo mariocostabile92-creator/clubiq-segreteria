@@ -392,7 +392,7 @@ async function openBillingCheckout(plan, interval = "monthly"){
     setDashboardMessage(`Apro Stripe Checkout per il piano ${label} ${intervalLabel}...`, "info");
 
     try{
-        const data = await apiRequest(`/billing/checkout/${plan}/${interval}`, { method:"POST" });
+        const data = await apiRequest(`/billing/checkout/${plan}`, { method:"POST" });
         const checkoutUrl = data?.checkout_url || data?.url;
 
         if(!checkoutUrl){
