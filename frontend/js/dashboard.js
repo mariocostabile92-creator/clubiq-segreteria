@@ -116,10 +116,10 @@ function bindDashboardActions(){
         generateSecretaryReportPdfBtn.addEventListener("click", generateSecretaryReportPdf);
     }
 
-    if(checkoutProMonthlyBtn) checkoutProMonthlyBtn.addEventListener("click", () => startCheckout("pro", "monthly"));
-    if(checkoutProYearlyBtn) checkoutProYearlyBtn.addEventListener("click", () => startCheckout("pro", "yearly"));
-    if(checkoutPremiumMonthlyBtn) checkoutPremiumMonthlyBtn.addEventListener("click", () => startCheckout("premium", "monthly"));
-    if(checkoutPremiumYearlyBtn) checkoutPremiumYearlyBtn.addEventListener("click", () => startCheckout("premium", "yearly"));
+    if(checkoutProMonthlyBtn) checkoutProMonthlyBtn.addEventListener("click", () => openBillingCheckout("pro", "monthly"));
+    if(checkoutProYearlyBtn) checkoutProYearlyBtn.addEventListener("click", () => openBillingCheckout("pro", "yearly"));
+    if(checkoutPremiumMonthlyBtn) checkoutPremiumMonthlyBtn.addEventListener("click", () => openBillingCheckout("premium", "monthly"));
+    if(checkoutPremiumYearlyBtn) checkoutPremiumYearlyBtn.addEventListener("click", () => openBillingCheckout("premium", "yearly"));
     if(manageBillingBtn) manageBillingBtn.addEventListener("click", openBillingPortal);
 
     if(resendVerificationBtn){
@@ -371,16 +371,35 @@ function renderBillingStatus(errorMessage = ""){
     }
 }
 
-async function openBillingCheckout(plan){
+async function openBillingCheckout(plan, interval = "monthly"){
     if(!requireVerifiedEmail("l'attivazione dell'abbonamento")) return;
 
+    plan = String(plan || "pro").toLowerCase().trim();
+    interval = String(interval || "monthly").toLowerCase().trim();
+
+    if(!["pro", "premium"].includes(plan)){
+        setDashboardMessage("Piano abbonamento non valido.", "error");
+        return;
+    }
+
+    if(!["monthly", "yearly"].includes(interval)){
+        setDashboardMessage("Durata abbonamento non valida.", "error");
+        return;
+    }
+
     const label = plan === "premium" ? "Premium" : "Pro";
-    setDashboardMessage(`Apro Stripe Checkout per il piano ${label}...`, "info");
+    const intervalLabel = interval === "yearly" ? "annuale" : "mensile";
+    setDashboardMessage(`Apro Stripe Checkout per il piano ${label} ${intervalLabel}...`, "info");
 
     try{
-        const data = await apiRequest(`/billing/checkout/${plan}/monthly`, { method:"POST" });
-        if(!data?.checkout_url && !data?.url) throw new Error("URL Stripe Checkout non ricevuto.");
-        window.location.href = data.checkout_url || data.url;
+        const data = await apiRequest(`/billing/checkout/${plan}/${interval}`, { method:"POST" });
+        const checkoutUrl = data?.checkout_url || data?.url;
+
+        if(!checkoutUrl){
+            throw new Error("URL Stripe Checkout non ricevuto.");
+        }
+
+        window.location.href = checkoutUrl;
     }catch(error){
         setDashboardMessage(error.message || "Errore apertura Stripe Checkout.", "error");
     }
@@ -447,11 +466,11 @@ async function refreshAll(){
     await loadCurrentUser();
     await loadMyClub();
     await loadBillingStatus();
-    await loadDashboard();
     await loadAthletesPreview();
     await loadPaymentsList();
     await loadCertificatesList();
     await loadParentRequestsList();
+    await loadDashboard();
 
     renderAthletesList();
     renderPaymentsList();
@@ -714,21 +733,39 @@ function setInputValue(id, value){
 }
 
 async function loadDashboard(){
-    setDashboardMessage("Caricamento dashboard...", "info");
+    renderDashboardSummaryFromCache();
+    setDashboardMessage("Dashboard aggiornata.", "success");
+}
 
-    try{
-        const summary = await apiRequest("/dashboard/summary");
+function renderDashboardSummaryFromCache(){
+    const athletesCount = Array.isArray(cachedAthletes) ? cachedAthletes.length : 0;
 
-        setText("athletesCount", summary.athletes_count ?? 0);
-        setText("totalResiduo", formatEuro(summary.total_residuo ?? 0));
-        setText("overduePayments", summary.quote_scadute ?? 0);
-        setText("expiredCertificates", summary.certificati_scaduti ?? 0);
-        setText("expiringCertificates", summary.certificati_in_scadenza ?? 0);
+    const totalResiduo = Array.isArray(cachedPayments)
+        ? cachedPayments.reduce((sum, payment) => {
+            return sum + Math.max(
+                0,
+                Number(payment.amount_due || 0) - Number(payment.amount_paid || 0)
+            );
+        }, 0)
+        : 0;
 
-        setDashboardMessage("Dashboard aggiornata.", "success");
-    }catch(error){
-        setDashboardMessage(error.message, "error");
-    }
+    const overduePayments = Array.isArray(cachedPayments)
+        ? cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length
+        : 0;
+
+    const expiredCertificates = Array.isArray(cachedCertificates)
+        ? cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length
+        : 0;
+
+    const expiringCertificates = Array.isArray(cachedCertificates)
+        ? cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length
+        : 0;
+
+    setText("athletesCount", athletesCount);
+    setText("totalResiduo", formatEuro(totalResiduo));
+    setText("overduePayments", overduePayments);
+    setText("expiredCertificates", expiredCertificates);
+    setText("expiringCertificates", expiringCertificates);
 }
 
 async function loadParentRequestsList(){
