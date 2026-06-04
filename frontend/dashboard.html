@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=billingfinal1" />
+    <link rel="stylesheet" href="css/dashboard.css?v=billingui1" />
+    <link rel="stylesheet" href="css/billing-ui.css?v=1.0" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
@@ -57,21 +58,88 @@
             </header>
 
             <div id="dashboardMessage" class="message hidden"></div>
-            <section id="billingSection" class="panel billing-panel hidden billing-compact-panel">
-                <div class="section-heading billing-heading">
+            <section id="billingSection" class="panel billing-panel hidden billing-plans-panel">
+                <div class="section-heading billing-heading billing-heading-modern">
                     <div>
                         <p class="eyebrow">Abbonamento ClubIQ</p>
-                        <h2>Piano società</h2>
+                        <h2>Scegli il piano migliore per la tua società</h2>
                         <p id="billingPlanSummary" class="club-link-description">Caricamento piano...</p>
                     </div>
-                    <div class="billing-actions">
-                        <button id="manageBillingBtn" class="secondary-btn" type="button">Gestisci abbonamento</button>
-                        <button id="checkoutProMonthlyBtn" class="primary-btn" type="button">Upgrade piano</button>
+                    <div class="billing-actions billing-main-actions">
+                        <button id="manageBillingBtn" class="secondary-btn hidden" type="button">Gestisci abbonamento</button>
                     </div>
                 </div>
-                <div class="billing-compact-note">
-                    <strong id="billingCurrentPlan">Piano attuale: Free</strong>
-                    <span id="billingCurrentLimits">Free include fino a 5 atleti. Pro arriva a 80, Premium è illimitato.</span>
+
+                <div class="billing-current-strip">
+                    <div>
+                        <span>Il tuo piano attuale</span>
+                        <strong id="billingCurrentPlan">Piano attuale: Free</strong>
+                    </div>
+                    <p id="billingCurrentLimits">Free include fino a 5 atleti. Pro arriva a 80, Premium è illimitato.</p>
+                </div>
+
+                <div class="billing-plan-grid">
+                    <article class="billing-plan-card billing-plan-free" data-plan-card="free">
+                        <div class="billing-plan-top">
+                            <span class="billing-plan-kicker">Free</span>
+                            <strong>0 €<small>/mese</small></strong>
+                            <p>Per iniziare e provare ClubIQ senza rischio.</p>
+                        </div>
+                        <div class="billing-pill green">Fino a 5 atleti</div>
+                        <ul>
+                            <li>Richieste iscrizione online</li>
+                            <li>Gestione base quote</li>
+                            <li>Gestione certificati medici</li>
+                            <li>Contatti e dati genitori</li>
+                        </ul>
+                        <button class="secondary-btn billing-current-btn" type="button" disabled>Incluso</button>
+                    </article>
+
+                    <article class="billing-plan-card billing-plan-pro" data-plan-card="pro">
+                        <div class="billing-plan-badge">Più scelto</div>
+                        <div class="billing-plan-top">
+                            <span class="billing-plan-kicker">Pro</span>
+                            <strong>19 €<small>/mese</small></strong>
+                            <p>Per società operative che vogliono risparmiare tempo ogni settimana.</p>
+                        </div>
+                        <div class="billing-pill blue">Fino a 80 atleti</div>
+                        <ul>
+                            <li>Tutto del piano Free</li>
+                            <li>Report PDF segreteria</li>
+                            <li>Export CSV pagamenti/certificati</li>
+                            <li>Storico WhatsApp sul dispositivo</li>
+                            <li>Gestione iscrizioni più completa</li>
+                        </ul>
+                        <div class="billing-card-actions">
+                            <button id="checkoutProMonthlyBtn" class="primary-btn" type="button">Passa a Pro</button>
+                            <button id="checkoutProYearlyBtn" class="secondary-btn" type="button">Pro annuale</button>
+                        </div>
+                    </article>
+
+                    <article class="billing-plan-card billing-plan-premium" data-plan-card="premium">
+                        <div class="billing-plan-top">
+                            <span class="billing-plan-kicker">Premium</span>
+                            <strong>39 €<small>/mese</small></strong>
+                            <p>Per società strutturate con più gruppi, squadre e più controllo operativo.</p>
+                        </div>
+                        <div class="billing-pill purple">Atleti illimitati</div>
+                        <ul>
+                            <li>Tutto del piano Pro</li>
+                            <li>Atleti illimitati</li>
+                            <li>Priorità sulle nuove funzioni</li>
+                            <li>Pensato per più gruppi/squadre</li>
+                            <li>Massimo controllo operativo</li>
+                        </ul>
+                        <div class="billing-card-actions">
+                            <button id="checkoutPremiumMonthlyBtn" class="primary-btn premium" type="button">Passa a Premium</button>
+                            <button id="checkoutPremiumYearlyBtn" class="secondary-btn" type="button">Premium annuale</button>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="billing-benefit-footer">
+                    <strong>Perché passare a Pro o Premium?</strong>
+                    <span>Risparmi tempo, riduci errori e hai sempre sotto controllo atleti, quote, certificati e comunicazioni con le famiglie.</span>
                 </div>
             </section>
 
@@ -561,7 +629,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js?v=billingfinal1"></script>
+    <script src="js/dashboard.js?v=billingui1"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">

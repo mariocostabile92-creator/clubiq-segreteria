@@ -344,26 +344,22 @@ async function loadBillingStatus(){
 function renderBillingStatus(errorMessage = ""){
     const section = document.getElementById("billingSection");
     const summary = document.getElementById("billingPlanSummary");
-    const portalBtn = document.getElementById("billingPortalBtn");
-    const manageBillingBtn = document.getElementById("manageBillingBtn");
-    const upgradeBtn = document.getElementById("checkoutProMonthlyBtn");
+    const manageBtn = document.getElementById("manageBillingBtn") || document.getElementById("billingPortalBtn");
 
     if(!section) return;
     section.classList.remove("hidden");
 
     if(errorMessage){
         if(summary) summary.textContent = errorMessage;
-        if(portalBtn) portalBtn.classList.add("hidden");
-        if(manageBillingBtn) manageBillingBtn.classList.add("hidden");
-        renderBillingPlanBenefits("free");
+        if(manageBtn) manageBtn.classList.add("hidden");
         return;
     }
 
-    const plan = cachedBilling?.plan || "free";
-    const status = cachedBilling?.subscription_status || "active";
+    const plan = (cachedBilling?.plan || "free").toLowerCase();
+    const status = (cachedBilling?.subscription_status || "active").toLowerCase();
     const label = plan === "premium" ? "Premium" : plan === "pro" ? "Pro" : "Free";
     const statusLabel = status === "suspended" ? "sospeso" : "attivo";
-    const hasSubscription = Boolean(cachedBilling?.stripe_subscription_id);
+    const hasStripeSubscription = !!(cachedBilling?.stripe_subscription_id || cachedBilling?.stripe_customer_id);
 
     if(summary){
         summary.textContent = `Piano attuale: ${label} · Stato: ${statusLabel}`;
@@ -373,115 +369,43 @@ function renderBillingStatus(errorMessage = ""){
     setText(
         "billingCurrentLimits",
         plan === "premium"
-            ? "Premium: atleti illimitati, tutte le funzioni avanzate e priorità sulle novità."
+            ? "Premium: atleti illimitati, funzioni avanzate e priorità sulle nuove funzioni."
             : plan === "pro"
                 ? "Pro: fino a 80 atleti, report PDF, export CSV e storico WhatsApp."
                 : "Free: fino a 5 atleti. Passa a Pro quando la segreteria cresce."
     );
 
-    if(portalBtn){
-        portalBtn.classList.toggle("hidden", !hasSubscription);
-    }
+    document.querySelectorAll("[data-plan-card]").forEach(card => {
+        const cardPlan = card.getAttribute("data-plan-card");
+        card.classList.toggle("is-current", cardPlan === plan);
 
-    if(manageBillingBtn){
-        manageBillingBtn.classList.toggle("hidden", !hasSubscription);
-    }
+        const existing = card.querySelector(".billing-current-badge");
+        if(existing) existing.remove();
 
-    if(upgradeBtn){
-        if(plan === "premium"){
-            upgradeBtn.classList.add("hidden");
-        }else{
-            upgradeBtn.classList.remove("hidden");
-            upgradeBtn.textContent = plan === "pro" ? "Passa a Premium" : "Passa a Pro";
-            upgradeBtn.onclick = () => openBillingCheckout(plan === "pro" ? "premium" : "pro", "monthly");
+        if(cardPlan === plan){
+            const badge = document.createElement("div");
+            badge.className = "billing-current-badge";
+            badge.textContent = plan === "free" ? "Piano attuale" : `${label} attivo`;
+            card.appendChild(badge);
         }
-    }
+    });
 
-    renderBillingPlanBenefits(plan);
+    const proMonthly = document.getElementById("checkoutProMonthlyBtn");
+    const proYearly = document.getElementById("checkoutProYearlyBtn");
+    const premiumMonthly = document.getElementById("checkoutPremiumMonthlyBtn");
+    const premiumYearly = document.getElementById("checkoutPremiumYearlyBtn");
+
+    if(proMonthly) proMonthly.classList.toggle("hidden", plan === "pro" || plan === "premium");
+    if(proYearly) proYearly.classList.toggle("hidden", plan === "pro" || plan === "premium");
+    if(premiumMonthly) premiumMonthly.classList.toggle("hidden", plan === "premium");
+    if(premiumYearly) premiumYearly.classList.toggle("hidden", plan === "premium");
+
+    if(manageBtn){
+        manageBtn.classList.toggle("hidden", !hasStripeSubscription);
+    }
 }
 
-function renderBillingPlanBenefits(currentPlan = "free"){
-    const section = document.getElementById("billingSection");
-    if(!section) return;
-
-    let box = document.getElementById("billingPlanBenefits");
-
-    if(!box){
-        box = document.createElement("div");
-        box.id = "billingPlanBenefits";
-        box.className = "billing-benefits-grid";
-        section.appendChild(box);
-    }
-
-    const plans = [
-        {
-            key: "free",
-            title: "Free",
-            price: "0 € / mese",
-            subtitle: "Per provare ClubIQ senza rischio.",
-            benefits: [
-                "Fino a 5 atleti",
-                "Link iscrizione genitori",
-                "Quote e certificati base",
-                "Ideale per testare la società"
-            ],
-            action: "Piano attuale"
-        },
-        {
-            key: "pro",
-            title: "Pro",
-            price: "19 € / mese",
-            subtitle: "Per società operative e scuole calcio.",
-            benefits: [
-                "Fino a 80 atleti",
-                "Report PDF segreteria",
-                "Export CSV pagamenti/certificati",
-                "Storico WhatsApp sul dispositivo",
-                "Gestione iscrizioni più completa"
-            ],
-            action: "Passa a Pro"
-        },
-        {
-            key: "premium",
-            title: "Premium",
-            price: "39 € / mese",
-            subtitle: "Per società strutturate con più gruppi.",
-            benefits: [
-                "Atleti illimitati",
-                "Tutte le funzioni Pro incluse",
-                "Priorità sulle nuove funzioni",
-                "Pensato per club con tante squadre",
-                "Massimo controllo operativo"
-            ],
-            action: "Passa a Premium"
-        }
-    ];
-
-    box.innerHTML = plans.map(plan => {
-        const isCurrent = plan.key === currentPlan;
-        const isFree = plan.key === "free";
-        const button = isCurrent
-            ? `<button class="secondary-btn billing-plan-action" type="button" disabled>Piano attuale</button>`
-            : isFree
-                ? `<button class="secondary-btn billing-plan-action" type="button" disabled>Incluso</button>`
-                : `<button class="primary-btn billing-plan-action" type="button" onclick="openBillingCheckout('${plan.key}', 'monthly')">${plan.action}</button>`;
-
-        return `
-            <article class="billing-benefit-card ${isCurrent ? "is-current" : ""}">
-                <div class="billing-benefit-topline">
-                    <span>${escapeHtml(plan.title)}</span>
-                    ${isCurrent ? `<b>ATTUALE</b>` : ""}
-                </div>
-                <strong>${escapeHtml(plan.price)}</strong>
-                <p>${escapeHtml(plan.subtitle)}</p>
-                <ul>
-                    ${plan.benefits.map(item => `<li>${escapeHtml(item)}</li>`).join("")}
-                </ul>
-                ${button}
-            </article>
-        `;
-    }).join("");
-}
+async function openBillingCheckout
 
 async function openBillingCheckout(plan, interval = "monthly"){
     if(!requireVerifiedEmail("l'attivazione dell'abbonamento")) return;
