@@ -2127,3 +2127,100 @@ body{
         grid-template-columns:1fr;
     }
 }
+
+/* ================================
+   ClubIQ V2.4 - White Label + Foto Atleta
+================================ */
+
+.topbar-club-identity{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    min-width:0;
+}
+
+.topbar-club-logo{
+    width:64px;
+    height:64px;
+    border-radius:22px;
+    object-fit:contain;
+    padding:8px;
+    background:#ffffff;
+    box-shadow:0 16px 34px rgba(0,0,0,.24);
+    flex:0 0 auto;
+}
+
+.athlete-card-enterprise{
+    align-items:center;
+}
+
+.athlete-card-main{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    min-width:0;
+}
+
+.athlete-list-avatar{
+    width:52px;
+    height:52px;
+    border-radius:18px;
+    display:grid;
+    place-items:center;
+    flex:0 0 auto;
+    overflow:hidden;
+    background:linear-gradient(135deg,#dbeafe,#dcfce7);
+    color:#0f172a;
+    font-weight:1000;
+    box-shadow:0 10px 24px rgba(15,23,42,.10);
+}
+
+.athlete-list-avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+
+.athlete-profile-avatar{
+    position:relative;
+    overflow:hidden;
+}
+
+.athlete-profile-avatar.has-photo{
+    background:#0f172a;
+    padding:0;
+}
+
+.athlete-profile-photo{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+
+.athlete-profile-photo.hidden{
+    display:none;
+}
+
+#detailAthleteInitials.hidden{
+    display:none;
+}
+
+@media (max-width:760px){
+    .topbar-club-identity{
+        align-items:flex-start;
+    }
+
+    .topbar-club-logo{
+        width:52px;
+        height:52px;
+        border-radius:18px;
+    }
+
+    .athlete-card-main{
+        width:100%;
+    }
+}

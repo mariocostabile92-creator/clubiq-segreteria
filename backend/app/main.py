@@ -51,6 +51,10 @@ def run_safe_migrations():
         # La lasciamo anche per compatibilità futura/precedente
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_current_period_end TIMESTAMP",
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS stripe_last_event_id VARCHAR",
+
+        # ClubIQ V2.4 - White-label visuals
+        "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS logo VARCHAR",
+        "ALTER TABLE athletes ADD COLUMN IF NOT EXISTS photo_url VARCHAR",
     ]
 
     with engine.begin() as connection:

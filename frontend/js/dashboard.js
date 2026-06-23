@@ -16,6 +16,7 @@ let editingPaymentId = null;
 let editingCertificateId = null;
 
 const CLUB_PAYMENT_SETTINGS_KEY = "clubiq_club_payment_settings_v1";
+const DEFAULT_CLUBIQ_LOGO = "assets/icons/logo-clubiq.png";
 let cachedBilling = null;
 
 function getClubPaymentSettings(){
@@ -33,6 +34,42 @@ function saveClubPaymentSettings(settings){
     }catch(error){
         console.warn("Salvataggio dati pagamento società non disponibile", error);
     }
+}
+
+
+function isSafeImageUrl(value){
+    const url = String(value || "").trim();
+    if(!url) return false;
+    return /^(https?:\/\/|\/|assets\/)/i.test(url);
+}
+
+function getClubLogoUrl(){
+    return isSafeImageUrl(cachedClub?.logo) ? cachedClub.logo.trim() : DEFAULT_CLUBIQ_LOGO;
+}
+
+function updateClubIdentityVisuals(){
+    const logoUrl = getClubLogoUrl();
+    ["sidebarClubLogo", "topbarClubLogo"].forEach(id => {
+        const img = document.getElementById(id);
+        if(!img) return;
+        img.src = logoUrl;
+        img.alt = cachedClub?.name ? `Logo ${cachedClub.name}` : "ClubIQ";
+        img.onerror = () => {
+            img.onerror = null;
+            img.src = DEFAULT_CLUBIQ_LOGO;
+        };
+    });
+}
+
+function renderAthleteAvatarHtml(athlete, className = "athlete-list-avatar"){
+    const photoUrl = String(athlete?.photo_url || "").trim();
+    const initials = escapeHtml(getAthleteInitials(athlete));
+
+    if(isSafeImageUrl(photoUrl)){
+        return `<div class="${className} has-photo"><img src="${escapeHtml(photoUrl)}" alt="Foto ${escapeHtml(`${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() || "atleta")}" onerror="this.remove(); this.parentElement.classList.remove('has-photo'); this.parentElement.innerHTML='${initials}';" /></div>`;
+    }
+
+    return `<div class="${className}">${initials}</div>`;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -639,6 +676,7 @@ function renderClubRegistrationLink(){
     setText("clubNameBox", cachedClub.name || "Società");
     setText("clubPublicCodeBox", publicCode || "-");
     fillClubSettingsForm();
+    updateClubIdentityVisuals();
 
     const input = document.getElementById("clubRegistrationLink");
     if(input){
@@ -699,6 +737,7 @@ function fillClubSettingsForm(){
     if(!cachedClub) return;
 
     setInputValue("clubNameInput", cachedClub.name || "");
+    setInputValue("clubLogoInput", cachedClub.logo || "");
     setInputValue("clubEmailInput", cachedClub.email || "");
     setInputValue("clubPhoneInput", cachedClub.phone || "");
     setInputValue("clubAddressInput", cachedClub.address || "");
@@ -726,6 +765,7 @@ async function handleUpdateClubSettings(event){
 
     const payload = {
         name: document.getElementById("clubNameInput").value.trim(),
+        logo: document.getElementById("clubLogoInput")?.value.trim() || null,
         email: document.getElementById("clubEmailInput").value.trim() || null,
         phone: document.getElementById("clubPhoneInput").value.trim() || null,
         address: document.getElementById("clubAddressInput").value.trim() || null,
@@ -748,6 +788,7 @@ async function handleUpdateClubSettings(event){
 
         saveClubPaymentSettings(paymentSettings);
         renderClubRegistrationLink();
+        updateClubIdentityVisuals();
         setDashboardMessage("Dati società e dati pagamento aggiornati correttamente.", "success");
     }catch(error){
         setDashboardMessage(error.message, "error");
@@ -971,6 +1012,7 @@ function renderExecutiveDashboard(){
     const userName = getDashboardUserName();
     const now = new Date();
 
+    updateClubIdentityVisuals();
     setText("executiveGreeting", `Buongiorno ${userName} 👋`);
     setText("executiveClubLine", `${clubName} · Centro operativo segreteria`);
     setText("executiveUpdatedAt", `Ultimo aggiornamento: ${now.toLocaleTimeString("it-IT", { hour:"2-digit", minute:"2-digit" })}`);
@@ -1298,11 +1340,14 @@ function renderAthletesList(){
         const status = getAthleteAdminStatus(athlete);
 
         return `
-            <article class="athlete-card">
-                <div>
-                    <strong>${escapeHtml(athlete.first_name)} ${escapeHtml(athlete.last_name)}</strong>
-                    <span>${escapeHtml(athlete.group_name || "Senza gruppo")}</span>
-                    <small>${escapeHtml(athlete.parent_name_1 || athlete.email || "Nessun contatto")}</small>
+            <article class="athlete-card athlete-card-enterprise">
+                <div class="athlete-card-main">
+                    ${renderAthleteAvatarHtml(athlete)}
+                    <div>
+                        <strong>${escapeHtml(athlete.first_name)} ${escapeHtml(athlete.last_name)}</strong>
+                        <span>${escapeHtml(athlete.group_name || "Senza gruppo")}</span>
+                        <small>${escapeHtml(athlete.parent_name_1 || athlete.email || "Nessun contatto")}</small>
+                    </div>
                 </div>
 
                 <div class="card-actions">
@@ -1529,6 +1574,7 @@ function fillAthleteForm(athleteId){
     document.getElementById("athleteGroup").value = athlete.group_name || "";
     document.getElementById("athletePhone").value = athlete.phone || "";
     document.getElementById("athleteEmail").value = athlete.email || "";
+    document.getElementById("athletePhotoUrl").value = athlete.photo_url || "";
     document.getElementById("parentName").value = athlete.parent_name_1 || "";
     document.getElementById("parentPhone").value = athlete.parent_phone_1 || "";
     document.getElementById("parentEmail").value = athlete.parent_email_1 || "";
@@ -1571,6 +1617,7 @@ async function handleAddAthlete(event){
         group_name: document.getElementById("athleteGroup").value.trim(),
         phone: document.getElementById("athletePhone").value.trim() || null,
         email: document.getElementById("athleteEmail").value.trim() || null,
+        photo_url: document.getElementById("athletePhotoUrl")?.value.trim() || null,
         parent_name_1: document.getElementById("parentName").value.trim() || null,
         parent_phone_1: document.getElementById("parentPhone").value.trim() || null,
         parent_email_1: document.getElementById("parentEmail").value.trim() || null,
@@ -1953,6 +2000,7 @@ function openAthleteDetail(athleteId, scroll = true){
 
     setText("detailAthleteName", fullName);
     setText("detailAthleteInitials", getAthleteInitials(athlete));
+    renderDetailAthletePhoto(athlete);
     setText("detailAthleteGroup", athlete.group_name || "Senza gruppo");
     setText("detailAthleteBirth", `Nato il ${formatDate(athlete.birth_date)}`);
     setText("detailAthleteContact", contact);
@@ -1983,6 +2031,36 @@ function openAthleteDetail(athleteId, scroll = true){
 
     if(scroll){
         section?.scrollIntoView({ behavior:"smooth" });
+    }
+}
+
+
+function renderDetailAthletePhoto(athlete){
+    const photo = document.getElementById("detailAthletePhoto");
+    const initials = document.getElementById("detailAthleteInitials");
+    const avatar = document.getElementById("detailAthleteAvatar");
+    const photoUrl = String(athlete?.photo_url || "").trim();
+
+    if(!photo || !initials || !avatar) return;
+
+    avatar.classList.remove("has-photo");
+    photo.classList.add("hidden");
+    photo.removeAttribute("src");
+    initials.classList.remove("hidden");
+
+    if(isSafeImageUrl(photoUrl)){
+        photo.src = photoUrl;
+        photo.alt = `Foto ${`${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() || "atleta"}`;
+        photo.onload = () => {
+            avatar.classList.add("has-photo");
+            photo.classList.remove("hidden");
+            initials.classList.add("hidden");
+        };
+        photo.onerror = () => {
+            avatar.classList.remove("has-photo");
+            photo.classList.add("hidden");
+            initials.classList.remove("hidden");
+        };
     }
 }
 

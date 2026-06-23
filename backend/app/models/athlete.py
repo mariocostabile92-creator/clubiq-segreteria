@@ -33,6 +33,7 @@ class Athlete(Base):
     # Contact details for the athlete
     phone = Column(String, nullable=True)
     email = Column(String, nullable=True)
+    photo_url = Column(String, nullable=True)
 
     # Parent/guardian contact details (optional)
     parent_name_1 = Column(String, nullable=True)

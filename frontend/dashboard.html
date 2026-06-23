@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=v21" />
+    <link rel="stylesheet" href="css/dashboard.css?v=v24" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
@@ -20,7 +20,7 @@
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand">
-                <img class="brand-logo-img" src="assets/icons/logo-clubiq.png" alt="ClubIQ" />
+                <img id="sidebarClubLogo" class="brand-logo-img" src="assets/icons/logo-clubiq.png" alt="ClubIQ" />
                 <div>
                     <strong>ClubIQ</strong>
                     <small>Segreteria Sportiva Intelligente</small>
@@ -44,10 +44,13 @@
 
         <main id="top" class="main-content">
             <header class="topbar">
-                <div class="topbar-copy">
-                    <p class="eyebrow">Centro operativo</p>
+                <div class="topbar-club-identity">
+                    <img id="topbarClubLogo" class="topbar-club-logo" src="assets/icons/logo-clubiq.png" alt="Logo società" />
+                    <div class="topbar-copy">
+                        <p class="eyebrow">Centro operativo</p>
                     <h1 id="executiveGreeting">ClubIQ Dashboard</h1>
-                    <p id="executiveClubLine" class="topbar-subtitle">Caricamento società...</p>
+                        <p id="executiveClubLine" class="topbar-subtitle">Caricamento società...</p>
+                    </div>
                 </div>
 
                 <div class="topbar-actions">
@@ -316,6 +319,11 @@
                     </label>
 
                     <label>
+                        Logo società URL
+                        <input id="clubLogoInput" type="url" placeholder="https://.../logo.png" />
+                    </label>
+
+                    <label>
                         Email società
                         <input id="clubEmailInput" type="email" placeholder="segreteria@societa.it" />
                     </label>
@@ -566,6 +574,7 @@
                     <label>Gruppo<input id="athleteGroup" type="text" placeholder="Under 12" /></label>
                     <label>Telefono atleta<input id="athletePhone" type="text" /></label>
                     <label>Email atleta<input id="athleteEmail" type="email" /></label>
+                    <label>Foto atleta URL<input id="athletePhotoUrl" type="url" placeholder="https://.../foto.jpg" /></label>
                     <label>Genitore<input id="parentName" type="text" /></label>
                     <label>Telefono genitore<input id="parentPhone" type="text" /></label>
                     <label>Email genitore<input id="parentEmail" type="email" /></label>
@@ -623,7 +632,10 @@
             <section id="athleteDetailSection" class="panel hidden athlete-profile-panel">
                 <div class="athlete-profile-hero">
                     <div class="athlete-profile-main">
-                        <div id="detailAthleteInitials" class="athlete-profile-avatar">CL</div>
+                        <div class="athlete-profile-avatar" id="detailAthleteAvatar">
+                            <img id="detailAthletePhoto" class="athlete-profile-photo hidden" src="" alt="Foto atleta" />
+                            <span id="detailAthleteInitials">CL</span>
+                        </div>
                         <div>
                             <p class="eyebrow">Scheda atleta</p>
                             <h2 id="detailAthleteName">Atleta</h2>
@@ -713,7 +725,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js?v=v23"></script>
+    <script src="js/dashboard.js?v=v24"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">

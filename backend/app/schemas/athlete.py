@@ -9,6 +9,7 @@ class AthleteBase(BaseModel):
     group_name: str | None = None
     phone: str | None = None
     email: EmailStr | None = None
+    photo_url: str | None = None
     parent_name_1: str | None = None
     parent_phone_1: str | None = None
     parent_email_1: EmailStr | None = None
@@ -29,6 +30,7 @@ class AthleteUpdate(BaseModel):
     group_name: str | None = None
     phone: str | None = None
     email: EmailStr | None = None
+    photo_url: str | None = None
     parent_name_1: str | None = None
     parent_phone_1: str | None = None
     parent_email_1: EmailStr | None = None

@@ -27,4 +27,5 @@ class ClubUpdate(BaseModel):
     address: str | None = None
     president: str | None = None
     secretary: str | None = None
+    logo: str | None = None
     regenerate_public_code: bool = False
