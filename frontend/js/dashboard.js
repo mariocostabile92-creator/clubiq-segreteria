@@ -51,6 +51,7 @@ function bindDashboardActions(){
     const logoutBtn = document.getElementById("logoutBtn");
     const refreshBtn = document.getElementById("refreshBtn");
     const generateSecretaryReportPdfBtn = document.getElementById("generateSecretaryReportPdfBtn");
+    const executiveReportShortcutBtn = document.getElementById("executiveReportShortcutBtn");
     const checkoutProMonthlyBtn = document.getElementById("checkoutProMonthlyBtn");
     const checkoutProYearlyBtn = document.getElementById("checkoutProYearlyBtn");
     const checkoutPremiumMonthlyBtn = document.getElementById("checkoutPremiumMonthlyBtn");
@@ -114,6 +115,10 @@ function bindDashboardActions(){
 
     if(generateSecretaryReportPdfBtn){
         generateSecretaryReportPdfBtn.addEventListener("click", generateSecretaryReportPdf);
+    }
+
+    if(executiveReportShortcutBtn){
+        executiveReportShortcutBtn.addEventListener("click", generateSecretaryReportPdf);
     }
 
     if(checkoutProMonthlyBtn) checkoutProMonthlyBtn.addEventListener("click", () => openBillingCheckout("pro", "monthly"));
@@ -536,6 +541,16 @@ async function loadCurrentUser(){
     }
 }
 
+function getFirstNameFromEmail(email){
+    const raw = String(email || "").split("@")[0] || "";
+    const cleaned = raw.replace(/[._-]+/g, " ").trim();
+    return cleaned ? cleaned.split(" ")[0].charAt(0).toUpperCase() + cleaned.split(" ")[0].slice(1) : "";
+}
+
+function getDashboardUserName(){
+    return currentUser?.name || currentUser?.full_name || getFirstNameFromEmail(currentUser?.email) || "Segreteria";
+}
+
 function renderEmailVerificationState(){
     const banner = document.getElementById("emailVerificationBanner");
     const emailBox = document.getElementById("currentUserEmail");
@@ -601,6 +616,7 @@ async function loadMyClub(){
     try{
         cachedClub = await apiRequest("/clubs/me");
         renderClubRegistrationLink();
+        renderExecutiveDashboard();
     }catch(error){
         setText("clubNameBox", "Società non disponibile");
         setText("clubPublicCodeBox", "-");
@@ -766,8 +782,230 @@ function setInputValue(id, value){
     if(el) el.value = value ?? "";
 }
 
+function getDashboardCoreMetrics(){
+    const athletesCount = Array.isArray(cachedAthletes) ? cachedAthletes.length : 0;
+
+    const totalDue = Array.isArray(cachedPayments)
+        ? cachedPayments.reduce((sum, payment) => sum + Number(payment.amount_due || 0), 0)
+        : 0;
+
+    const totalPaid = Array.isArray(cachedPayments)
+        ? cachedPayments.reduce((sum, payment) => sum + Number(payment.amount_paid || 0), 0)
+        : 0;
+
+    const totalResidual = Array.isArray(cachedPayments)
+        ? cachedPayments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0)), 0)
+        : 0;
+
+    const overdueResidual = Array.isArray(cachedPayments)
+        ? cachedPayments.reduce((sum, payment) => {
+            return getPaymentStatusKey(payment) === "overdue"
+                ? sum + Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0))
+                : sum;
+        }, 0)
+        : 0;
+
+    const pendingRequests = Array.isArray(cachedParentRequests)
+        ? cachedParentRequests.filter(item => item.status === "pending").length
+        : 0;
+
+    const overduePayments = Array.isArray(cachedPayments)
+        ? cachedPayments.filter(payment => getPaymentStatusKey(payment) === "overdue").length
+        : 0;
+
+    const expiredCertificates = Array.isArray(cachedCertificates)
+        ? cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expired").length
+        : 0;
+
+    const expiringCertificates = Array.isArray(cachedCertificates)
+        ? cachedCertificates.filter(cert => getCertificateStatusKey(cert) === "expiring").length
+        : 0;
+
+    const totalUrgencies = pendingRequests + overduePayments + expiredCertificates + expiringCertificates;
+
+    return {
+        athletesCount,
+        totalDue,
+        totalPaid,
+        totalResidual,
+        overdueResidual,
+        pendingRequests,
+        overduePayments,
+        expiredCertificates,
+        expiringCertificates,
+        totalUrgencies
+    };
+}
+
+function getAssistantAdvice(metrics){
+    const advice = [];
+
+    if(metrics.pendingRequests > 0){
+        advice.push(`Verifica ${metrics.pendingRequests} richiesta${metrics.pendingRequests === 1 ? "" : "e"} di iscrizione in attesa.`);
+    }
+
+    if(metrics.overduePayments > 0){
+        advice.push(`Sollecita ${metrics.overduePayments} quota${metrics.overduePayments === 1 ? "" : "e"} scaduta${metrics.overduePayments === 1 ? "" : "e"}.`);
+    }
+
+    if(metrics.expiredCertificates > 0){
+        advice.push(`Richiedi il rinnovo di ${metrics.expiredCertificates} certificato${metrics.expiredCertificates === 1 ? "" : "i"} scaduto${metrics.expiredCertificates === 1 ? "" : "i"}.`);
+    }
+
+    if(metrics.expiringCertificates > 0){
+        advice.push(`Avvisa le famiglie per ${metrics.expiringCertificates} certificato${metrics.expiringCertificates === 1 ? "" : "i"} in scadenza.`);
+    }
+
+    if(!advice.length){
+        advice.push("La segreteria è sotto controllo. Puoi concentrarti su iscrizioni, comunicazioni e aggiornamento dati.");
+    }
+
+    return advice.slice(0, 4);
+}
+
+function renderAssistantAdvice(metrics){
+    const list = document.getElementById("assistantAdviceList");
+    const time = document.getElementById("assistantEstimatedTime");
+    if(!list) return;
+
+    const advice = getAssistantAdvice(metrics);
+    const estimatedMinutes = Math.max(3, Math.min(18, metrics.totalUrgencies * 3 || 4));
+
+    if(time){
+        time.textContent = `Tempo stimato: ${estimatedMinutes} min`;
+    }
+
+    list.innerHTML = advice.map(item => `
+        <div class="assistant-advice-item">
+            <span>✓</span>
+            <p>${escapeHtml(item)}</p>
+        </div>
+    `).join("");
+}
+
+function renderMoneyOverview(metrics){
+    setText("moneyCollectedValue", formatEuro(metrics.totalPaid));
+    setText("moneyResidualValue", formatEuro(metrics.totalResidual));
+    setText("moneyOverdueValue", formatEuro(metrics.overdueResidual));
+
+    const total = Math.max(1, metrics.totalPaid + metrics.totalResidual);
+    const collectedPct = Math.min(100, Math.round((metrics.totalPaid / total) * 100));
+    const residualPct = Math.min(100, Math.round((metrics.totalResidual / total) * 100));
+    const overduePct = Math.min(100, Math.round((metrics.overdueResidual / total) * 100));
+
+    const collectedBar = document.getElementById("moneyCollectedBar");
+    const residualBar = document.getElementById("moneyResidualBar");
+    const overdueBar = document.getElementById("moneyOverdueBar");
+
+    if(collectedBar) collectedBar.style.width = `${collectedPct}%`;
+    if(residualBar) residualBar.style.width = `${residualPct}%`;
+    if(overdueBar) overdueBar.style.width = `${overduePct}%`;
+}
+
+function getDashboardTimelineItems(){
+    const items = [];
+
+    cachedParentRequests.slice(0, 3).forEach(request => {
+        items.push({
+            type: request.status === "pending" ? "warning" : "success",
+            title: request.status === "pending" ? "Nuova richiesta iscrizione" : "Richiesta gestita",
+            text: `${getAthleteFullNameFromObject(request)} · ${request.requested_group || "Gruppo non indicato"}`,
+            date: request.created_at || request.updated_at,
+            href: "#parentRequestsSection"
+        });
+    });
+
+    cachedPayments.slice(0, 3).forEach(payment => {
+        const athlete = findAthlete(payment.athlete_id);
+        const residual = Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
+        items.push({
+            type: residual <= 0 ? "success" : getPaymentStatusKey(payment) === "overdue" ? "danger" : "warning",
+            title: residual <= 0 ? "Quota pagata" : "Pagamento aperto",
+            text: `${athlete} · ${residual <= 0 ? formatEuro(payment.amount_paid || 0) : `${formatEuro(residual)} residui`}`,
+            date: payment.due_date,
+            href: "#paymentsSection"
+        });
+    });
+
+    cachedCertificates.slice(0, 3).forEach(cert => {
+        const athlete = findAthlete(cert.athlete_id);
+        const status = getCertificateStatusKey(cert);
+        items.push({
+            type: status === "expired" ? "danger" : status === "expiring" ? "warning" : "success",
+            title: status === "expired" ? "Certificato scaduto" : status === "expiring" ? "Certificato in scadenza" : "Certificato valido",
+            text: `${athlete} · scadenza ${formatDate(cert.expiry_date)}`,
+            date: cert.expiry_date,
+            href: "#certificatesSection"
+        });
+    });
+
+    return items
+        .filter(item => item.text)
+        .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+        .slice(0, 6);
+}
+
+function renderDashboardTimeline(){
+    const list = document.getElementById("dashboardTimelineList");
+    if(!list) return;
+
+    const items = getDashboardTimelineItems();
+
+    if(!items.length){
+        list.innerHTML = `<div class="timeline-empty">Nessuna attività recente da mostrare.</div>`;
+        return;
+    }
+
+    list.innerHTML = items.map(item => `
+        <a class="timeline-item ${escapeHtml(item.type)}" href="${escapeHtml(item.href)}">
+            <span>${formatDate(item.date)}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+            <small>${escapeHtml(item.text)}</small>
+        </a>
+    `).join("");
+}
+
+function renderExecutiveDashboard(){
+    const metrics = getDashboardCoreMetrics();
+    const clubName = cachedClub?.name || "la tua società";
+    const userName = getDashboardUserName();
+    const now = new Date();
+
+    setText("executiveGreeting", `Buongiorno ${userName} 👋`);
+    setText("executiveClubLine", `${clubName} · Centro operativo segreteria`);
+    setText("executiveUpdatedAt", `Ultimo aggiornamento: ${now.toLocaleTimeString("it-IT", { hour:"2-digit", minute:"2-digit" })}`);
+
+    const title = document.getElementById("executiveStatusTitle");
+    const text = document.getElementById("executiveStatusText");
+    const badge = document.getElementById("executiveStatusBadge");
+
+    if(title && text && badge){
+        if(metrics.totalUrgencies === 0){
+            title.textContent = "Tutto sotto controllo";
+            text.textContent = "Non risultano urgenze operative: richieste, quote e certificati sono monitorati.";
+            badge.textContent = "Stato verde";
+            badge.className = "executive-status-badge success";
+        }else if(metrics.totalUrgencies <= 3){
+            title.textContent = `${metrics.totalUrgencies} attività richiedono attenzione`;
+            text.textContent = "ClubIQ ha individuato alcune priorità da gestire oggi per mantenere la segreteria ordinata.";
+            badge.textContent = "Da controllare";
+            badge.className = "executive-status-badge warning";
+        }else{
+            title.textContent = `${metrics.totalUrgencies} attività urgenti`;
+            text.textContent = "Ci sono quote, certificati o richieste che richiedono un intervento rapido della segreteria.";
+            badge.textContent = "Priorità alta";
+            badge.className = "executive-status-badge danger";
+        }
+    }
+
+    renderAssistantAdvice(metrics);
+    renderMoneyOverview(metrics);
+    renderDashboardTimeline();
+}
+
 async function loadDashboard(){
     renderDashboardSummaryFromCache();
+    renderExecutiveDashboard();
     setDashboardMessage("Dashboard aggiornata.", "success");
 }
 
