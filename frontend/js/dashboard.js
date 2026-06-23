@@ -1986,8 +1986,6 @@ function openAthleteDetail(athleteId, scroll = true){
     }
 }
 
-function quickCreatePaymentForOpenedAthlete
-
 function quickCreatePaymentForOpenedAthlete(){
     if(!requireVerifiedEmail("il pagamento rapido")){
         return;
