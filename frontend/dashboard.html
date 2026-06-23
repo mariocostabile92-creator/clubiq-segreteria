@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=billingui1" />
+    <link rel="stylesheet" href="css/dashboard.css?v=clubiqv2" />
     <link rel="stylesheet" href="css/billing-ui.css?v=1.0" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
@@ -30,6 +30,7 @@
 
             <nav class="side-nav">
                 <a class="active" href="#top">Dashboard</a>
+                <a href="#commandCenterSection">Centro operativo</a>
                 <a href="#clubRegistrationSection">Link iscrizione</a>
                 <a href="#parentRequestsSection">Richieste</a>
                 <a href="#quickCommunicationsSection">Comunicazioni</a>
@@ -178,6 +179,73 @@
                 <div class="auth-note">
                     <strong>Email account:</strong>
                     <span id="currentUserEmail">Caricamento...</span>
+                </div>
+            </section>
+
+
+            <section id="commandCenterSection" class="panel command-center-panel">
+                <div class="section-heading command-center-heading">
+                    <div>
+                        <p class="eyebrow">Centro operativo</p>
+                        <h2>Gestisci la società da un’unica schermata</h2>
+                        <p class="club-link-description">
+                            Le azioni più importanti della segreteria: iscrizioni, atleti, quote, certificati,
+                            comunicazioni e report sempre a portata di mano.
+                        </p>
+                    </div>
+                    <div class="command-center-actions">
+                        <button id="commandRefreshBtn" class="secondary-btn" type="button">Aggiorna dati</button>
+                    </div>
+                </div>
+
+                <div class="command-center-grid">
+                    <a class="command-card primary-command" href="#parentRequestsSection">
+                        <span>01</span>
+                        <strong>Richieste iscrizione</strong>
+                        <small>Controlla le nuove richieste dei genitori e trasformale in atleti.</small>
+                    </a>
+
+                    <a class="command-card" href="#athletesSection">
+                        <span>02</span>
+                        <strong>Archivio atleti</strong>
+                        <small>Cerca, filtra e gestisci tutte le anagrafiche della società.</small>
+                    </a>
+
+                    <a class="command-card warning-command" href="#paymentsSection">
+                        <span>03</span>
+                        <strong>Quote e pagamenti</strong>
+                        <small>Monitora residui, scadenze e incassi ancora aperti.</small>
+                    </a>
+
+                    <a class="command-card danger-command" href="#certificatesSection">
+                        <span>04</span>
+                        <strong>Certificati medici</strong>
+                        <small>Verifica validità, scadenze e documenti da aggiornare.</small>
+                    </a>
+
+                    <a class="command-card success-command" href="#quickCommunicationsSection">
+                        <span>05</span>
+                        <strong>Comunicazioni</strong>
+                        <small>Prepara messaggi WhatsApp rapidi per famiglie e referenti.</small>
+                    </a>
+
+                    <a class="command-card" href="#clubRegistrationSection">
+                        <span>06</span>
+                        <strong>Link iscrizione</strong>
+                        <small>Condividi il modulo pubblico della società con un click.</small>
+                    </a>
+                </div>
+            </section>
+
+            <section id="executiveSnapshotSection" class="panel executive-snapshot-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Situazione società</p>
+                        <h2>Panoramica operativa</h2>
+                        <p class="club-link-description">
+                            I numeri chiave della segreteria, pensati per capire subito cosa funziona e cosa richiede attenzione.
+                        </p>
+                    </div>
                 </div>
             </section>
 
@@ -629,7 +697,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js?v=billingui1"></script>
+    <script src="js/dashboard.js?v=clubiqv2"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">

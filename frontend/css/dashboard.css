@@ -1430,3 +1430,224 @@ body{
 .billing-compact-note span{color:#64748b;font-weight:800;}
 .billing-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
 @media(max-width:760px){.billing-compact-note{display:grid}.billing-actions{width:100%;justify-content:stretch}.billing-actions button{width:100%;}}
+
+
+/* ================================
+   ClubIQ V2 - Dashboard Premium
+   Step 1: Command Center + executive polish
+================================ */
+
+.main-content{
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(34,197,94,.08), transparent 34%),
+        #f4f7fb;
+}
+
+.topbar{
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:28px;
+    padding:26px;
+    background:
+        radial-gradient(circle at top right, rgba(37,99,235,.20), transparent 36%),
+        linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+    color:#ffffff;
+    box-shadow:0 24px 70px rgba(15,23,42,.20);
+}
+
+.topbar .eyebrow{
+    color:#86efac;
+}
+
+.topbar h1{
+    color:#ffffff;
+    font-size:34px;
+    letter-spacing:-.055em;
+}
+
+.command-center-panel{
+    margin-top:20px;
+    border-color:#bfdbfe;
+    background:
+        radial-gradient(circle at top right, rgba(37,99,235,.13), transparent 34%),
+        linear-gradient(180deg,#ffffff 0%,#eff6ff 100%);
+}
+
+.command-center-heading{
+    align-items:flex-start;
+}
+
+.command-center-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+.command-center-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+}
+
+.command-card{
+    display:grid;
+    align-content:start;
+    gap:10px;
+    min-height:154px;
+    padding:18px;
+    text-decoration:none;
+    border:1px solid rgba(148,163,184,.35);
+    border-radius:22px;
+    background:rgba(255,255,255,.90);
+    box-shadow:0 12px 28px rgba(15,23,42,.07);
+    transition:.18s ease;
+    position:relative;
+    overflow:hidden;
+}
+
+.command-card::after{
+    content:"";
+    position:absolute;
+    left:18px;
+    right:18px;
+    bottom:0;
+    height:4px;
+    border-radius:999px 999px 0 0;
+    background:linear-gradient(90deg,#2563eb,#22c55e);
+    opacity:.55;
+}
+
+.command-card:hover{
+    transform:translateY(-3px);
+    background:#ffffff;
+    box-shadow:0 18px 42px rgba(15,23,42,.12);
+    border-color:#93c5fd;
+}
+
+.command-card span{
+    width:max-content;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 10px;
+    border-radius:999px;
+    background:#eff6ff;
+    color:#1d4ed8;
+    font-size:11px;
+    font-weight:1000;
+    letter-spacing:.08em;
+}
+
+.command-card strong{
+    color:#0f172a;
+    font-size:19px;
+    letter-spacing:-.04em;
+}
+
+.command-card small{
+    color:#64748b;
+    font-size:13px;
+    line-height:1.45;
+    font-weight:800;
+}
+
+.primary-command{
+    border-color:#bfdbfe;
+    background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%);
+}
+
+.warning-command::after{
+    background:linear-gradient(90deg,#f59e0b,#facc15);
+}
+
+.danger-command::after{
+    background:linear-gradient(90deg,#ef4444,#f97316);
+}
+
+.success-command::after{
+    background:linear-gradient(90deg,#22c55e,#86efac);
+}
+
+.executive-snapshot-panel{
+    margin-top:20px;
+    padding-bottom:8px;
+    border-color:#e0f2fe;
+    background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+}
+
+.executive-snapshot-panel + .stats-grid{
+    margin-top:14px;
+}
+
+.stats-grid{
+    gap:16px;
+}
+
+.stat-card{
+    border-color:rgba(15,23,42,.08);
+    box-shadow:0 16px 40px rgba(15,23,42,.08);
+    position:relative;
+    overflow:hidden;
+}
+
+.stat-card::after{
+    content:"";
+    position:absolute;
+    left:18px;
+    right:18px;
+    bottom:0;
+    height:4px;
+    border-radius:999px 999px 0 0;
+    background:linear-gradient(90deg,#2563eb,#22c55e);
+    opacity:.75;
+}
+
+.panel{
+    box-shadow:0 18px 48px rgba(15,23,42,.08);
+}
+
+.today-check-card,
+.operative-notification-card,
+.quick-communication-card,
+.request-summary-card,
+.detail-box,
+.athlete-card,
+.data-card{
+    box-shadow:0 12px 28px rgba(15,23,42,.055);
+}
+
+@media (max-width: 1180px){
+    .command-center-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px){
+    .topbar{
+        border-radius:22px;
+        padding:22px;
+    }
+
+    .topbar h1{
+        font-size:27px;
+    }
+
+    .command-center-grid{
+        grid-template-columns:1fr;
+    }
+
+    .command-center-actions{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr;
+    }
+
+    .command-center-actions .secondary-btn{
+        width:100%;
+    }
+
+    .command-card{
+        min-height:auto;
+    }
+}
