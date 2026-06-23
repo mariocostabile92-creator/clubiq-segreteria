@@ -33,6 +33,11 @@
         .landing-price-card strong{display:block;font-size:28px;margin:10px 0;color:#0f172a;}
         .landing-price-card small{display:block;color:#64748b;font-weight:800;line-height:1.45;margin-bottom:10px;}
         .landing-price-card ul{margin:0 0 14px 18px;padding:0;color:#334155;font-weight:800;line-height:1.55;}
+
+        .landing-pricing-header h2{margin:6px 0 8px;font-size:clamp(26px,3vw,38px);line-height:1.05;color:#0f172a;letter-spacing:-.04em;}
+        .landing-pricing-header p{margin:0;color:#64748b;font-weight:800;line-height:1.5;max-width:720px;}
+        .landing-price-card .primary-btn,.landing-price-card .secondary-btn{width:100%;justify-content:center;text-decoration:none;margin-top:6px;}
+        .landing-price-card strong small{display:inline;color:#0f172a;font-size:14px;margin-left:4px;}
         @media(max-width:900px){.landing-shell{grid-template-columns:1fr;margin:18px auto}.landing-auth-card{margin-top:0}.landing-pricing-grid{grid-template-columns:1fr}.landing-pricing-header{display:block}.landing-feature-grid{grid-template-columns:1fr}}
     </style>
 </head>
@@ -125,6 +130,60 @@
                 dopo la registrazione riceverai una mail di verifica. Il link iscrizione viene generato nella dashboard della società.
             </div>
         </section>
+
+
+        <section id="pricing" class="landing-pricing-section">
+            <div class="landing-pricing-header">
+                <div>
+                    <span class="section-label">Piani ClubIQ</span>
+                    <h2>Prezzi semplici per società sportive reali</h2>
+                    <p>Parti gratis, poi scegli il piano più adatto alla tua segreteria quando vuoi gestire più atleti, report e strumenti avanzati.</p>
+                </div>
+                <a class="secondary-btn" href="#accesso">Accedi o crea società</a>
+            </div>
+
+            <div class="landing-pricing-grid">
+                <article class="landing-price-card">
+                    <span>Free</span>
+                    <strong>0 €<small>/mese</small></strong>
+                    <small>Per iniziare e provare ClubIQ senza rischio.</small>
+                    <ul>
+                        <li>Fino a 5 atleti</li>
+                        <li>Richieste iscrizione online</li>
+                        <li>Gestione base quote</li>
+                        <li>Certificati medici</li>
+                    </ul>
+                    <a class="secondary-btn" href="#accesso">Inizia gratis</a>
+                </article>
+
+                <article class="landing-price-card pro">
+                    <span>Pro</span>
+                    <strong>19 €<small>/mese</small></strong>
+                    <small>Per società operative che vogliono risparmiare tempo ogni settimana.</small>
+                    <ul>
+                        <li>Fino a 80 atleti</li>
+                        <li>Report PDF segreteria</li>
+                        <li>Export CSV</li>
+                        <li>Storico WhatsApp</li>
+                    </ul>
+                    <a class="primary-btn" href="#accesso">Scegli Pro</a>
+                </article>
+
+                <article class="landing-price-card premium">
+                    <span>Premium</span>
+                    <strong>39 €<small>/mese</small></strong>
+                    <small>Per società strutturate con più gruppi, squadre e controllo operativo.</small>
+                    <ul>
+                        <li>Atleti illimitati</li>
+                        <li>Tutto del piano Pro</li>
+                        <li>Priorità nuove funzioni</li>
+                        <li>Massimo controllo operativo</li>
+                    </ul>
+                    <a class="secondary-btn" href="#accesso">Scegli Premium</a>
+                </article>
+            </div>
+        </section>
+
     </main>
 
     <script src="js/api.js?v=3.0"></script>
