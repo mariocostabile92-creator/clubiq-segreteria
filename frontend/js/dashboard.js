@@ -1945,21 +1945,48 @@ function openAthleteDetail(athleteId, scroll = true){
     }, 0);
 
     const certStatus = getBestCertificateStatus(athleteCertificates);
+    const athleteStatus = getAthleteAdminStatus(athlete);
+    const fullName = `${athlete.first_name || ""} ${athlete.last_name || ""}`.trim() || "Atleta";
+    const contact = athlete.parent_name_1 || athlete.email || athlete.phone || "Non indicato";
+    const phone = athlete.parent_phone_1 || athlete.phone || "Telefono non indicato";
+    const email = athlete.parent_email_1 || athlete.email || "Email non indicata";
 
-    setText("detailAthleteName", `${athlete.first_name} ${athlete.last_name}`);
+    setText("detailAthleteName", fullName);
+    setText("detailAthleteInitials", getAthleteInitials(athlete));
     setText("detailAthleteGroup", athlete.group_name || "Senza gruppo");
-    setText("detailAthleteBirth", formatDate(athlete.birth_date));
-    setText("detailAthleteContact", athlete.parent_name_1 || athlete.email || athlete.phone || "Non indicato");
+    setText("detailAthleteBirth", `Nato il ${formatDate(athlete.birth_date)}`);
+    setText("detailAthleteContact", contact);
+    setText("detailAthleteParent", athlete.parent_name_1 || "Famiglia non indicata");
+    setText("detailAthletePhone", phone);
+    setText("detailAthleteEmail", email);
     setText("detailAthleteResiduo", formatEuro(totalResiduo));
     setText("detailAthleteCertificate", certStatus);
+    setText("detailPaymentsMetric", `${athletePayments.length} pagamento${athletePayments.length === 1 ? "" : "i"} collegat${athletePayments.length === 1 ? "o" : "i"}`);
+    setText("detailCertificatesMetric", `${athleteCertificates.length} certificat${athleteCertificates.length === 1 ? "o" : "i"} collegat${athleteCertificates.length === 1 ? "o" : "i"}`);
+    setText("detailAthleteNotes", athlete.notes || "Nessuna nota salvata.");
+
+    const statusBadge = document.getElementById("detailAthleteStatusBadge");
+    if(statusBadge){
+        statusBadge.className = `status-badge ${athleteStatus.className}`;
+        statusBadge.textContent = athleteStatus.label;
+    }
+
+    const whatsAppBtn = document.getElementById("detailWhatsAppBtn");
+    if(whatsAppBtn){
+        whatsAppBtn.disabled = !(athlete.parent_phone_1 || athlete.phone);
+        whatsAppBtn.onclick = () => openWhatsAppAthlete(athlete.id, "generic");
+    }
 
     renderDetailPayments(athletePayments);
     renderDetailCertificates(athleteCertificates);
+    renderDetailTimeline(athlete, athletePayments, athleteCertificates);
 
     if(scroll){
         section?.scrollIntoView({ behavior:"smooth" });
     }
 }
+
+function quickCreatePaymentForOpenedAthlete
 
 function quickCreatePaymentForOpenedAthlete(){
     if(!requireVerifiedEmail("il pagamento rapido")){
@@ -2034,6 +2061,64 @@ function closeAthleteDetail(){
     }
 }
 
+function getAthleteInitials(athlete){
+    const first = String(athlete?.first_name || "").trim().charAt(0);
+    const last = String(athlete?.last_name || "").trim().charAt(0);
+    return `${first}${last}`.trim().toUpperCase() || "CL";
+}
+
+function renderDetailTimeline(athlete, payments, certificates){
+    const list = document.getElementById("detailTimelineList");
+    if(!list) return;
+
+    const items = [];
+
+    payments.forEach(payment => {
+        const residual = Math.max(0, Number(payment.amount_due || 0) - Number(payment.amount_paid || 0));
+        const status = getPaymentStatusKey(payment);
+        items.push({
+            date: payment.due_date || payment.created_at || "",
+            type: status === "paid" ? "success" : status === "overdue" ? "danger" : "warning",
+            title: status === "paid" ? "Quota pagata" : residual > 0 ? `Residuo quota ${formatEuro(residual)}` : "Pagamento registrato",
+            text: `Dovuto ${formatEuro(payment.amount_due || 0)} · Pagato ${formatEuro(payment.amount_paid || 0)}`
+        });
+    });
+
+    certificates.forEach(cert => {
+        const status = getCertificateDisplayStatus(cert);
+        items.push({
+            date: cert.expiry_date || cert.issue_date || "",
+            type: status.key === "valid" ? "success" : status.key === "expired" ? "danger" : "warning",
+            title: `Certificato ${status.label.toLowerCase()}`,
+            text: `${cert.type || "Certificato medico"} · Scadenza ${formatDate(cert.expiry_date)}`
+        });
+    });
+
+    if(athlete?.created_at){
+        items.push({
+            date: athlete.created_at,
+            type: "success",
+            title: "Atleta registrato",
+            text: "Profilo atleta creato in ClubIQ."
+        });
+    }
+
+    items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    if(!items.length){
+        list.innerHTML = `<div class="empty">Nessun evento disponibile per questo atleta.</div>`;
+        return;
+    }
+
+    list.innerHTML = items.slice(0, 6).map(item => `
+        <article class="athlete-timeline-item ${item.type}">
+            <span>${formatDate(item.date)}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+            <small>${escapeHtml(item.text)}</small>
+        </article>
+    `).join("");
+}
+
 function renderDetailPayments(payments){
     const list = document.getElementById("detailPaymentsList");
     if(!list) return;
@@ -2048,7 +2133,7 @@ function renderDetailPayments(payments){
         const isPaid = residuo <= 0 || payment.status === "paid";
 
         return `
-            <article class="mini-record">
+            <article class="mini-record ${isPaid ? "success" : residuo > 0 ? "warning" : ""}">
                 <strong>${isPaid ? "Pagato" : "Residuo " + formatEuro(residuo)}</strong>
                 <span>Dovuto: ${formatEuro(payment.amount_due || 0)} · Pagato: ${formatEuro(payment.amount_paid || 0)}</span>
                 <small>Scadenza: ${formatDate(payment.due_date)}</small>
@@ -2070,7 +2155,7 @@ function renderDetailCertificates(certificates){
         const status = getCertificateDisplayStatus(cert);
 
         return `
-            <article class="mini-record">
+            <article class="mini-record ${status.key || ""}">
                 <strong class="${status.className}">${status.label}</strong>
                 <span>${escapeHtml(cert.type)}</span>
                 <small>Scadenza: ${formatDate(cert.expiry_date)}</small>
