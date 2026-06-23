@@ -504,7 +504,7 @@ async function refreshTodayChecks(){
 async function refreshAll(){
     await loadCurrentUser();
     await loadMyClub();
-    await loadBillingStatus();
+    // Pricing/billing is handled outside the operational dashboard.
     await loadAthletesPreview();
     await loadPaymentsList();
     await loadCertificatesList();
