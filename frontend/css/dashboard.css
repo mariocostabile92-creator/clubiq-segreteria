@@ -2224,3 +2224,18 @@ body{
         width:100%;
     }
 }
+
+
+/* ================================
+   ClubIQ V2.5 - Upload logo/foto
+================================ */
+.media-upload-field{align-content:start;}
+.upload-control{display:grid;gap:8px;border:1px dashed #bfdbfe;border-radius:16px;background:#f8fbff;padding:13px;}
+.upload-control input[type="file"]{width:100%;border:0;padding:0;background:transparent;font-size:13px;}
+.upload-control span{color:#2563eb;font-size:12px;font-weight:1000;}
+.upload-preview{display:flex;align-items:center;gap:12px;border:1px solid #e2e8f0;border-radius:16px;background:#ffffff;padding:10px;min-height:70px;}
+.upload-preview img{width:52px;height:52px;border-radius:16px;object-fit:cover;border:1px solid #dbeafe;background:#f8fafc;}
+.upload-preview small{display:block;color:#64748b;font-weight:900;line-height:1.35;}
+.upload-preview-fallback{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#dbeafe,#dcfce7);color:#1e3a8a;font-weight:1000;border:1px solid #bfdbfe;}
+.upload-preview .hidden,.upload-preview-fallback.hidden{display:none;}
+@media(max-width:760px){.upload-preview{align-items:flex-start;}}

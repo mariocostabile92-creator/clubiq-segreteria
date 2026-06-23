@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 import re
 import unicodedata
+from pathlib import Path
+from uuid import uuid4
 
 from ..db.database import get_db
 from ..models.club import Club
@@ -11,6 +13,23 @@ from ..models.user import User
 
 
 router = APIRouter(prefix="/clubs", tags=["clubs"])
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+UPLOADS_DIR = BASE_DIR / "uploads"
+ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+
+
+def validate_image_upload(file: UploadFile) -> str:
+    extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
+    if not extension:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Formato immagine non supportato. Usa JPG, PNG o WEBP.")
+    return extension
+
+
+def public_upload_url(path: Path) -> str:
+    relative = path.relative_to(UPLOADS_DIR).as_posix()
+    return f"/uploads/{relative}"
 
 
 def build_public_code(club_name: str) -> str:
@@ -78,6 +97,30 @@ def update_my_club(club_in: ClubUpdate, current_user: User = Depends(get_current
 def regenerate_my_public_code(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     club = get_current_club_or_404(current_user, db)
     club.public_code = make_unique_public_code(db, club.name, club.id)
+    db.commit()
+    db.refresh(club)
+    return club
+
+
+@router.post("/me/logo", response_model=ClubOut)
+async def upload_my_club_logo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    club = get_current_club_or_404(current_user, db)
+    extension = validate_image_upload(file)
+    content = await file.read()
+
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Immagine troppo grande. Carica un file massimo da 4 MB.")
+
+    target_dir = UPLOADS_DIR / "clubs" / str(club.id)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_path = target_dir / f"logo-{uuid4().hex}{extension}"
+    target_path.write_bytes(content)
+
+    club.logo = public_upload_url(target_path)
     db.commit()
     db.refresh(club)
     return club

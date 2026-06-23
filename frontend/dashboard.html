@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=v24" />
+    <link rel="stylesheet" href="css/dashboard.css?v=v25" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
@@ -318,9 +318,17 @@
                         <input id="clubNameInput" type="text" placeholder="Nome società" required />
                     </label>
 
-                    <label>
-                        Logo società URL
-                        <input id="clubLogoInput" type="url" placeholder="https://.../logo.png" />
+                    <label class="media-upload-field">
+                        Logo società
+                        <input id="clubLogoInput" type="hidden" />
+                        <div class="upload-control">
+                            <input id="clubLogoFileInput" type="file" accept="image/png,image/jpeg,image/webp" />
+                            <span>Scegli file da PC o telefono</span>
+                        </div>
+                        <div class="upload-preview" id="clubLogoPreview">
+                            <img id="clubLogoPreviewImg" src="assets/icons/logo-clubiq.png" alt="Anteprima logo società" />
+                            <small>JPG, PNG o WEBP · max 4 MB</small>
+                        </div>
                     </label>
 
                     <label>
@@ -574,7 +582,18 @@
                     <label>Gruppo<input id="athleteGroup" type="text" placeholder="Under 12" /></label>
                     <label>Telefono atleta<input id="athletePhone" type="text" /></label>
                     <label>Email atleta<input id="athleteEmail" type="email" /></label>
-                    <label>Foto atleta URL<input id="athletePhotoUrl" type="url" placeholder="https://.../foto.jpg" /></label>
+                    <label class="media-upload-field">Foto atleta
+                        <input id="athletePhotoUrl" type="hidden" />
+                        <div class="upload-control">
+                            <input id="athletePhotoFileInput" type="file" accept="image/png,image/jpeg,image/webp" />
+                            <span>Scegli foto da PC o telefono</span>
+                        </div>
+                        <div class="upload-preview" id="athletePhotoPreview">
+                            <div id="athletePhotoPreviewFallback" class="upload-preview-fallback">Foto</div>
+                            <img id="athletePhotoPreviewImg" class="hidden" src="" alt="Anteprima foto atleta" />
+                            <small>JPG, PNG o WEBP · max 4 MB</small>
+                        </div>
+                    </label>
                     <label>Genitore<input id="parentName" type="text" /></label>
                     <label>Telefono genitore<input id="parentPhone" type="text" /></label>
                     <label>Email genitore<input id="parentEmail" type="email" /></label>
@@ -725,7 +744,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js?v=v24"></script>
+    <script src="js/dashboard.js?v=v25"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">

@@ -1,6 +1,6 @@
 /*
   ClubIQ Segreteria - Dashboard
-  V2.3.1 WhatsApp V1.3.1 Hotfix Storico
+  V2.5 Upload logo/foto
   Dashboard + Atleti + Pagamenti + Certificati + Scheda atleta + Filtri + Azioni rapide + Modifica + Export CSV
 */
 
@@ -59,6 +59,61 @@ function updateClubIdentityVisuals(){
             img.src = DEFAULT_CLUBIQ_LOGO;
         };
     });
+}
+
+
+async function apiUploadImage(path, inputId){
+    const input = document.getElementById(inputId);
+    const file = input?.files?.[0];
+    if(!file) return null;
+    if(!["image/jpeg", "image/png", "image/webp"].includes(file.type || "")){
+        throw new Error("Formato immagine non supportato. Usa JPG, PNG o WEBP.");
+    }
+    if(file.size > 4 * 1024 * 1024){
+        throw new Error("Immagine troppo grande. Carica un file massimo da 4 MB.");
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+        method: "POST",
+        headers: getToken() ? { "Authorization": `Bearer ${getToken()}` } : {},
+        body: formData
+    });
+    let data = null;
+    try{ data = await response.json(); }catch(error){ data = null; }
+    if(!response.ok){ throw new Error(data?.detail || "Errore caricamento immagine"); }
+    return data;
+}
+
+function renderUploadPreview(inputId, imgId, fallbackId = null){
+    const input = document.getElementById(inputId);
+    const img = document.getElementById(imgId);
+    const fallback = fallbackId ? document.getElementById(fallbackId) : null;
+    const file = input?.files?.[0];
+    if(!input || !img || !file) return;
+    img.src = URL.createObjectURL(file);
+    img.classList.remove("hidden");
+    fallback?.classList.add("hidden");
+}
+
+function setImagePreview(imgId, url, fallbackId = null){
+    const img = document.getElementById(imgId);
+    const fallback = fallbackId ? document.getElementById(fallbackId) : null;
+    if(!img) return;
+    if(isSafeImageUrl(url)){
+        img.src = url;
+        img.classList.remove("hidden");
+        fallback?.classList.add("hidden");
+    }else{
+        img.removeAttribute("src");
+        img.classList.add("hidden");
+        fallback?.classList.remove("hidden");
+    }
+}
+
+function clearFileInput(inputId){
+    const input = document.getElementById(inputId);
+    if(input) input.value = "";
 }
 
 function renderAthleteAvatarHtml(athlete, className = "athlete-list-avatar"){
@@ -738,6 +793,8 @@ function fillClubSettingsForm(){
 
     setInputValue("clubNameInput", cachedClub.name || "");
     setInputValue("clubLogoInput", cachedClub.logo || "");
+    setImagePreview("clubLogoPreviewImg", cachedClub.logo || DEFAULT_CLUBIQ_LOGO);
+    clearFileInput("clubLogoFileInput");
     setInputValue("clubEmailInput", cachedClub.email || "");
     setInputValue("clubPhoneInput", cachedClub.phone || "");
     setInputValue("clubAddressInput", cachedClub.address || "");
@@ -781,6 +838,12 @@ async function handleUpdateClubSettings(event){
     setDashboardMessage("Salvataggio dati società...", "info");
 
     try{
+        const uploadedLogoClub = await apiUploadImage("/clubs/me/logo", "clubLogoFileInput");
+        if(uploadedLogoClub?.logo){
+            payload.logo = uploadedLogoClub.logo;
+            setInputValue("clubLogoInput", uploadedLogoClub.logo);
+        }
+
         cachedClub = await apiRequest("/clubs/me", {
             method: "PATCH",
             body: JSON.stringify(payload)
@@ -789,7 +852,9 @@ async function handleUpdateClubSettings(event){
         saveClubPaymentSettings(paymentSettings);
         renderClubRegistrationLink();
         updateClubIdentityVisuals();
-        setDashboardMessage("Dati società e dati pagamento aggiornati correttamente.", "success");
+        setImagePreview("clubLogoPreviewImg", cachedClub.logo || DEFAULT_CLUBIQ_LOGO);
+        clearFileInput("clubLogoFileInput");
+        setDashboardMessage("Dati società, logo e dati pagamento aggiornati correttamente.", "success");
     }catch(error){
         setDashboardMessage(error.message, "error");
     }
@@ -1575,6 +1640,8 @@ function fillAthleteForm(athleteId){
     document.getElementById("athletePhone").value = athlete.phone || "";
     document.getElementById("athleteEmail").value = athlete.email || "";
     document.getElementById("athletePhotoUrl").value = athlete.photo_url || "";
+    setImagePreview("athletePhotoPreviewImg", athlete.photo_url || "", "athletePhotoPreviewFallback");
+    clearFileInput("athletePhotoFileInput");
     document.getElementById("parentName").value = athlete.parent_name_1 || "";
     document.getElementById("parentPhone").value = athlete.parent_phone_1 || "";
     document.getElementById("parentEmail").value = athlete.parent_email_1 || "";
@@ -1597,6 +1664,9 @@ function resetAthleteForm(){
         form.reset();
     }
 
+    setImagePreview("athletePhotoPreviewImg", "", "athletePhotoPreviewFallback");
+    clearFileInput("athletePhotoFileInput");
+
     const submitBtn = document.querySelector("#addAthleteForm button[type='submit']");
     if(submitBtn){
         submitBtn.textContent = "Salva atleta";
@@ -1609,6 +1679,9 @@ async function handleAddAthlete(event){
     if(!requireVerifiedEmail("l'inserimento degli atleti")){
         return;
     }
+
+    const photoFileInput = document.getElementById("athletePhotoFileInput");
+    const hasPhotoFile = !!photoFileInput?.files?.[0];
 
     const payload = {
         first_name: document.getElementById("athleteFirstName").value.trim(),
@@ -1630,23 +1703,37 @@ async function handleAddAthlete(event){
     setDashboardMessage(editingAthleteId ? "Aggiornamento atleta..." : "Salvataggio atleta...", "info");
 
     try{
+        let savedAthlete = null;
+
         if(editingAthleteId){
-            await apiRequest(`/athletes/${editingAthleteId}`, {
+            savedAthlete = await apiRequest(`/athletes/${editingAthleteId}`, {
                 method: "PATCH",
                 body: JSON.stringify(payload)
             });
 
+            if(hasPhotoFile){
+                setDashboardMessage("Caricamento foto atleta...", "info");
+                savedAthlete = await apiUploadImage(`/athletes/${editingAthleteId}/photo`, "athletePhotoFileInput");
+            }
+
             resetAthleteForm();
             await refreshAll();
+            if(savedAthlete?.id){ openAthleteDetail(savedAthlete.id, false); }
             setDashboardMessage("Atleta aggiornato correttamente.", "success");
         }else{
-            await apiRequest("/athletes/", {
+            savedAthlete = await apiRequest("/athletes/", {
                 method: "POST",
                 body: JSON.stringify(payload)
             });
 
+            if(hasPhotoFile && savedAthlete?.id){
+                setDashboardMessage("Caricamento foto atleta...", "info");
+                savedAthlete = await apiUploadImage(`/athletes/${savedAthlete.id}/photo`, "athletePhotoFileInput");
+            }
+
             resetAthleteForm();
             await refreshAll();
+            if(savedAthlete?.id){ openAthleteDetail(savedAthlete.id, false); }
             setDashboardMessage("Atleta inserito correttamente.", "success");
         }
     }catch(error){
