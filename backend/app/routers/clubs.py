@@ -4,6 +4,7 @@ import re
 import unicodedata
 from pathlib import Path
 from uuid import uuid4
+import base64
 
 from ..db.database import get_db
 from ..models.club import Club
@@ -30,6 +31,11 @@ def validate_image_upload(file: UploadFile) -> str:
 def public_upload_url(path: Path) -> str:
     relative = path.relative_to(UPLOADS_DIR).as_posix()
     return f"/uploads/{relative}"
+
+
+def build_image_data_url(content: bytes, content_type: str) -> str:
+    encoded = base64.b64encode(content).decode("ascii")
+    return f"data:{content_type};base64,{encoded}"
 
 
 def build_public_code(club_name: str) -> str:
@@ -115,12 +121,8 @@ async def upload_my_club_logo(
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Immagine troppo grande. Carica un file massimo da 4 MB.")
 
-    target_dir = UPLOADS_DIR / "clubs" / str(club.id)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target_path = target_dir / f"logo-{uuid4().hex}{extension}"
-    target_path.write_bytes(content)
-
-    club.logo = public_upload_url(target_path)
+    # Salviamo il logo come data URL nel database: così resta fisso anche dopo deploy/restart Railway.
+    club.logo = build_image_data_url(content, file.content_type or "image/png")
     db.commit()
     db.refresh(club)
     return club

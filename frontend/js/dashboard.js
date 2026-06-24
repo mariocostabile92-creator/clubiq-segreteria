@@ -40,7 +40,7 @@ function saveClubPaymentSettings(settings){
 function isSafeImageUrl(value){
     const url = String(value || "").trim();
     if(!url) return false;
-    return /^(https?:\/\/|\/|assets\/)/i.test(url);
+    return /^(https?:\/\/|data:image\/|\/|assets\/)/i.test(url);
 }
 
 function getClubLogoUrl(){

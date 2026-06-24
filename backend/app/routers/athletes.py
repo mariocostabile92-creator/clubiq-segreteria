@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from pathlib import Path
 from uuid import uuid4
+import base64
 
 from ..db.database import get_db
 from ..schemas.athlete import AthleteCreate, AthleteUpdate, AthleteOut
@@ -30,6 +31,11 @@ def validate_image_upload(file: UploadFile) -> str:
 def public_upload_url(path: Path) -> str:
     relative = path.relative_to(UPLOADS_DIR).as_posix()
     return f"/uploads/{relative}"
+
+
+def build_image_data_url(content: bytes, content_type: str) -> str:
+    encoded = base64.b64encode(content).decode("ascii")
+    return f"data:{content_type};base64,{encoded}"
 
 
 def get_athlete_or_404(athlete_id: int, club_id: int, db: Session) -> Athlete:
@@ -169,12 +175,8 @@ async def upload_athlete_photo(
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Immagine troppo grande. Carica un file massimo da 4 MB.")
 
-    target_dir = UPLOADS_DIR / "athletes" / str(current_user.club_id) / str(athlete.id)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target_path = target_dir / f"photo-{uuid4().hex}{extension}"
-    target_path.write_bytes(content)
-
-    athlete.photo_url = public_upload_url(target_path)
+    # Salviamo la foto come data URL nel database: resta disponibile anche dopo deploy/restart Railway.
+    athlete.photo_url = build_image_data_url(content, file.content_type or "image/png")
     db.commit()
     db.refresh(athlete)
     return athlete

@@ -2239,3 +2239,78 @@ body{
 .upload-preview-fallback{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#dbeafe,#dcfce7);color:#1e3a8a;font-weight:1000;border:1px solid #bfdbfe;}
 .upload-preview .hidden,.upload-preview-fallback.hidden{display:none;}
 @media(max-width:760px){.upload-preview{align-items:flex-start;}}
+
+
+/* ================================
+   ClubIQ V2.5.2 - Logo società premium
+================================ */
+
+#sidebarClubLogo{
+    object-fit:contain;
+    background:#ffffff;
+}
+
+.topbar-club-logo{
+    width:76px;
+    height:76px;
+    border-radius:24px;
+    object-fit:contain;
+    padding:8px;
+    background:#ffffff;
+    border:1px solid rgba(255,255,255,.55);
+    box-shadow:0 18px 42px rgba(0,0,0,.28);
+}
+
+.club-logo-preview{
+    min-height:124px;
+    padding:18px;
+    gap:18px;
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,.12), transparent 34%),
+        linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+    border:1px solid #bfdbfe;
+}
+
+.club-logo-preview img{
+    width:96px;
+    height:96px;
+    border-radius:26px;
+    object-fit:contain;
+    padding:10px;
+    background:#ffffff;
+    border:1px solid #dbeafe;
+    box-shadow:0 14px 34px rgba(15,23,42,.12);
+    flex:0 0 auto;
+}
+
+.club-logo-preview strong{
+    display:block;
+    color:#0f172a;
+    font-size:16px;
+    margin-bottom:6px;
+}
+
+.club-logo-preview small{
+    color:#64748b;
+    font-weight:900;
+    line-height:1.45;
+}
+
+@media(max-width:760px){
+    .topbar-club-logo{
+        width:62px;
+        height:62px;
+        border-radius:20px;
+    }
+
+    .club-logo-preview{
+        display:grid;
+        grid-template-columns:1fr;
+        justify-items:start;
+    }
+
+    .club-logo-preview img{
+        width:86px;
+        height:86px;
+    }
+}
