@@ -14,7 +14,7 @@ from ..models.user import User
 
 router = APIRouter(prefix="/athletes", tags=["athletes"])
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parents[3]
 UPLOADS_DIR = BASE_DIR / "uploads"
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 MAX_UPLOAD_BYTES = 4 * 1024 * 1024

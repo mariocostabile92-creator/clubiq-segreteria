@@ -172,6 +172,8 @@ function bindDashboardActions(){
     const billingProBtn = document.getElementById("billingProBtn");
     const billingPremiumBtn = document.getElementById("billingPremiumBtn");
     const billingPortalBtn = document.getElementById("billingPortalBtn");
+    const clubLogoFileInput = document.getElementById("clubLogoFileInput");
+    const athletePhotoFileInput = document.getElementById("athletePhotoFileInput");
 
     const cancelPaymentEditBtn = document.getElementById("cancelPaymentEditBtn");
     const cancelCertificateEditBtn = document.getElementById("cancelCertificateEditBtn");
@@ -257,6 +259,18 @@ function bindDashboardActions(){
 
     if(billingPortalBtn){
         billingPortalBtn.addEventListener("click", openBillingPortal);
+    }
+
+    if(clubLogoFileInput){
+        clubLogoFileInput.addEventListener("change", () => {
+            renderUploadPreview("clubLogoFileInput", "clubLogoPreviewImg");
+        });
+    }
+
+    if(athletePhotoFileInput){
+        athletePhotoFileInput.addEventListener("change", () => {
+            renderUploadPreview("athletePhotoFileInput", "athletePhotoPreviewImg", "athletePhotoPreviewFallback");
+        });
     }
 
     if(exportCommunicationHistoryCsvBtn){

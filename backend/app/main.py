@@ -148,3 +148,6 @@ if (FRONTEND_DIR / "js").exists():
 
 if (FRONTEND_DIR / "assets").exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
+
+if UPLOADS_DIR.exists():
+    app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
