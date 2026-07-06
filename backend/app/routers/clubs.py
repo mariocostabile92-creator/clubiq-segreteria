@@ -11,6 +11,7 @@ from ..models.club import Club
 from ..schemas.club import ClubOut, ClubUpdate
 from ..core.security import get_current_user
 from ..models.user import User
+from ..core.storage import upload_image_to_cloudinary, validate_image_upload as validate_storage_image_upload
 
 
 router = APIRouter(prefix="/clubs", tags=["clubs"])
@@ -115,14 +116,19 @@ async def upload_my_club_logo(
     db: Session = Depends(get_db)
 ):
     club = get_current_club_or_404(current_user, db)
-    extension = validate_image_upload(file)
     content = await file.read()
+    validate_storage_image_upload(file.content_type, len(content))
 
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Immagine troppo grande. Carica un file massimo da 4 MB.")
 
     # Salviamo il logo come data URL nel database: così resta fisso anche dopo deploy/restart Railway.
-    club.logo = build_image_data_url(content, file.content_type or "image/png")
+    club.logo = upload_image_to_cloudinary(
+        content,
+        file.filename or "logo",
+        file.content_type or "image/png",
+        f"clubiq/clubs/{club.id}/logo",
+    )
     db.commit()
     db.refresh(club)
     return club

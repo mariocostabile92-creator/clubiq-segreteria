@@ -9,7 +9,7 @@ import time
 import uuid
 from urllib import parse, request as urlrequest
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
 from ..db.database import get_db
@@ -19,6 +19,7 @@ from ..schemas.public_parent_request import (
     PublicParentRequestCreate,
     PublicParentRequestOut,
 )
+from ..services.audit import create_audit_log
 
 
 router = APIRouter(
@@ -135,6 +136,7 @@ async def upload_parent_document(
 @router.post("/", response_model=PublicParentRequestOut)
 def create_public_parent_request(
     request_in: PublicParentRequestCreate,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     club_code = request_in.club_code.strip().upper()
@@ -175,6 +177,23 @@ def create_public_parent_request(
     )
 
     db.add(parent_request)
+    db.flush()
+
+    create_audit_log(
+        db,
+        action="parent_request_consent_collected",
+        club_id=club.id,
+        actor_type="parent",
+        target_type="parent_request",
+        target_id=parent_request.id,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        metadata={
+            "privacy_consent": request_in.privacy_consent,
+            "data_processing_consent": request_in.data_processing_consent,
+            "parent_email": request_in.parent_email,
+        },
+    )
     db.commit()
     db.refresh(parent_request)
 

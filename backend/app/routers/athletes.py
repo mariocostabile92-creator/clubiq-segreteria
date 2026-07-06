@@ -12,6 +12,7 @@ from ..models.certificate import Certificate
 from ..models.club import Club
 from ..core.security import get_current_user
 from ..models.user import User
+from ..core.storage import upload_image_to_cloudinary, validate_image_upload as validate_storage_image_upload
 
 
 router = APIRouter(prefix="/athletes", tags=["athletes"])
@@ -189,14 +190,19 @@ async def upload_athlete_photo(
     db: Session = Depends(get_db)
 ):
     athlete = get_athlete_or_404(athlete_id, current_user.club_id, db)
-    extension = validate_image_upload(file)
     content = await file.read()
+    validate_storage_image_upload(file.content_type, len(content))
 
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Immagine troppo grande. Carica un file massimo da 4 MB.")
 
     # Salviamo la foto come data URL nel database: resta disponibile anche dopo deploy/restart Railway.
-    athlete.photo_url = build_image_data_url(content, file.content_type or "image/png")
+    athlete.photo_url = upload_image_to_cloudinary(
+        content,
+        file.filename or "foto-atleta",
+        file.content_type or "image/png",
+        f"clubiq/clubs/{current_user.club_id}/athletes/{athlete.id}",
+    )
     db.commit()
     db.refresh(athlete)
     return athlete

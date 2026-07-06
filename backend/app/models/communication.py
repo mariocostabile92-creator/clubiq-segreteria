@@ -17,6 +17,8 @@ class Communication(Base):
     channel = Column(String, nullable=False, default="whatsapp")
     type = Column(String, nullable=False, default="WhatsApp")
     recipient = Column(String, nullable=False, default="Contatto")
+    recipient_email = Column(String, nullable=True)
+    subject = Column(String, nullable=True)
     phone = Column(String, nullable=True)
     athlete = Column(String, nullable=True)
     message = Column(Text, nullable=False)

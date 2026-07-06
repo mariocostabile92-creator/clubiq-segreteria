@@ -23,9 +23,14 @@ from .models.payment import Payment
 from .models.certificate import Certificate
 from .models.parent_request import ParentRequest
 from .models.communication import Communication
+from .models.audit_log import AuditLog
 from .schemas.communication import CommunicationCreate, CommunicationOut
+from .schemas.user_management import StaffUserCreate, StaffUserOut, StaffUserUpdate
 from .core.security import get_current_user
+from .core.security import get_password_hash
 from .db.database import get_db
+from .core.email import send_brevo_email
+from .core.whatsapp import send_whatsapp_text
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -79,6 +84,8 @@ def run_safe_migrations():
         "ALTER TABLE athletes ADD COLUMN IF NOT EXISTS photo_url VARCHAR",
         "ALTER TABLE parent_requests ADD COLUMN IF NOT EXISTS privacy_consent BOOLEAN DEFAULT FALSE",
         "ALTER TABLE parent_requests ADD COLUMN IF NOT EXISTS data_processing_consent BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE communications ADD COLUMN IF NOT EXISTS recipient_email VARCHAR",
+        "ALTER TABLE communications ADD COLUMN IF NOT EXISTS subject VARCHAR",
     ]
 
     with engine.begin() as connection:
@@ -114,6 +121,91 @@ app.include_router(admin_router)
 app.include_router(billing_router)
 app.include_router(parent_requests_router)
 app.include_router(public_parent_requests_router)
+
+
+CLUB_ADMIN_ROLES = {"owner", "secretary"}
+ALLOWED_CLUB_ROLES = {"secretary", "coach", "president", "viewer"}
+
+
+def require_club_admin(current_user: User = Depends(get_current_user)) -> User:
+    if (current_user.role or "").lower() not in CLUB_ADMIN_ROLES:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permesso insufficiente.")
+    return current_user
+
+
+@app.get("/users/", response_model=list[StaffUserOut])
+def list_staff_users(
+    current_user: User = Depends(require_club_admin),
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(User)
+        .filter(User.club_id == current_user.club_id)
+        .order_by(User.id.asc())
+        .all()
+    )
+
+
+@app.post("/users/", response_model=StaffUserOut)
+def create_staff_user(
+    payload: StaffUserCreate,
+    current_user: User = Depends(require_club_admin),
+    db: Session = Depends(get_db),
+):
+    role = payload.role.lower().strip()
+    if role not in ALLOWED_CLUB_ROLES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ruolo non valido.")
+
+    username = payload.username.strip()
+    email = str(payload.email).strip().lower()
+    existing = db.query(User).filter((User.username == username) | (User.email == email)).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username o email gia in uso.")
+
+    user = User(
+        club_id=current_user.club_id,
+        username=username,
+        email=email,
+        hashed_password=get_password_hash(payload.password),
+        role=role,
+        is_active=True,
+        email_verified=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.patch("/users/{user_id}", response_model=StaffUserOut)
+def update_staff_user(
+    user_id: int,
+    payload: StaffUserUpdate,
+    current_user: User = Depends(require_club_admin),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id, User.club_id == current_user.club_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utente non trovato.")
+    if user.role == "owner" and user.id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non puoi modificare un owner.")
+
+    data = payload.model_dump(exclude_unset=True)
+    if "role" in data and data["role"] is not None and user.role != "owner":
+        role = data["role"].lower().strip()
+        if role not in ALLOWED_CLUB_ROLES:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ruolo non valido.")
+        user.role = role
+    if "email" in data and data["email"] is not None:
+        user.email = str(data["email"]).strip().lower()
+    if "is_active" in data and data["is_active"] is not None:
+        user.is_active = bool(data["is_active"])
+    if "password" in data and data["password"]:
+        user.hashed_password = get_password_hash(data["password"])
+
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 @app.get("/communications/", response_model=list[CommunicationOut])
@@ -158,12 +250,34 @@ def create_communication(
         channel=channel,
         type=communication_in.type.strip() or "WhatsApp",
         recipient=communication_in.recipient.strip() or "Contatto",
+        recipient_email=(communication_in.recipient_email or "").strip() or None,
+        subject=(communication_in.subject or "").strip() or None,
         phone=(communication_in.phone or "").strip() or None,
         athlete=(communication_in.athlete or "").strip() or None,
         message=communication_in.message.strip(),
         direction=direction,
         status=status_value,
     )
+
+    if channel == "email":
+        try:
+            send_brevo_email(
+                communication_in.recipient_email or communication_in.recipient,
+                communication_in.subject or communication_in.type,
+                communication_in.message,
+            )
+            communication.status = "sent"
+        except Exception as exc:
+            communication.status = "failed"
+            communication.message = f"{communication.message}\n\n[Errore invio email: {exc}]"
+
+    if channel == "whatsapp" and communication_in.send_now:
+        try:
+            send_whatsapp_text(communication.phone or "", communication.message)
+            communication.status = "sent"
+        except Exception as exc:
+            communication.status = "failed"
+            communication.message = f"{communication.message}\n\n[Errore invio WhatsApp: {exc}]"
 
     db.add(communication)
     db.commit()
