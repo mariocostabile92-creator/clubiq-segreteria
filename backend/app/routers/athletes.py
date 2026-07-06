@@ -9,6 +9,7 @@ from ..schemas.athlete import AthleteCreate, AthleteUpdate, AthleteOut
 from ..models.athlete import Athlete
 from ..models.payment import Payment
 from ..models.certificate import Certificate
+from ..models.club import Club
 from ..core.security import get_current_user
 from ..models.user import User
 
@@ -19,6 +20,7 @@ BASE_DIR = Path(__file__).resolve().parents[3]
 UPLOADS_DIR = BASE_DIR / "uploads"
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+PLAN_ATHLETE_LIMITS = {"free": 5, "pro": 80, "premium": None}
 
 
 def validate_image_upload(file: UploadFile) -> str:
@@ -54,12 +56,30 @@ def get_athlete_or_404(athlete_id: int, club_id: int, db: Session) -> Athlete:
     return athlete
 
 
+def ensure_can_create_athlete(club_id: int, db: Session) -> None:
+    club = db.query(Club).filter(Club.id == club_id).first()
+    plan = ((getattr(club, "plan", None) or "free").strip().lower())
+    limit = PLAN_ATHLETE_LIMITS.get(plan, PLAN_ATHLETE_LIMITS["free"])
+
+    if limit is None:
+        return
+
+    athletes_count = db.query(Athlete).filter(Athlete.club_id == club_id).count()
+    if athletes_count >= limit:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Limite piano raggiunto: il piano {plan} consente fino a {limit} atleti.",
+        )
+
+
 @router.post("/", response_model=AthleteOut)
 def create_athlete(
     athlete_in: AthleteCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    ensure_can_create_athlete(current_user.club_id, db)
+
     athlete = Athlete(
         club_id=current_user.club_id,
         **athlete_in.dict()

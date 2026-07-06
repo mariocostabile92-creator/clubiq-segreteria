@@ -9,6 +9,7 @@ from ..db.database import get_db
 from ..core.security import get_current_user
 from ..models.user import User
 from ..models.athlete import Athlete
+from ..models.club import Club
 from ..models.parent_request import ParentRequest
 from ..schemas.parent_request import (
     ParentRequestCreate,
@@ -22,6 +23,8 @@ router = APIRouter(
     prefix="/parent-requests",
     tags=["parent-requests"],
 )
+
+PLAN_ATHLETE_LIMITS = {"free": 5, "pro": 80, "premium": None}
 
 
 def get_parent_request_or_404(
@@ -45,6 +48,22 @@ def get_parent_request_or_404(
         )
 
     return parent_request
+
+
+def ensure_can_create_athlete(club_id: int, db: Session) -> None:
+    club = db.query(Club).filter(Club.id == club_id).first()
+    plan = ((getattr(club, "plan", None) or "free").strip().lower())
+    limit = PLAN_ATHLETE_LIMITS.get(plan, PLAN_ATHLETE_LIMITS["free"])
+
+    if limit is None:
+        return
+
+    athletes_count = db.query(Athlete).filter(Athlete.club_id == club_id).count()
+    if athletes_count >= limit:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Limite piano raggiunto: il piano {plan} consente fino a {limit} atleti.",
+        )
 
 
 @router.post("/", response_model=ParentRequestOut)
@@ -147,6 +166,8 @@ def approve_parent_request(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Questa richiesta è già stata approvata",
         )
+
+    ensure_can_create_athlete(current_user.club_id, db)
 
     athlete = Athlete(
         club_id=current_user.club_id,

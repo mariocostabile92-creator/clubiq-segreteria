@@ -139,6 +139,12 @@ def create_public_parent_request(
 ):
     club_code = request_in.club_code.strip().upper()
 
+    if not request_in.privacy_consent or not request_in.data_processing_consent:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Per inviare la richiesta devi accettare informativa privacy e trattamento dati.",
+        )
+
     club = (
         db.query(Club)
         .filter(Club.public_code == club_code)
@@ -163,6 +169,8 @@ def create_public_parent_request(
         notes=(request_in.notes or "").strip() or None,
         certificate_file_url=(request_in.certificate_file_url or "").strip() or None,
         payment_receipt_url=(request_in.payment_receipt_url or "").strip() or None,
+        privacy_consent=request_in.privacy_consent,
+        data_processing_consent=request_in.data_processing_consent,
         status="pending",
     )
 

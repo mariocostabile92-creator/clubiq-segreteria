@@ -21,6 +21,8 @@ class ParentRequestCreate(BaseModel):
     notes: Optional[str] = None
     certificate_file_url: Optional[str] = None
     payment_receipt_url: Optional[str] = None
+    privacy_consent: bool = False
+    data_processing_consent: bool = False
 
 
 class ParentRequestUpdate(BaseModel):
@@ -36,6 +38,8 @@ class ParentRequestUpdate(BaseModel):
     notes: Optional[str] = None
     certificate_file_url: Optional[str] = None
     payment_receipt_url: Optional[str] = None
+    privacy_consent: Optional[bool] = None
+    data_processing_consent: Optional[bool] = None
 
     status: Optional[str] = None
     review_note: Optional[str] = None
@@ -61,6 +65,8 @@ class ParentRequestOut(BaseModel):
     notes: Optional[str] = None
     certificate_file_url: Optional[str] = None
     payment_receipt_url: Optional[str] = None
+    privacy_consent: bool = False
+    data_processing_consent: bool = False
 
     status: str
     review_note: Optional[str] = None

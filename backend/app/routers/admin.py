@@ -13,7 +13,7 @@ from ..routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-ADMIN_ROLES = {"admin", "owner"}
+ADMIN_ROLES = {"admin", "super_admin"}
 ALLOWED_PLANS = {"free", "pro", "premium"}
 ALLOWED_STATUSES = {"active", "suspended"}
 

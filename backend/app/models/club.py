@@ -2,7 +2,7 @@
 SQLAlchemy model definition for a sports club (società).
 """
 
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -28,6 +28,15 @@ class Club(Base):
     address = Column(String, nullable=True)
     president = Column(String, nullable=True)
     secretary = Column(String, nullable=True)
+
+    plan = Column(String, default="free")
+    subscription_status = Column(String, default="active")
+    admin_notes = Column(Text, nullable=True)
+    stripe_customer_id = Column(String, nullable=True)
+    stripe_subscription_id = Column(String, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
+    stripe_current_period_end = Column(DateTime, nullable=True)
+    stripe_last_event_id = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

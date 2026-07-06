@@ -2,7 +2,7 @@
 SQLAlchemy model for parent registration requests.
 """
 
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Boolean
 from sqlalchemy.sql import func
 
 from ..db.database import Base
@@ -26,6 +26,8 @@ class ParentRequest(Base):
     notes = Column(String, nullable=True)
     certificate_file_url = Column(String, nullable=True)
     payment_receipt_url = Column(String, nullable=True)
+    privacy_consent = Column(Boolean, nullable=False, default=False)
+    data_processing_consent = Column(Boolean, nullable=False, default=False)
 
     status = Column(String, nullable=False, default="pending")
     review_note = Column(String, nullable=True)

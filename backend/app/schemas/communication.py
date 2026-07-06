@@ -1,0 +1,24 @@
+from datetime import datetime
+
+from pydantic import BaseModel, Field
+
+
+class CommunicationCreate(BaseModel):
+    channel: str = Field(default="whatsapp", max_length=40)
+    type: str = Field(default="WhatsApp", max_length=80)
+    recipient: str = Field(default="Contatto", max_length=160)
+    phone: str | None = Field(default=None, max_length=60)
+    athlete: str | None = Field(default=None, max_length=160)
+    message: str = Field(min_length=1, max_length=4000)
+    direction: str = Field(default="outbound", max_length=40)
+    status: str = Field(default="opened", max_length=40)
+
+
+class CommunicationOut(CommunicationCreate):
+    id: int
+    club_id: int
+    user_id: int | None = None
+    created_at: datetime | None = None
+
+    class Config:
+        from_attributes = True

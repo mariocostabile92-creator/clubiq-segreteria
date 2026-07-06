@@ -23,6 +23,8 @@ class PublicParentRequestCreate(BaseModel):
     notes: Optional[str] = None
     certificate_file_url: Optional[str] = None
     payment_receipt_url: Optional[str] = None
+    privacy_consent: bool
+    data_processing_consent: bool
 
 
 class PublicParentRequestOut(BaseModel):

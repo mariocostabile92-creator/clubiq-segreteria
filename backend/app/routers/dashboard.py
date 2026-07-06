@@ -8,6 +8,7 @@ from ..models.user import User
 from ..models.athlete import Athlete
 from ..models.payment import Payment
 from ..models.certificate import Certificate
+from ..models.parent_request import ParentRequest
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -50,10 +51,43 @@ def get_summary(
         elif c.expiry_date and (c.expiry_date - today).days <= 30:
             certificati_in_scadenza += 1
 
+    richieste_genitori_pendenti = (
+        db.query(ParentRequest)
+        .filter(ParentRequest.club_id == club_id, ParentRequest.status == "pending")
+        .count()
+    )
+
     return {
         "athletes_count": athletes_count,
         "total_residuo": total_residuo,
         "quote_scadute": quote_scadute,
         "certificati_scaduti": certificati_scaduti,
         "certificati_in_scadenza": certificati_in_scadenza,
+        "richieste_genitori_pendenti": richieste_genitori_pendenti,
+        "notifications": [
+            {
+                "type": "payments",
+                "severity": "warning",
+                "message": f"{quote_scadute} quote scadute da sollecitare.",
+                "count": quote_scadute,
+            },
+            {
+                "type": "certificates_expired",
+                "severity": "danger",
+                "message": f"{certificati_scaduti} certificati medici scaduti.",
+                "count": certificati_scaduti,
+            },
+            {
+                "type": "certificates_expiring",
+                "severity": "warning",
+                "message": f"{certificati_in_scadenza} certificati in scadenza entro 30 giorni.",
+                "count": certificati_in_scadenza,
+            },
+            {
+                "type": "parent_requests",
+                "severity": "info",
+                "message": f"{richieste_genitori_pendenti} richieste genitori da verificare.",
+                "count": richieste_genitori_pendenti,
+            },
+        ],
     }

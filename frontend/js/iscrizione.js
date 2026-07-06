@@ -54,6 +54,8 @@ async function handleParentRequestSubmit(event){
         parent_email: document.getElementById("parentEmail").value.trim(),
         certificate_file_url: null,
         payment_receipt_url: null,
+        privacy_consent: !!document.getElementById("privacyConsent")?.checked,
+        data_processing_consent: !!document.getElementById("dataProcessingConsent")?.checked,
         notes: document.getElementById("requestNotes").value.trim() || null
     };
 
@@ -69,6 +71,11 @@ async function handleParentRequestSubmit(event){
 
     if(!payload.parent_name || !payload.parent_email){
         setRequestMessage("Compila nome ed email del genitore.", "error");
+        return;
+    }
+
+    if(!payload.privacy_consent || !payload.data_processing_consent){
+        setRequestMessage("Per inviare la richiesta devi accettare privacy e trattamento dati.", "error");
         return;
     }
 

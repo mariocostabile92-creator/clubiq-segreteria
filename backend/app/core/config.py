@@ -36,5 +36,11 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-# Instantiate the settings to be imported elsewhere
 settings = Settings()
+
+
+if (
+    settings.ENVIRONMENT.lower() in {"production", "prod"}
+    and settings.SECRET_KEY == "change-this-secret-key"
+):
+    raise RuntimeError("Configura SECRET_KEY in produzione prima di avviare ClubIQ.")

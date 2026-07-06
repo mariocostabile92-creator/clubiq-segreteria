@@ -1,11 +1,10 @@
 from pathlib import Path
 
-from fastapi import FastAPI, Depends, HTTPException, Query, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import inspect, text
-from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from .core.config import settings
 from .db.database import engine, Base
@@ -22,10 +21,6 @@ from .models.athlete import Athlete
 from .models.payment import Payment
 from .models.certificate import Certificate
 from .models.parent_request import ParentRequest
-from .models.communication import Communication
-from .schemas.communication import CommunicationCreate, CommunicationOut
-from .core.security import get_current_user
-from .db.database import get_db
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -35,21 +30,6 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 Base.metadata.create_all(bind=engine)
-
-
-def apply_add_column_if_missing(connection, statement: str):
-    marker = " ADD COLUMN IF NOT EXISTS "
-    if marker not in statement:
-        connection.execute(text(statement))
-        return
-
-    table_name = statement.split("ALTER TABLE ", 1)[1].split(" ", 1)[0]
-    column_sql = statement.split(marker, 1)[1]
-    column_name = column_sql.split(" ", 1)[0]
-    existing = {column["name"] for column in inspect(connection).get_columns(table_name)}
-
-    if column_name not in existing:
-        connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_sql}"))
 
 
 def run_safe_migrations():
@@ -77,13 +57,11 @@ def run_safe_migrations():
         # ClubIQ V2.4 - White-label visuals
         "ALTER TABLE clubs ADD COLUMN IF NOT EXISTS logo VARCHAR",
         "ALTER TABLE athletes ADD COLUMN IF NOT EXISTS photo_url VARCHAR",
-        "ALTER TABLE parent_requests ADD COLUMN IF NOT EXISTS privacy_consent BOOLEAN DEFAULT FALSE",
-        "ALTER TABLE parent_requests ADD COLUMN IF NOT EXISTS data_processing_consent BOOLEAN DEFAULT FALSE",
     ]
 
     with engine.begin() as connection:
         for statement in statements:
-            apply_add_column_if_missing(connection, statement)
+            connection.execute(text(statement))
 
 
 run_safe_migrations()
@@ -114,75 +92,6 @@ app.include_router(admin_router)
 app.include_router(billing_router)
 app.include_router(parent_requests_router)
 app.include_router(public_parent_requests_router)
-
-
-@app.get("/communications/", response_model=list[CommunicationOut])
-def list_communications(
-    limit: int = Query(default=100, ge=1, le=500),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return (
-        db.query(Communication)
-        .filter(Communication.club_id == current_user.club_id)
-        .order_by(Communication.created_at.desc(), Communication.id.desc())
-        .limit(limit)
-        .all()
-    )
-
-
-@app.post("/communications/", response_model=CommunicationOut)
-def create_communication(
-    communication_in: CommunicationCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    allowed_channels = {"whatsapp", "email", "phone", "note"}
-    allowed_directions = {"outbound", "inbound", "internal"}
-    allowed_statuses = {"opened", "sent", "draft", "failed", "logged"}
-
-    channel = communication_in.channel.lower().strip()
-    direction = communication_in.direction.lower().strip()
-    status_value = communication_in.status.lower().strip()
-
-    if channel not in allowed_channels:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Canale comunicazione non valido.")
-    if direction not in allowed_directions:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Direzione comunicazione non valida.")
-    if status_value not in allowed_statuses:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Stato comunicazione non valido.")
-
-    communication = Communication(
-        club_id=current_user.club_id,
-        user_id=current_user.id,
-        channel=channel,
-        type=communication_in.type.strip() or "WhatsApp",
-        recipient=communication_in.recipient.strip() or "Contatto",
-        phone=(communication_in.phone or "").strip() or None,
-        athlete=(communication_in.athlete or "").strip() or None,
-        message=communication_in.message.strip(),
-        direction=direction,
-        status=status_value,
-    )
-
-    db.add(communication)
-    db.commit()
-    db.refresh(communication)
-    return communication
-
-
-@app.delete("/communications/")
-def clear_communications(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    deleted = (
-        db.query(Communication)
-        .filter(Communication.club_id == current_user.club_id)
-        .delete(synchronize_session=False)
-    )
-    db.commit()
-    return {"ok": True, "deleted": deleted}
 
 
 @app.get("/api/health")

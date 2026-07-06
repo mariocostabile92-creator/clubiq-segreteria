@@ -8,6 +8,7 @@ let cachedAthletes = [];
 let cachedPayments = [];
 let cachedCertificates = [];
 let cachedParentRequests = [];
+let cachedCommunicationHistory = [];
 let cachedClub = null;
 let currentUser = null;
 let openedAthleteId = null;
@@ -615,6 +616,7 @@ async function refreshAll(){
     await loadPaymentsList();
     await loadCertificatesList();
     await loadParentRequestsList();
+    await loadCommunicationHistory();
     await loadDashboard();
 
     renderAthletesList();
@@ -3428,7 +3430,21 @@ Segreteria ${clubName}`;
 
 const COMMUNICATION_HISTORY_KEY = "clubiq_communication_history_v1";
 
+async function loadCommunicationHistory(){
+    try{
+        const data = await apiRequest("/communications/?limit=100");
+        cachedCommunicationHistory = Array.isArray(data) ? data : [];
+        localStorage.setItem(COMMUNICATION_HISTORY_KEY, JSON.stringify(cachedCommunicationHistory.slice(0, 30)));
+    }catch(error){
+        console.warn("Storico comunicazioni backend non disponibile:", error);
+    }
+}
+
 function getCommunicationHistory(){
+    if(Array.isArray(cachedCommunicationHistory) && cachedCommunicationHistory.length){
+        return cachedCommunicationHistory;
+    }
+
     try{
         const raw = localStorage.getItem(COMMUNICATION_HISTORY_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
@@ -3459,6 +3475,7 @@ function saveCommunicationHistory(entry){
 
     history.unshift(nextEntry);
     const compact = history.slice(0, 30);
+    cachedCommunicationHistory = compact;
 
     try{
         localStorage.setItem(COMMUNICATION_HISTORY_KEY, JSON.stringify(compact));
@@ -3470,6 +3487,19 @@ function saveCommunicationHistory(entry){
     }
 
     renderCommunicationHistory();
+
+    apiRequest("/communications/", {
+        method: "POST",
+        body: JSON.stringify(nextEntry)
+    }).then(saved => {
+        cachedCommunicationHistory = [
+            saved,
+            ...cachedCommunicationHistory.filter(item => Number(item.id) !== Number(nextEntry.id))
+        ].slice(0, 100);
+        renderCommunicationHistory();
+    }).catch(error => {
+        console.warn("Storico comunicazioni salvato solo localmente:", error);
+    });
 }
 
 function populateCommunicationHistoryTypeFilter(history){
@@ -3619,8 +3649,12 @@ function clearCommunicationHistory(){
     try{
         localStorage.removeItem("clubiq_communication_history_v1");
         localStorage.removeItem("clubiq_whatsapp_history_v1");
+        cachedCommunicationHistory = [];
         renderCommunicationHistory();
         setDashboardMessage("Storico comunicazioni pulito.", "success");
+        apiRequest("/communications/", { method: "DELETE" }).catch(error => {
+            console.warn("Storico comunicazioni backend non pulito:", error);
+        });
     }catch(error){
         setDashboardMessage("Impossibile pulire lo storico comunicazioni.", "error");
     }
@@ -3631,4 +3665,3 @@ function clearCommunicationHistory(){
 /* =========================
    Report Segreteria PDF V1
 ========================= */
-
