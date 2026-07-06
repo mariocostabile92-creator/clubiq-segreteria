@@ -10,6 +10,7 @@ from ..models.athlete import Athlete
 from ..models.payment import Payment
 from ..models.certificate import Certificate
 from ..routers.auth import get_current_user
+from ..core.config import settings
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -24,9 +25,22 @@ class ClubPlanUpdate(BaseModel):
     admin_notes: str | None = None
 
 
-def require_admin(current_user: User = Depends(get_current_user)):
+def get_platform_admin_emails() -> set[str]:
+    return {
+        email.strip().lower()
+        for email in (settings.PLATFORM_ADMIN_EMAILS or "").split(",")
+        if email.strip()
+    }
+
+
+def is_platform_admin(current_user: User) -> bool:
     role = (current_user.role or "").lower().strip()
-    if role not in ADMIN_ROLES:
+    email = (current_user.email or "").lower().strip()
+    return role in ADMIN_ROLES or email in get_platform_admin_emails()
+
+
+def require_admin(current_user: User = Depends(get_current_user)):
+    if not is_platform_admin(current_user):
         raise HTTPException(status_code=403, detail="Accesso admin non autorizzato")
     return current_user
 

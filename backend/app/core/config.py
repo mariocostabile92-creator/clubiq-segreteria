@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # OpenAI API key placeholder (if needed for future AI features)
     OPENAI_API_KEY: str = ""
 
+    # Comma-separated platform admin emails allowed to access /api/admin.
+    PLATFORM_ADMIN_EMAILS: str = ""
+
     class Config:
         env_file = ".env"
 
