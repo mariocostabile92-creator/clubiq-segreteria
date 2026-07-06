@@ -10,6 +10,7 @@ let cachedCertificates = [];
 let cachedParentRequests = [];
 let cachedCommunicationHistory = [];
 let cachedClub = null;
+let cachedCopilotPlan = null;
 let currentUser = null;
 let openedAthleteId = null;
 let editingAthleteId = null;
@@ -617,6 +618,7 @@ async function refreshAll(){
     await loadCertificatesList();
     await loadParentRequestsList();
     await loadCommunicationHistory();
+    await loadCopilotPlan();
     await loadDashboard();
 
     renderAthletesList();
@@ -624,6 +626,7 @@ async function refreshAll(){
     renderCertificatesList();
     renderTodayChecks();
     renderOperativeNotifications();
+    renderCopilotPlan();
 
     if(openedAthleteId){
         openAthleteDetail(openedAthleteId, false);
@@ -990,6 +993,21 @@ function renderAssistantAdvice(metrics){
     const time = document.getElementById("assistantEstimatedTime");
     if(!list) return;
 
+    if(cachedCopilotPlan?.action_plan?.length){
+        const estimatedMinutes = cachedCopilotPlan.estimated_minutes || 8;
+        if(time){
+            time.textContent = `Tempo stimato: ${estimatedMinutes} min`;
+        }
+
+        list.innerHTML = cachedCopilotPlan.action_plan.slice(0, 4).map(item => `
+            <div class="assistant-advice-item">
+                <span>${escapeHtml((item.priority || "media").toUpperCase())}</span>
+                <p><strong>${escapeHtml(item.title || "Azione consigliata")}</strong><br>${escapeHtml(item.description || "")}</p>
+            </div>
+        `).join("");
+        return;
+    }
+
     const advice = getAssistantAdvice(metrics);
     const estimatedMinutes = Math.max(3, Math.min(18, metrics.totalUrgencies * 3 || 4));
 
@@ -1003,6 +1021,99 @@ function renderAssistantAdvice(metrics){
             <p>${escapeHtml(item)}</p>
         </div>
     `).join("");
+}
+
+async function loadCopilotPlan(){
+    try{
+        cachedCopilotPlan = await apiRequest("/dashboard/copilot-plan");
+    }catch(error){
+        cachedCopilotPlan = null;
+        console.warn("Piano copilot non disponibile:", error);
+    }
+}
+
+function renderCopilotPlan(){
+    const plan = cachedCopilotPlan;
+    const summary = document.getElementById("copilotSummaryText");
+    const actionList = document.getElementById("copilotActionList");
+    const reportCards = document.getElementById("copilotReportCards");
+    const templates = document.getElementById("copilotMessageTemplates");
+    const differentiators = document.getElementById("copilotDifferentiators");
+
+    if(!plan){
+        if(summary) summary.textContent = "Piano operativo non disponibile. Uso i controlli locali della dashboard.";
+        return;
+    }
+
+    if(summary){
+        summary.textContent = `${plan.headline || "Piano operativo"} · ${plan.summary || ""}`;
+    }
+
+    if(actionList){
+        const actions = Array.isArray(plan.action_plan) ? plan.action_plan : [];
+        actionList.innerHTML = actions.length ? actions.map(item => `
+            <a class="copilot-action-card ${escapeHtml(item.priority || "media")}" href="${escapeHtml(item.cta_anchor || "#top")}">
+                <span>${escapeHtml(item.area || "Segreteria")}</span>
+                <strong>${escapeHtml(item.title || "Azione consigliata")}</strong>
+                <small>${escapeHtml(item.description || "")}</small>
+                <em>${escapeHtml(item.estimated_minutes || 5)} min</em>
+            </a>
+        `).join("") : `<div class="copilot-empty">Nessuna azione urgente.</div>`;
+    }
+
+    if(reportCards){
+        const cards = Array.isArray(plan.report_cards) ? plan.report_cards : [];
+        reportCards.innerHTML = cards.map(card => `
+            <div class="copilot-report-card">
+                <span>${escapeHtml(card.label || "-")}</span>
+                <strong>${escapeHtml(String(card.value ?? "-"))}</strong>
+                <small>${escapeHtml(card.detail || "")}</small>
+            </div>
+        `).join("");
+    }
+
+    if(templates){
+        const items = Array.isArray(plan.message_templates) ? plan.message_templates : [];
+        templates.innerHTML = items.length ? items.map((item, index) => `
+            <article class="copilot-template-card">
+                <div>
+                    <strong>${escapeHtml(item.type || "Messaggio")}</strong>
+                    <span>${escapeHtml(item.recipient || "Genitore")} ${item.athlete ? `· ${escapeHtml(item.athlete)}` : ""}</span>
+                </div>
+                <p>${escapeHtml(item.message || "").slice(0, 180)}${String(item.message || "").length > 180 ? "..." : ""}</p>
+                <button class="mini-btn" type="button" onclick="useCopilotTemplate(${index})">Usa messaggio</button>
+            </article>
+        `).join("") : `<div class="empty">Nessun messaggio suggerito.</div>`;
+    }
+
+    if(differentiators){
+        const items = Array.isArray(plan.differentiators) ? plan.differentiators : [];
+        differentiators.innerHTML = items.map(item => `
+            <div class="copilot-differentiator-item">${escapeHtml(item)}</div>
+        `).join("");
+    }
+}
+
+function useCopilotTemplate(index){
+    const item = cachedCopilotPlan?.message_templates?.[index];
+    if(!item){
+        setDashboardMessage("Template non disponibile.", "error");
+        return;
+    }
+
+    const messageInput = document.getElementById("quickCustomMessage");
+    const phoneInput = document.getElementById("quickCustomPhone");
+
+    if(messageInput){
+        messageInput.value = item.message || "";
+    }
+
+    if(phoneInput && item.phone){
+        phoneInput.value = item.phone;
+    }
+
+    document.getElementById("quickCommunicationsSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setDashboardMessage("Messaggio copilot copiato nella comunicazione rapida.", "success");
 }
 
 function renderMoneyOverview(metrics){

@@ -1608,6 +1608,172 @@ body{
     line-height:1.45;
 }
 
+.copilot-action-list{
+    display:grid;
+    gap:10px;
+    margin-top:14px;
+}
+
+.copilot-action-card,
+.copilot-template-card,
+.copilot-differentiator-item,
+.copilot-report-card{
+    border:1px solid rgba(148,163,184,.28);
+    border-radius:16px;
+    background:#ffffff;
+}
+
+.copilot-action-card{
+    display:grid;
+    gap:5px;
+    padding:13px;
+    color:#0f172a;
+    text-decoration:none;
+}
+
+.copilot-action-card span{
+    color:#2563eb;
+    font-size:11px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.copilot-action-card strong{
+    font-size:15px;
+}
+
+.copilot-action-card small{
+    color:#64748b;
+    font-weight:800;
+    line-height:1.4;
+}
+
+.copilot-action-card em{
+    justify-self:start;
+    padding:4px 8px;
+    border-radius:999px;
+    background:#eff6ff;
+    color:#1d4ed8;
+    font-size:11px;
+    font-style:normal;
+    font-weight:1000;
+}
+
+.copilot-action-card.alta{border-color:#fecaca;background:#fff7f7;}
+.copilot-action-card.media{border-color:#fde68a;background:#fffbeb;}
+
+.copilot-empty{
+    padding:14px;
+    border-radius:16px;
+    background:#f8fafc;
+    color:#64748b;
+    font-weight:800;
+}
+
+.copilot-command-panel{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    align-items:flex-start;
+    margin-top:16px;
+    padding:18px;
+    border:1px solid rgba(37,99,235,.18);
+    border-radius:24px;
+    background:#ffffff;
+}
+
+.copilot-command-panel h2{
+    margin:4px 0 6px;
+    color:#0f172a;
+    letter-spacing:-.035em;
+}
+
+.copilot-command-panel p{
+    margin:0;
+    color:#475569;
+    font-weight:800;
+    line-height:1.45;
+}
+
+.copilot-report-cards{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(96px, 1fr));
+    gap:10px;
+    min-width:420px;
+}
+
+.copilot-report-card{
+    padding:12px;
+}
+
+.copilot-report-card span,
+.copilot-template-card span{
+    display:block;
+    color:#64748b;
+    font-size:11px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+}
+
+.copilot-report-card strong{
+    display:block;
+    margin:6px 0;
+    font-size:22px;
+    color:#0f172a;
+}
+
+.copilot-report-card small{
+    color:#64748b;
+    font-weight:800;
+}
+
+.copilot-grid{
+    display:grid;
+    grid-template-columns:1.15fr .85fr;
+    gap:16px;
+    margin-top:16px;
+}
+
+.copilot-box{
+    border:1px solid rgba(148,163,184,.32);
+    border-radius:24px;
+    padding:18px;
+    background:#ffffff;
+}
+
+.copilot-template-list,
+.copilot-differentiator-list{
+    display:grid;
+    gap:10px;
+}
+
+.copilot-template-card{
+    display:grid;
+    gap:10px;
+    padding:14px;
+}
+
+.copilot-template-card p{
+    margin:0;
+    color:#334155;
+    line-height:1.45;
+    font-weight:800;
+}
+
+.copilot-template-card .mini-btn{
+    justify-self:start;
+}
+
+.copilot-differentiator-item{
+    padding:13px;
+    color:#334155;
+    font-weight:900;
+    line-height:1.45;
+    background:#f8fafc;
+}
+
 .executive-actions-row{
     display:grid;
     grid-template-columns:repeat(6, minmax(0, 1fr));
@@ -1792,6 +1958,16 @@ body{
     .executive-actions-row{
         grid-template-columns:repeat(3, minmax(0,1fr));
     }
+
+    .copilot-command-panel,
+    .copilot-grid{
+        display:grid;
+        grid-template-columns:1fr;
+    }
+
+    .copilot-report-cards{
+        min-width:0;
+    }
 }
 
 @media (max-width:980px){
@@ -1801,6 +1977,10 @@ body{
     }
 
     .executive-actions-row{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+
+    .copilot-report-cards{
         grid-template-columns:repeat(2, minmax(0,1fr));
     }
 }
@@ -1821,6 +2001,10 @@ body{
     }
 
     .executive-actions-row{
+        grid-template-columns:1fr;
+    }
+
+    .copilot-report-cards{
         grid-template-columns:1fr;
     }
 
