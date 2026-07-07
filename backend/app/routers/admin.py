@@ -15,6 +15,10 @@ from ..core.config import settings
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 ADMIN_ROLES = {"admin", "super_admin"}
+BOOTSTRAP_ADMIN_EMAILS = {
+    "admin4@test.it",
+    "mario.costabile92@outlook.it",
+}
 ALLOWED_PLANS = {"free", "pro", "premium"}
 ALLOWED_STATUSES = {"active", "suspended"}
 
@@ -26,11 +30,12 @@ class ClubPlanUpdate(BaseModel):
 
 
 def get_platform_admin_emails() -> set[str]:
-    return {
+    configured_emails = {
         email.strip().lower()
         for email in (settings.PLATFORM_ADMIN_EMAILS or "").split(",")
         if email.strip()
     }
+    return configured_emails | BOOTSTRAP_ADMIN_EMAILS
 
 
 def is_platform_admin(current_user: User) -> bool:

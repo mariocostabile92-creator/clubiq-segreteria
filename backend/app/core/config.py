@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
 
     # Comma-separated platform admin emails allowed to access /api/admin.
-    PLATFORM_ADMIN_EMAILS: str = "admin4@test.it"
+    PLATFORM_ADMIN_EMAILS: str = "admin4@test.it,mario.costabile92@outlook.it"
 
     class Config:
         env_file = ".env"
