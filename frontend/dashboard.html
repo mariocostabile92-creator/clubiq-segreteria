@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=v25" />
+    <link rel="stylesheet" href="css/dashboard.css?v=v26" />
     <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
@@ -156,6 +156,56 @@
                         </div>
                         <div id="copilotDifferentiators" class="copilot-differentiator-list">
                             <div class="empty">Caricamento...</div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="copilot-priority-grid">
+                    <article class="copilot-box">
+                        <div class="section-heading compact-heading">
+                            <div>
+                                <p class="eyebrow">Onboarding societa</p>
+                                <h2>Setup guidato</h2>
+                            </div>
+                        </div>
+                        <div id="copilotOnboardingList" class="copilot-checklist">
+                            <div class="empty">Caricamento checklist...</div>
+                        </div>
+                    </article>
+
+                    <article class="copilot-box">
+                        <div class="section-heading compact-heading">
+                            <div>
+                                <p class="eyebrow">Solleciti automatici</p>
+                                <h2>Automazioni pronte</h2>
+                            </div>
+                        </div>
+                        <div id="copilotAutomationList" class="copilot-automation-list">
+                            <div class="empty">Caricamento automazioni...</div>
+                        </div>
+                    </article>
+
+                    <article class="copilot-box">
+                        <div class="section-heading compact-heading">
+                            <div>
+                                <p class="eyebrow">Centro messaggi</p>
+                                <h2>Libreria template</h2>
+                            </div>
+                        </div>
+                        <div id="copilotMessageLibrary" class="copilot-template-list">
+                            <div class="empty">Caricamento template...</div>
+                        </div>
+                    </article>
+
+                    <article class="copilot-box">
+                        <div class="section-heading compact-heading">
+                            <div>
+                                <p class="eyebrow">Report presidente</p>
+                                <h2>Sintesi direzionale</h2>
+                            </div>
+                        </div>
+                        <div id="copilotPresidentReport" class="copilot-president-report">
+                            <div class="empty">Caricamento report...</div>
                         </div>
                     </article>
                 </div>
@@ -608,6 +658,28 @@
                 </div>
             </section>
 
+            <section id="athleteImportSection" class="panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Onboarding rapido</p>
+                        <h2>Importa atleti da CSV</h2>
+                        <p>Carica un elenco con colonne nome, cognome e data nascita per avviare una societa in pochi minuti.</p>
+                    </div>
+                    <button id="downloadAthletesCsvTemplateBtn" class="secondary-btn" type="button">Scarica modello CSV</button>
+                </div>
+                <div class="csv-import-box">
+                    <label class="media-upload-field">File CSV atleti
+                        <div class="upload-control">
+                            <input id="athleteCsvInput" type="file" accept=".csv,text/csv" />
+                            <span>Colonne richieste: first_name, last_name, birth_date</span>
+                        </div>
+                        <small>La data nascita deve essere in formato YYYY-MM-DD. Le righe non valide vengono saltate e segnalate.</small>
+                    </label>
+                    <button id="importAthletesCsvBtn" class="primary-btn" type="button">Importa CSV</button>
+                    <div id="athleteImportResult" class="csv-import-result hidden"></div>
+                </div>
+            </section>
+
             <section id="addAthleteSection" class="panel">
                 <div class="section-heading">
                     <div>
@@ -785,7 +857,7 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script src="js/dashboard.js?v=v25"></script>
+    <script src="js/dashboard.js?v=v26"></script>
     <script src="js/pwa.js"></script>
 
     <nav class="mobile-bottom-nav">

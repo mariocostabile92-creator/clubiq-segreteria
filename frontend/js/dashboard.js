@@ -288,6 +288,14 @@ function bindDashboardActions(){
         addAthleteForm.addEventListener("submit", handleAddAthlete);
     }
 
+    if(importAthletesCsvBtn){
+        importAthletesCsvBtn.addEventListener("click", importAthletesCsv);
+    }
+
+    if(downloadAthletesCsvTemplateBtn){
+        downloadAthletesCsvTemplateBtn.addEventListener("click", downloadAthletesCsvTemplate);
+    }
+
     if(addPaymentForm){
         addPaymentForm.addEventListener("submit", handleAddPayment);
     }
@@ -1039,6 +1047,10 @@ function renderCopilotPlan(){
     const reportCards = document.getElementById("copilotReportCards");
     const templates = document.getElementById("copilotMessageTemplates");
     const differentiators = document.getElementById("copilotDifferentiators");
+    const onboarding = document.getElementById("copilotOnboardingList");
+    const automations = document.getElementById("copilotAutomationList");
+    const messageLibrary = document.getElementById("copilotMessageLibrary");
+    const presidentReport = document.getElementById("copilotPresidentReport");
 
     if(!plan){
         if(summary) summary.textContent = "Piano operativo non disponibile. Uso i controlli locali della dashboard.";
@@ -1092,6 +1104,62 @@ function renderCopilotPlan(){
             <div class="copilot-differentiator-item">${escapeHtml(item)}</div>
         `).join("");
     }
+
+    if(onboarding){
+        const steps = Array.isArray(plan.onboarding_steps) ? plan.onboarding_steps : [];
+        onboarding.innerHTML = steps.map(step => `
+            <a class="copilot-check-item ${step.done ? "done" : ""}" href="${escapeHtml(step.anchor || "#top")}">
+                <span>${step.done ? "OK" : "Da fare"}</span>
+                <strong>${escapeHtml(step.title || "Step onboarding")}</strong>
+                <small>${escapeHtml(step.hint || "")}</small>
+            </a>
+        `).join("") || `<div class="empty">Checklist non disponibile.</div>`;
+    }
+
+    if(automations){
+        const items = Array.isArray(plan.automation_suggestions) ? plan.automation_suggestions : [];
+        automations.innerHTML = items.map(item => `
+            <div class="copilot-automation-card ${escapeHtml(item.status || "standby")}">
+                <strong>${escapeHtml(item.name || "Automazione")}</strong>
+                <span>${escapeHtml(item.trigger || "")}</span>
+                <small>${escapeHtml(item.audience || "")} · ${escapeHtml(item.channel || "WhatsApp")}</small>
+            </div>
+        `).join("") || `<div class="empty">Nessuna automazione suggerita.</div>`;
+    }
+
+    if(messageLibrary){
+        const items = Array.isArray(plan.message_library) ? plan.message_library : [];
+        messageLibrary.innerHTML = items.map((item, index) => `
+            <article class="copilot-template-card">
+                <div>
+                    <strong>${escapeHtml(item.type || "Template")}</strong>
+                    <span>Messaggio riutilizzabile</span>
+                </div>
+                <p>${escapeHtml(item.message || "").slice(0, 170)}${String(item.message || "").length > 170 ? "..." : ""}</p>
+                <button class="mini-btn" type="button" onclick="useMessageLibraryTemplate(${index})">Usa template</button>
+            </article>
+        `).join("") || `<div class="empty">Nessun template disponibile.</div>`;
+    }
+
+    if(presidentReport){
+        const report = plan.president_report || {};
+        const highlights = Array.isArray(report.highlights) ? report.highlights : [];
+        const risks = Array.isArray(report.risks) ? report.risks : [];
+        presidentReport.innerHTML = `
+            <strong>${escapeHtml(report.title || "Report presidente")}</strong>
+            <p>${escapeHtml(report.summary || "Sintesi non disponibile.")}</p>
+            <div class="copilot-report-columns">
+                <div>
+                    <span>Indicatori</span>
+                    ${highlights.map(item => `<small>${escapeHtml(item)}</small>`).join("")}
+                </div>
+                <div>
+                    <span>Rischi</span>
+                    ${risks.map(item => `<small>${escapeHtml(item)}</small>`).join("")}
+                </div>
+            </div>
+        `;
+    }
 }
 
 function useCopilotTemplate(index){
@@ -1114,6 +1182,22 @@ function useCopilotTemplate(index){
 
     document.getElementById("quickCommunicationsSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
     setDashboardMessage("Messaggio copilot copiato nella comunicazione rapida.", "success");
+}
+
+function useMessageLibraryTemplate(index){
+    const item = cachedCopilotPlan?.message_library?.[index];
+    if(!item){
+        setDashboardMessage("Template non disponibile.", "error");
+        return;
+    }
+
+    const messageInput = document.getElementById("quickCustomMessage");
+    if(messageInput){
+        messageInput.value = item.message || "";
+    }
+
+    document.getElementById("quickCommunicationsSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setDashboardMessage("Template copiato nel centro messaggi.", "success");
 }
 
 function renderMoneyOverview(metrics){
@@ -1893,6 +1977,67 @@ async function deleteAthlete(athleteId){
     }catch(error){
         setDashboardMessage(error.message, "error");
     }
+}
+
+async function importAthletesCsv(){
+    if(!requireVerifiedEmail("l'import CSV degli atleti")){
+        return;
+    }
+
+    const input = document.getElementById("athleteCsvInput");
+    const file = input?.files?.[0];
+    const resultBox = document.getElementById("athleteImportResult");
+
+    if(!file){
+        setDashboardMessage("Seleziona prima un file CSV.", "error");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setDashboardMessage("Importazione CSV in corso...", "info");
+
+    try{
+        const response = await fetch(`${API_BASE_URL}/athletes/import-csv`, {
+            method: "POST",
+            headers: getToken() ? { "Authorization": `Bearer ${getToken()}` } : {},
+            body: formData
+        });
+
+        const data = await response.json().catch(() => null);
+        if(!response.ok){
+            throw new Error(data?.detail || "Import CSV non riuscito.");
+        }
+
+        if(resultBox){
+            const errors = Array.isArray(data.errors) ? data.errors : [];
+            resultBox.classList.remove("hidden");
+            resultBox.innerHTML = `
+                <strong>${escapeHtml(data.created || 0)} atleti importati</strong>
+                <span>${escapeHtml(data.skipped || 0)} righe saltate</span>
+                ${errors.length ? `<ul>${errors.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
+            `;
+        }
+
+        if(input) input.value = "";
+        await refreshAll();
+        setDashboardMessage("Import CSV completato.", "success");
+    }catch(error){
+        if(resultBox){
+            resultBox.classList.remove("hidden");
+            resultBox.innerHTML = `<strong>Import non riuscito</strong><span>${escapeHtml(error.message)}</span>`;
+        }
+        setDashboardMessage(error.message, "error");
+    }
+}
+
+function downloadAthletesCsvTemplate(){
+    downloadCsv([
+        ["first_name", "last_name", "birth_date", "group_name", "parent_name_1", "parent_phone_1", "parent_email_1", "notes"],
+        ["Mario", "Rossi", "2012-04-18", "Under 14", "Luigi Rossi", "3331234567", "genitore@example.com", "Esempio da sostituire"]
+    ], `clubiq_modello_import_atleti_${getTodaySlug()}.csv`);
+    setDashboardMessage("Modello CSV scaricato.", "success");
 }
 
 /* =========================

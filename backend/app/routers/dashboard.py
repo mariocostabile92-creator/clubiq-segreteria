@@ -9,6 +9,7 @@ from ..models.athlete import Athlete
 from ..models.payment import Payment
 from ..models.certificate import Certificate
 from ..models.parent_request import ParentRequest
+from ..models.communication import Communication
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -168,6 +169,11 @@ def get_copilot_plan(
         .order_by(ParentRequest.created_at.desc(), ParentRequest.id.desc())
         .all()
     )
+    communications_count = (
+        db.query(Communication)
+        .filter(Communication.club_id == club_id)
+        .count()
+    )
 
     athlete_by_id = {athlete.id: athlete for athlete in athletes}
 
@@ -314,6 +320,106 @@ def get_copilot_plan(
         {"label": "Certificati critici", "value": len(expired_certificates) + len(expiring_certificates), "detail": "scaduti o in scadenza"},
     ]
 
+    president_report = {
+        "title": f"Report presidente - {club_name}",
+        "summary": (
+            f"{len(athletes)} atleti censiti, {round(total_residual, 2)} euro da incassare, "
+            f"{len(overdue_payments)} quote scadute e {len(expired_certificates) + len(expiring_certificates)} certificati critici."
+        ),
+        "highlights": [
+            f"Incasso residuo totale: {round(total_residual, 2)} euro",
+            f"Residuo gia scaduto: {round(overdue_residual, 2)} euro",
+            f"Richieste genitori pendenti: {len(pending_requests)}",
+            f"Comunicazioni registrate: {communications_count}",
+        ],
+        "risks": [
+            item for item in [
+                f"{len(overdue_payments)} quote scadute da recuperare" if overdue_payments else None,
+                f"{len(expired_certificates)} certificati scaduti" if expired_certificates else None,
+                f"{len(pending_requests)} richieste iscrizione in attesa" if pending_requests else None,
+            ] if item
+        ] or ["Nessun rischio operativo grave rilevato oggi."],
+    }
+
+    club = current_user.club
+    onboarding_steps = [
+        {
+            "title": "Completa dati societa",
+            "done": bool(getattr(club, "email", None) and getattr(club, "phone", None)),
+            "hint": "Email e telefono rendono professionali messaggi, report e link genitori.",
+            "anchor": "#clubProfileSection",
+        },
+        {
+            "title": "Carica logo societa",
+            "done": bool(getattr(club, "logo", None)),
+            "hint": "Il logo rende riconoscibili dashboard e comunicazioni.",
+            "anchor": "#clubProfileSection",
+        },
+        {
+            "title": "Attiva link iscrizione genitori",
+            "done": bool(getattr(club, "public_code", None)),
+            "hint": "Il link pubblico trasforma richieste WhatsApp in pratiche ordinate.",
+            "anchor": "#clubRegistrationSection",
+        },
+        {
+            "title": "Importa o crea i primi atleti",
+            "done": len(athletes) > 0,
+            "hint": "Puoi partire con il CSV se hai gia un elenco Excel.",
+            "anchor": "#athleteImportSection",
+        },
+        {
+            "title": "Registra almeno una comunicazione",
+            "done": communications_count > 0,
+            "hint": "Cosi la societa ha storico reale, non solo messaggi nel telefono.",
+            "anchor": "#quickCommunicationsSection",
+        },
+    ]
+
+    automation_suggestions = [
+        {
+            "name": "Sollecito quota scaduta",
+            "trigger": "Pagamento con residuo e scadenza passata",
+            "audience": f"{len(overdue_payments)} famiglie oggi",
+            "channel": "WhatsApp",
+            "status": "ready" if overdue_payments else "standby",
+        },
+        {
+            "name": "Promemoria certificato",
+            "trigger": "Certificato scaduto o in scadenza entro 30 giorni",
+            "audience": f"{len(expired_certificates) + len(expiring_certificates)} famiglie oggi",
+            "channel": "WhatsApp",
+            "status": "ready" if (expired_certificates or expiring_certificates) else "standby",
+        },
+        {
+            "name": "Follow-up iscrizione",
+            "trigger": "Richiesta genitore ancora pending",
+            "audience": f"{len(pending_requests)} richieste oggi",
+            "channel": "WhatsApp",
+            "status": "ready" if pending_requests else "standby",
+        },
+    ]
+
+    message_library = [
+        {
+            "type": "Benvenuto nuova famiglia",
+            "message": (
+                f"Ciao, benvenuto in {club_name}. Da oggi useremo ClubIQ per iscrizioni, documenti, quote e comunicazioni importanti."
+            ),
+        },
+        {
+            "type": "Documenti mancanti",
+            "message": (
+                f"Ciao, per completare la pratica con {club_name} manca ancora un documento. Puoi inviarlo qui o caricarlo dal link iscrizione."
+            ),
+        },
+        {
+            "type": "Promemoria quota",
+            "message": (
+                f"Ciao, ti ricordiamo la quota sportiva aperta con {club_name}. Se hai gia pagato, inviaci pure la ricevuta."
+            ),
+        },
+    ]
+
     differentiators = [
         "ClubIQ non mostra solo dati: suggerisce cosa fare oggi.",
         "WhatsApp-first: ogni priorita puo diventare un messaggio pronto.",
@@ -335,7 +441,17 @@ def get_copilot_plan(
         "estimated_minutes": sum(item["estimated_minutes"] for item in action_plan),
         "action_plan": action_plan[:6],
         "message_templates": message_templates[:6],
+        "message_library": message_library,
         "report_cards": report_cards,
+        "president_report": president_report,
+        "onboarding_steps": onboarding_steps,
+        "automation_suggestions": automation_suggestions,
+        "csv_import": {
+            "accepted_format": "CSV UTF-8",
+            "required_columns": ["first_name", "last_name", "birth_date"],
+            "optional_columns": ["group_name", "phone", "email", "parent_name_1", "parent_phone_1", "parent_email_1", "notes"],
+            "example": "first_name,last_name,birth_date,group_name,parent_name_1,parent_phone_1,parent_email_1",
+        },
         "differentiators": differentiators,
         "next_best_features": next_best_features,
     }

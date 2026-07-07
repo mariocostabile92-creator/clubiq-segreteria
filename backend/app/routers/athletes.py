@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
+from datetime import date
 from pathlib import Path
 from uuid import uuid4
 import base64
+import csv
+import io
 
 from ..db.database import get_db
 from ..schemas.athlete import AthleteCreate, AthleteUpdate, AthleteOut
@@ -91,6 +94,96 @@ def create_athlete(
     db.refresh(athlete)
 
     return athlete
+
+
+def _clean_csv_value(row: dict, *keys: str) -> str | None:
+    normalized = {str(key or "").strip().lower(): value for key, value in row.items()}
+    for key in keys:
+        value = normalized.get(key.strip().lower())
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return None
+
+
+@router.post("/import-csv")
+async def import_athletes_csv(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Carica un file CSV.")
+
+    content = await file.read()
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CSV non leggibile. Salvalo in UTF-8.") from exc
+
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CSV vuoto o senza intestazioni.")
+
+    created = 0
+    skipped = 0
+    errors = []
+
+    for row_number, row in enumerate(reader, start=2):
+        first_name = _clean_csv_value(row, "first_name", "nome", "Nome")
+        last_name = _clean_csv_value(row, "last_name", "cognome", "Cognome")
+        birth_date_raw = _clean_csv_value(row, "birth_date", "data_nascita", "data nascita", "nascita")
+
+        if not first_name or not last_name or not birth_date_raw:
+            skipped += 1
+            errors.append(f"Riga {row_number}: nome, cognome e data nascita sono obbligatori.")
+            continue
+
+        try:
+            parsed_birth_date = date.fromisoformat(birth_date_raw)
+        except ValueError:
+            skipped += 1
+            errors.append(f"Riga {row_number}: data nascita non valida. Usa formato YYYY-MM-DD.")
+            continue
+
+        try:
+            ensure_can_create_athlete(current_user.club_id, db)
+        except HTTPException:
+            skipped += 1
+            errors.append(f"Riga {row_number}: limite atleti del piano raggiunto.")
+            break
+
+        athlete = Athlete(
+            club_id=current_user.club_id,
+            first_name=first_name,
+            last_name=last_name,
+            birth_date=parsed_birth_date,
+            group_name=_clean_csv_value(row, "group_name", "gruppo", "squadra"),
+            phone=_clean_csv_value(row, "phone", "telefono_atleta", "telefono atleta"),
+            email=_clean_csv_value(row, "email", "email_atleta", "email atleta"),
+            parent_name_1=_clean_csv_value(row, "parent_name_1", "genitore", "nome genitore"),
+            parent_phone_1=_clean_csv_value(row, "parent_phone_1", "telefono_genitore", "telefono genitore"),
+            parent_email_1=_clean_csv_value(row, "parent_email_1", "email_genitore", "email genitore"),
+            notes=_clean_csv_value(row, "notes", "note"),
+        )
+        db.add(athlete)
+        created += 1
+
+    db.commit()
+
+    return {
+        "created": created,
+        "skipped": skipped,
+        "errors": errors[:20],
+        "expected_columns": [
+            "first_name",
+            "last_name",
+            "birth_date",
+            "group_name",
+            "parent_name_1",
+            "parent_phone_1",
+            "parent_email_1",
+        ],
+    }
 
 
 @router.get("/", response_model=list[AthleteOut])

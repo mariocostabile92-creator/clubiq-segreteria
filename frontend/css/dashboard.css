@@ -1736,6 +1736,13 @@ body{
     margin-top:16px;
 }
 
+.copilot-priority-grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:16px;
+    margin-top:16px;
+}
+
 .copilot-box{
     border:1px solid rgba(148,163,184,.32);
     border-radius:24px;
@@ -1772,6 +1779,99 @@ body{
     font-weight:900;
     line-height:1.45;
     background:#f8fafc;
+}
+
+.copilot-checklist,
+.copilot-automation-list,
+.copilot-president-report{
+    display:grid;
+    gap:10px;
+}
+
+.copilot-check-item,
+.copilot-automation-card{
+    display:grid;
+    gap:6px;
+    padding:13px;
+    border:1px solid #e2e8f0;
+    border-radius:16px;
+    background:#f8fafc;
+    color:#0f172a;
+    text-decoration:none;
+}
+
+.copilot-check-item span,
+.copilot-automation-card small,
+.copilot-president-report span{
+    color:#64748b;
+    font-size:11px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+}
+
+.copilot-check-item.done{
+    border-color:#bbf7d0;
+    background:#f0fdf4;
+}
+
+.copilot-automation-card.ready{
+    border-color:#bfdbfe;
+    background:#eff6ff;
+}
+
+.copilot-automation-card span,
+.copilot-check-item small,
+.copilot-president-report p,
+.copilot-president-report small{
+    margin:0;
+    color:#475569;
+    font-weight:800;
+    line-height:1.45;
+}
+
+.copilot-president-report strong{
+    color:#0f172a;
+}
+
+.copilot-report-columns{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.copilot-report-columns div{
+    display:grid;
+    gap:6px;
+    padding:12px;
+    border-radius:16px;
+    background:#f8fafc;
+}
+
+.csv-import-box{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:14px;
+    align-items:end;
+}
+
+.csv-import-result{
+    grid-column:1 / -1;
+    display:grid;
+    gap:6px;
+    padding:13px;
+    border:1px solid #bfdbfe;
+    border-radius:16px;
+    background:#eff6ff;
+    color:#1e3a8a;
+    font-weight:900;
+}
+
+.csv-import-result ul{
+    margin:6px 0 0;
+    padding-left:18px;
+    color:#475569;
+    font-weight:800;
 }
 
 .executive-actions-row{
@@ -1960,7 +2060,8 @@ body{
     }
 
     .copilot-command-panel,
-    .copilot-grid{
+    .copilot-grid,
+    .copilot-priority-grid{
         display:grid;
         grid-template-columns:1fr;
     }
@@ -1982,6 +2083,11 @@ body{
 
     .copilot-report-cards{
         grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+
+    .csv-import-box,
+    .copilot-report-columns{
+        grid-template-columns:1fr;
     }
 }
 
